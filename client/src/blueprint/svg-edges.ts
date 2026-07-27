@@ -13,12 +13,49 @@ export interface SvgEdgeLayer {
   destroy(): void;
 }
 
+export interface CurveControlPoints {
+  p0: { x: number; y: number };
+  p1: { x: number; y: number };
+  p2: { x: number; y: number };
+  p3: { x: number; y: number };
+}
+
+/** Control points for the cubic Bezier used by `curvePath` / packet animation (PP-04). */
+export function edgeCurveControls(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): CurveControlPoints {
+  const dx = Math.abs(to.x - from.x) * 0.4;
+  return {
+    p0: { x: from.x, y: from.y },
+    p1: { x: from.x + dx, y: from.y },
+    p2: { x: to.x - dx, y: to.y },
+    p3: { x: to.x, y: to.y },
+  };
+}
+
+/** Sample a point on the same cubic Bezier as the edge `d` (PP-04 AC3). */
+export function pointOnEdgeCurve(
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  t: number,
+): { x: number; y: number } {
+  const { p0, p1, p2, p3 } = edgeCurveControls(from, to);
+  const u = 1 - t;
+  const uu = u * u;
+  const tt = t * t;
+  const uuu = uu * u;
+  const ttt = tt * t;
+  return {
+    x: uuu * p0.x + 3 * uu * t * p1.x + 3 * u * tt * p2.x + ttt * p3.x,
+    y: uuu * p0.y + 3 * uu * t * p1.y + 3 * u * tt * p2.y + ttt * p3.y,
+  };
+}
+
 /** Cubic Bezier path between edge anchors (PP-04 — must not be straight-only L). */
 export function curvePath(from: { x: number; y: number }, to: { x: number; y: number }): string {
-  const dx = Math.abs(to.x - from.x) * 0.4;
-  const c1x = from.x + dx;
-  const c2x = to.x - dx;
-  return `M ${from.x} ${from.y} C ${c1x} ${from.y}, ${c2x} ${to.y}, ${to.x} ${to.y}`;
+  const { p0, p1, p2, p3 } = edgeCurveControls(from, to);
+  return `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y}, ${p2.x} ${p2.y}, ${p3.x} ${p3.y}`;
 }
 
 export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
@@ -130,8 +167,7 @@ export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
           if (!ep || !packet) {
             continue;
           }
-          const x = ep.from.x + (ep.to.x - ep.from.x) * phase;
-          const y = ep.from.y + (ep.to.y - ep.from.y) * phase;
+          const { x, y } = pointOnEdgeCurve(ep.from, ep.to, phase);
           packet.setAttribute('cx', String(x));
           packet.setAttribute('cy', String(y));
         }
