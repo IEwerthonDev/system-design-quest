@@ -22,23 +22,27 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 5 `polish` verified PASS** — merging to `main` |
-| **Próximo passo** | Merge completo; produto Fases 0–5 |
-| **Feature ativa** | `polish` (verify PASS) |
+| **Fase atual** | **Fase 5 `polish` merged em `main`** ✅ |
+| **Próximo passo** | Produto Fases 0–5 completo; backlog / polish deferred (PNG, 2D fallback, 36 tipos) |
+| **Feature ativa** | nenhuma |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `.specs/features/polish/validation.md` PASS |
+| **Artefatos** | polish validation PASS em `main` |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
 | Verifier | ✅ PASS |
-| Gate lint/test + e2e | ✅ OK |
-| Merge → main | em progresso |
+| Merge → `main` | ✅ `cb5ffba` via SSH |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx run-many -t lint test` && `npx playwright test`
+**Prompt para nova sessão:**
+```
+Branch main. Fases 0–5 merged (foundation → polish).
+Deferred: Export PNG, 2D WebGL fallback, catalog 36 types.
+Gate: npx nx run-many -t lint test && npx playwright test
+```
 
 ---
 
