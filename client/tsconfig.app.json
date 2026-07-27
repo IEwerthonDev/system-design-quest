@@ -3,5 +3,5 @@
   "compilerOptions": {
     "outDir": "../dist/out-tsc/client"
   },
-  "include": ["src/**/*.ts"]
+  "include": ["src/**/*.ts", "src/vite-env.d.ts"]
 }
