@@ -12,7 +12,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 **Spec:** `.specs/features/canvas-graph-dnd/spec.md`  
 **Context:** `.specs/features/canvas-graph-dnd/context.md`  
 **Branch:** `feature/canvas-graph-dnd`  
-**Status:** Approved — 2026-07-27  
+**Status:** Done — Verify PASS 2026-07-27  
 **Approach:** A — Interaction orchestrator
 
 ---
