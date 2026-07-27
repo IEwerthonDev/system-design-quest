@@ -135,20 +135,20 @@ O loop pedagógico (Fases 0–4) está completo, mas a experiência ainda usa pr
 
 | Requirement ID | Story | Phase | Status |
 | -------------- | ----- | ----- | ------ |
-| POL-01 | P1: Manifest GLB 25 tipos | Design | Pending |
-| POL-02 | P1: Render GLB + fallback | Design | Pending |
-| POL-03 | P1: Graph/state independente de mesh | Design | Pending |
-| POL-04 | P1: Sons place/connect/submit | Design | Pending |
-| POL-05 | P1: Mute + soundEnabled persist | Design | Pending |
-| POL-06 | P1: Settings panel | Design | Pending |
-| POL-07 | P1: Refazer tutorial | Design | Pending |
-| POL-08 | P1: Rever onboarding | Design | Pending |
-| POL-09 | P2: Responsive ≤1024 | Design | Pending |
-| POL-10 | P2: Palette collapse tablet | Design | Pending |
-| POL-11 | P2: Playwright e2e tutorial | Design | Pending |
-| POL-12 | P2: SSH docs | Design | Pending |
+| POL-01 | P1: Manifest GLB 25 tipos | Design | Verified |
+| POL-02 | P1: Render GLB + fallback | Design | Verified |
+| POL-03 | P1: Graph/state independente de mesh | Design | Verified |
+| POL-04 | P1: Sons place/connect/submit | Design | Verified |
+| POL-05 | P1: Mute + soundEnabled persist | Design | Verified |
+| POL-06 | P1: Settings panel | Design | Verified |
+| POL-07 | P1: Refazer tutorial | Design | Verified |
+| POL-08 | P1: Rever onboarding | Design | Verified |
+| POL-09 | P2: Responsive ≤1024 | Design | Verified |
+| POL-10 | P2: Palette collapse tablet | Design | Verified |
+| POL-11 | P2: Playwright e2e tutorial | Design | Verified |
+| POL-12 | P2: SSH docs | Design | Verified |
 
-**Coverage:** 12 total, 0 mapped to tasks yet
+**Coverage:** 12 total, 12 implemented (pending independent Verifier)
 
 ---
 

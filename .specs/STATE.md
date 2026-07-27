@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 5 `polish`** — Execute T1–T8 |
-| **Próximo passo** | T1: component GLB manifest |
+| **Fase atual** | **Fase 5 `polish`** — T1–T8 executed, awaiting Verifier |
+| **Próximo passo** | Verifier → merge `feature/polish` → `main` |
 | **Feature ativa** | `polish` (`feature/polish`) |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | `.specs/features/polish/{spec,context,design,tasks}.md` |
@@ -32,20 +32,20 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Sinal | Status |
 | ----- | ------ |
-| Discuss confirmado 1A/2A/3/4A | ✅ OK |
-| Spec/design/tasks escritos | ✅ OK |
-| Branch `feature/polish` | ✅ criada |
-| Execute | T1 pendente |
+| T1–T8 commits | ✅ OK |
+| Gate lint/test | pendente neste handoff |
+| e2e Playwright | ✅ tutorial pass |
+| SSH docs | ✅ AGENTS |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx test client` (quick) · full: `npx nx run-many -t lint test` && `npx playwright test`
+**Gate:** `npx nx run-many -t lint test` && `npx playwright test`
 
 **Prompt para nova sessão:**
 ```
-Branch feature/polish. Spec/design/tasks ready. Start T1 (GLB manifest).
+Branch feature/polish. T1–T8 done. Run Verifier on polish, then merge to main via SSH.
 Read .specs/STATE.md Handoff + .specs/features/polish/tasks.md.
-Gate: npx nx test client
+Gate: npx nx run-many -t lint test && npx playwright test
 ```
 
 ---
