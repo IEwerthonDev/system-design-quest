@@ -146,10 +146,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06 (durability)
 
 **Done when:**
-- [ ] Persist survives new store instance on same path
-- [ ] Corrupt JSON boots empty without throw
-- [ ] Gate: `npx nx test server`
-- [ ] Commit: `feat(server): JSON file design session store`
+- [x] Persist survives new store instance on same path
+- [x] Corrupt JSON boots empty without throw
+- [x] Gate: `npx nx test server`
+- [x] Commit: `feat(server): JSON file design session store`
 
 **Tests:** unit  
 **Gate:** quick server
