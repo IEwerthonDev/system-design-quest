@@ -84,8 +84,8 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-03
 
-- [ ] Paleta lateral agrupada por categoria (Client, Edge, Traffic, Compute, Data, Messaging, Observability)
-- [ ] Drag da paleta dispara evento `palette:drop` com `ComponentType`
+- [x] Paleta lateral agrupada por categoria (Client, Edge, Traffic, Compute, Data, Messaging, Observability)
+- [x] Drag da paleta dispara evento `palette:drop` com `ComponentType`
 - [ ] Commit: `feat(client): component palette with categories`
 
 ---
@@ -99,8 +99,8 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-03
 
-- [ ] Primitivo Three.js colorido por categoria + label flutuante
-- [ ] `addComponent(type, position)` + drag no plano XZ (raycast)
+- [x] Primitivo Three.js colorido por categoria + label flutuante
+- [x] `addComponent(type, position)` + drag no plano XZ (raycast)
 - [ ] Commit: `feat(client): 3d component instances with xz drag`
 
 ---
