@@ -15,11 +15,17 @@ import {
 
 describe('component instance', () => {
   it('creates a category-colored primitive with floating label', () => {
-    const instance = createComponentInstance('load_balancer', { x: 0, y: 0, z: 0 }, 'comp-1');
+    const instance = createComponentInstance(
+      'load_balancer',
+      { x: 0, y: 0, z: 0 },
+      'comp-1',
+      { skipGlb: true },
+    );
 
     expect(instance.type).toBe('load_balancer');
     expect(instance.category).toBe('traffic');
     expect(instance.label).toBe('Load Balancer');
+    expect(instance.meshSource).toBe('primitive');
     expect((instance.mesh.material as THREE.MeshStandardMaterial).color.getHex()).toBe(
       CATEGORY_COLORS.traffic,
     );
@@ -29,18 +35,71 @@ describe('component instance', () => {
   });
 
   it('uses a sphere primitive for edge components and cylinder for data', () => {
-    const cdn = createComponentInstance('cdn', { x: 0, y: 0, z: 0 }, 'comp-edge');
-    const db = createComponentInstance('sql_db', { x: 0, y: 0, z: 0 }, 'comp-data');
+    const cdn = createComponentInstance('cdn', { x: 0, y: 0, z: 0 }, 'comp-edge', {
+      skipGlb: true,
+    });
+    const db = createComponentInstance('sql_db', { x: 0, y: 0, z: 0 }, 'comp-data', {
+      skipGlb: true,
+    });
 
     expect(cdn.mesh.geometry).toBeInstanceOf(THREE.SphereGeometry);
     expect(db.mesh.geometry).toBeInstanceOf(THREE.CylinderGeometry);
   });
 
   it('setInstanceXZPosition updates group XZ coordinates', () => {
-    const instance = createComponentInstance('app_server', { x: 1, y: 0, z: 2 }, 'comp-2');
+    const instance = createComponentInstance(
+      'app_server',
+      { x: 1, y: 0, z: 2 },
+      'comp-2',
+      { skipGlb: true },
+    );
     setInstanceXZPosition(instance, 4, 6);
 
     expect(getInstancePosition(instance)).toMatchObject({ x: 4, y: 0, z: 6 });
+  });
+
+  it('upgrades to GLB mesh when load succeeds and keeps type/id', async () => {
+    const glbMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.5, 0.5),
+      new THREE.MeshStandardMaterial({ color: 0xffffff }),
+    );
+    const glbRoot = new THREE.Group();
+    glbRoot.add(glbMesh);
+
+    const instance = createComponentInstance(
+      'load_balancer',
+      { x: 2, y: 0, z: 3 },
+      'comp-glb',
+      {
+        loadGltf: async () => glbRoot,
+      },
+    );
+
+    await vi.waitFor(() => expect(instance.meshSource).toBe('glb'));
+
+    expect(instance.id).toBe('comp-glb');
+    expect(instance.type).toBe('load_balancer');
+    expect(instance.mesh).toBeInstanceOf(THREE.Mesh);
+    expect(instance.mesh.userData.componentId).toBe('comp-glb');
+    expect(instance.mesh.geometry).toBeInstanceOf(THREE.BoxGeometry);
+    expect(getInstancePosition(instance)).toMatchObject({ x: 2, y: 0, z: 3 });
+  });
+
+  it('keeps primitive when GLB load fails', async () => {
+    const instance = createComponentInstance(
+      'cdn',
+      { x: 0, y: 0, z: 0 },
+      'comp-fail',
+      {
+        loadGltf: async () => null,
+      },
+    );
+
+    await vi.waitFor(() => {
+      // allow microtasks to settle
+      expect(instance.meshSource).toBe('primitive');
+    });
+    expect(instance.mesh.geometry).toBeInstanceOf(THREE.SphereGeometry);
   });
 });
 

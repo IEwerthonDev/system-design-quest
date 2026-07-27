@@ -1,5 +1,11 @@
 import * as THREE from 'three';
 import { getComponentMeta, type ComponentCategory, type ComponentType } from '@sdq/shared';
+import {
+  findPrimaryMesh,
+  loadComponentModel,
+  tintObjectWithColor,
+  type GltfLoadFn,
+} from './asset-loader';
 
 export const CATEGORY_COLORS: Record<ComponentCategory, number> = {
   client: 0x60a5fa,
@@ -15,6 +21,8 @@ export const CATEGORY_COLORS: Record<ComponentCategory, number> = {
 const BASE_HEIGHT = 0.4;
 const LABEL_OFFSET_Y = 1.1;
 
+export type MeshSource = 'primitive' | 'glb';
+
 export interface ComponentInstanceObject {
   id: string;
   type: ComponentType;
@@ -24,6 +32,15 @@ export interface ComponentInstanceObject {
   group: THREE.Group;
   mesh: THREE.Mesh;
   labelSprite: THREE.Sprite;
+  meshSource: MeshSource;
+  /** Ignores stale async GLB upgrades after dispose/replace. */
+  loadToken: number;
+}
+
+export interface CreateComponentInstanceOptions {
+  /** Skip async GLB upgrade (tests that assert primitives). */
+  skipGlb?: boolean;
+  loadGltf?: GltfLoadFn;
 }
 
 function createPrimitiveMesh(category: ComponentCategory): THREE.Mesh {
@@ -106,23 +123,66 @@ function disposeLabelSprite(sprite: THREE.Sprite): void {
   material.dispose();
 }
 
+function tagPickMesh(mesh: THREE.Mesh, id: string): void {
+  mesh.userData.componentId = id;
+  mesh.userData.isComponent = true;
+}
+
+export async function upgradeInstanceToGlb(
+  instance: ComponentInstanceObject,
+  options?: { loadGltf?: GltfLoadFn },
+): Promise<boolean> {
+  const token = instance.loadToken;
+  const model = await loadComponentModel(instance.type, {
+    loadGltf: options?.loadGltf,
+  });
+
+  if (!model || token !== instance.loadToken) {
+    return false;
+  }
+
+  const primary = findPrimaryMesh(model);
+  if (!primary) {
+    return false;
+  }
+
+  tintObjectWithColor(model, CATEGORY_COLORS[instance.category]);
+  model.position.y = BASE_HEIGHT;
+
+  instance.group.remove(instance.mesh);
+  instance.mesh.geometry.dispose();
+  const oldMat = instance.mesh.material;
+  if (Array.isArray(oldMat)) {
+    oldMat.forEach((m) => m.dispose());
+  } else {
+    oldMat.dispose();
+  }
+
+  tagPickMesh(primary, instance.id);
+  instance.group.add(model);
+  // Keep `mesh` as the primary pick target for selection/raycast helpers.
+  instance.mesh = primary;
+  instance.meshSource = 'glb';
+  return true;
+}
+
 export function createComponentInstance(
   type: ComponentType,
   position: { x: number; y: number; z: number },
   id: string,
+  options?: CreateComponentInstanceOptions,
 ): ComponentInstanceObject {
   const meta = getComponentMeta(type);
   const mesh = createPrimitiveMesh(meta.category);
   const labelSprite = createLabelSprite(meta.label);
   const group = new THREE.Group();
 
-  mesh.userData.componentId = id;
-  mesh.userData.isComponent = true;
+  tagPickMesh(mesh, id);
 
   group.add(mesh, labelSprite);
   group.position.set(position.x, position.y, position.z);
 
-  return {
+  const instance: ComponentInstanceObject = {
     id,
     type,
     label: meta.label,
@@ -130,7 +190,15 @@ export function createComponentInstance(
     group,
     mesh,
     labelSprite,
+    meshSource: 'primitive',
+    loadToken: 1,
   };
+
+  if (!options?.skipGlb) {
+    void upgradeInstanceToGlb(instance, { loadGltf: options?.loadGltf });
+  }
+
+  return instance;
 }
 
 export function getInstancePosition(instance: ComponentInstanceObject): {
@@ -171,12 +239,18 @@ export function setInstanceSelected(
   instance: ComponentInstanceObject,
   selected: boolean,
 ): void {
-  const material = instance.mesh.material as THREE.MeshStandardMaterial;
-  if (selected) {
-    material.emissive.setHex(0xffffff);
-    material.emissiveIntensity = 0.35;
-  } else {
-    material.emissive.setHex(0x000000);
-    material.emissiveIntensity = 0;
+  const material = instance.mesh.material;
+  const materials = Array.isArray(material) ? material : [material];
+  for (const mat of materials) {
+    if (!(mat instanceof THREE.MeshStandardMaterial)) {
+      continue;
+    }
+    if (selected) {
+      mat.emissive.setHex(0xffffff);
+      mat.emissiveIntensity = 0.35;
+    } else {
+      mat.emissive.setHex(0x000000);
+      mat.emissiveIntensity = 0;
+    }
   }
 }
