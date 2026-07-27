@@ -22,26 +22,27 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `vercel-judge` merged to `main` + production deploy |
-| **Próximo passo** | Formal Verify report (optional); sessions/leaderboard still Hobby-deferred |
-| **Feature ativa** | `vercel-judge` (on `main`) |
+| **Fase atual** | Session confirm fix on Hobby (`localStorage` fallback) |
+| **Próximo passo** | Redeploy production after commit; optional durable remote sessions later |
+| **Feature ativa** | `vercel-judge` + sessions Hobby fallback (on `main`) |
 | **Branch** | `main` |
-| **Bloqueios** | Sessions/leaderboard still need external API / durable store |
+| **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_27R4sYKCm5uwo6Qof71qTsCw3TUs` (Spiral Out / Hobby) — READY |
+| **Bugfix** | Confirm "Design aprovado" no longer fails with `Session upsert failed` when `/api/sessions` is absent |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable («/») |
 
 ### Deploy note (Hobby)
 
 - **Serves:** Vite client `dist/client` + serverless `api/judge.js` (esbuild CJS bundle from `server/src/vercel/api-judge.ts`)
-- **Does not serve:** sessions/leaderboard Fastify routes on Hobby (deferred)
-- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` only for sessions/leaderboard
+- **Sessions on Hobby:** client falls back to `localStorage` (`sdq-sessions`) when `PUT/GET /api/sessions` returns 404/405 or network fails; optional `VITE_SESSIONS_MODE=local`
+- **Does not serve:** Fastify sessions/leaderboard routes (leaderboard still deferred)
+- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` for remote sessions/leaderboard when available
 - **Build:** esbuild judge bundle then `client:build`; quality gate `nx run-many -t lint test`
 - **Production:** https://system-design-quest.vercel.app
 
 ### AD-022 (active)
 
-Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full Fastify). Hybrid LLM: real when `LLM_API_KEY` set, mock otherwise (including production).
+Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full Fastify). Hybrid LLM: real when `LLM_API_KEY` set, mock otherwise (including production). Design sessions persist via localStorage fallback on Hobby (AD-021 server store still used when Fastify `/api/sessions` is reachable).
 
 ---
 
@@ -70,7 +71,7 @@ Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full
 | AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
 | AD-021 | active | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
-| AD-022 | active | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions/leaderboard fora do Hobby | Unblocks AI judge on free preview without wrapping Fastify |
+| AD-022 | active | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
 
 ---
 
