@@ -22,9 +22,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `blueprint-2d-canvas` Execute done — gate lint+test PASS |
-| **Próximo passo** | Hard refresh localhost:4200; UAT URL Shortener no blueprint; merge após Verify |
-| **Feature ativa** | `blueprint-2d-canvas` |
+| **Fase atual** | `blueprint-2d-canvas` **Verify PASS** (`98b81ec`) |
+| **Próximo passo** | Hard refresh localhost:4200 — UAT Playground-like canvas; depois merge → main |
+| **Feature ativa** | `blueprint-2d-canvas` (pronta) |
 | **Branch** | `feature/blueprint-2d-canvas` |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | `client/src/blueprint/*`, sim controls, AD-018..020 |
