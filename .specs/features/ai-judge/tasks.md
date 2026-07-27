@@ -89,10 +89,10 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-08
 
-- [ ] Mock returns deterministic `JudgePartialResult` per judge role + graph tier
-- [ ] Tier detection: match golden graph node sets or hash
-- [ ] `JUDGE_USE_MOCK=true` or missing `LLM_API_KEY` selects mock
-- [ ] Commit: `feat(server): mock LLM client with judge fixtures`
+- [x] Mock returns deterministic `JudgePartialResult` per judge role + graph tier
+- [x] Tier detection: match golden graph node sets or hash
+- [x] `JUDGE_USE_MOCK=true` or missing `LLM_API_KEY` selects mock
+- [x] Commit: `feat(server): mock LLM client with judge fixtures`
 
 ---
 

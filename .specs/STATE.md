@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge`** — Execute T2 concluído |
-| **Próximo passo** | Execute T3 (mock LLM client + judge fixtures) |
+| **Fase atual** | **Fase 2 `ai-judge`** — Execute T3 concluído |
+| **Próximo passo** | Execute T4 (dual-judge orchestration) |
 | **Feature ativa** | `ai-judge` em `feature/ai-judge` |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
@@ -43,8 +43,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch feature/ai-judge. T1–T2 committed.
-Execute T3: mock LLM client in server/src/judge/mock-llm-client.ts.
+Branch feature/ai-judge. T1–T3 committed.
+Execute T4: dual-judge orchestration in server/src/judge/dual-judge.ts.
 Gate: npx nx test shared server
 ```
 
