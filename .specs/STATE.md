@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge`** — Execute T5 concluído |
-| **Próximo passo** | Execute T6 (session judge result state) |
+| **Fase atual** | **Fase 2 `ai-judge`** — Execute T6 concluído |
+| **Próximo passo** | Execute T7 (judge API client + progress overlay) |
 | **Feature ativa** | `ai-judge` em `feature/ai-judge` |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
@@ -43,8 +43,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch feature/ai-judge. T1–T5 committed.
-Execute T6: session judge result in client/src/session/session-store.ts.
+Branch feature/ai-judge. T1–T6 committed.
+Execute T7: judge API client in client/src/judge/judge-api.ts.
 Gate: npx nx test shared server client
 ```
 

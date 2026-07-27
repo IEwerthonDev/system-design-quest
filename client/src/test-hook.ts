@@ -1,8 +1,9 @@
-import type { ArchitectureGraph } from '@sdq/shared';
+import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
 import type { ExperienceLevel } from './storage/preferences';
 
 export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
 export type GameMode = 'study' | 'speedrun';
+export type JudgingStep = 'analyzing' | 'rigorous' | 'pragmatic' | 'consensus';
 
 export interface GameRequirements {
   functional: string[];
@@ -18,6 +19,8 @@ export interface GameState {
   guidedMode: boolean;
   experienceLevel: ExperienceLevel | null;
   guidedStep: string | null;
+  judgeResult: JudgeResult | null;
+  judgingStep: JudgingStep | null;
 }
 
 declare global {
@@ -39,6 +42,8 @@ const initialState: GameState = {
   guidedMode: false,
   experienceLevel: null,
   guidedStep: null,
+  judgeResult: null,
+  judgingStep: null,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -49,6 +54,8 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     guidedMode: false,
     experienceLevel: null,
     guidedStep: null,
+    judgeResult: null,
+    judgingStep: null,
     ...overrides,
   };
   return window.__GAME_STATE__;
@@ -85,4 +92,8 @@ export function setMode(mode: GameMode): void {
 
 export function setGuidedStep(step: string | null): void {
   getGameState().guidedStep = step;
+}
+
+export function setJudgingStep(step: JudgingStep | null): void {
+  getGameState().judgingStep = step;
 }

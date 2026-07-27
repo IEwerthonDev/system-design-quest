@@ -141,10 +141,10 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-05
 
-- [ ] `setJudgeResult(result)`, `getJudgeResult()`, `clearJudgeResult()`
-- [ ] `__GAME_STATE__.judgeResult`, `__GAME_STATE__.judgingStep`
-- [ ] Tests: set/get roundtrip, sync to game state
-- [ ] Commit: `feat(client): session judge result state`
+- [x] `setJudgeResult(result)`, `getJudgeResult()`, `clearJudgeResult()`
+- [x] `__GAME_STATE__.judgeResult`, `__GAME_STATE__.judgingStep`
+- [x] Tests: set/get roundtrip, sync to game state
+- [x] Commit: `feat(client): session judge result state`
 
 ---
 

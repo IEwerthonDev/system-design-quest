@@ -190,7 +190,7 @@ O loop pedagógico está incompleto: o jogador monta arquitetura e submete, mas 
 | JUDGE-02 | P1: Dual-judge orchestration | Execute T4 | Done |
 | JUDGE-03 | P1: Veredito AD-016 | Execute T1 | Done |
 | JUDGE-04 | P1: Cobertura requisitos | Execute T4 | Done |
-| JUDGE-05 | P1: UI resultado | Design | Pending |
+| JUDGE-05 | P1: UI resultado | Execute T6 | Partial (T8 UI pending) |
 | JUDGE-06 | P1: Loading/erro/retry | Design | Pending |
 | JUDGE-07 | P2: Feedback em camadas | Design | Pending |
 | JUDGE-08 | P2: Golden tests | Design | Pending |
