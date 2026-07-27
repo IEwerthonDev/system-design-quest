@@ -172,9 +172,11 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       reconnectEnd: null,
     };
     (state as GameStateWithPressure).pressures = lastPressures;
+    (state as GameStateWithPressure).latencyMs = lastLatencyMs;
   };
 
   let lastPressures: Record<string, PressureLevel> | null = null;
+  let lastLatencyMs: Record<string, number> | null = null;
 
   const persist = (): void => {
     graph = normalizeGraph(graph);
@@ -205,18 +207,25 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     const sim = graph.simulation ?? DEFAULT_SIMULATION;
     if (!sim.running) {
       lastPressures = null;
+      lastLatencyMs = null;
       for (const card of cards.values()) {
         card.setPressure(null);
       }
+      const state = getGameState();
+      (state as GameStateWithPressure).pressures = null;
+      (state as GameStateWithPressure).latencyMs = null;
       return;
     }
     const result = evaluateSimulation(graph);
     lastPressures = result.nodes;
+    lastLatencyMs = result.latencyMs;
     for (const [id, card] of cards) {
-      card.setPressure(result.nodes[id] ?? 'ok');
+      const level = result.nodes[id] ?? 'ok';
+      card.setPressure(level, result.latencyMs[id] ?? null);
     }
     const state = getGameState();
     (state as GameStateWithPressure).pressures = lastPressures;
+    (state as GameStateWithPressure).latencyMs = lastLatencyMs;
     (state as GameStateWithPressure).hotReadPath = result.hotReadPath;
   };
 
@@ -425,6 +434,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
 
 interface GameStateWithPressure {
   pressures?: Record<string, PressureLevel> | null;
+  latencyMs?: Record<string, number> | null;
   hotReadPath?: boolean;
 }
 

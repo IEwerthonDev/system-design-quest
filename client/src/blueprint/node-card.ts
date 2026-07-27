@@ -27,7 +27,7 @@ export interface NodeCardCallbacks {
 export interface NodeCardHandle {
   root: HTMLElement;
   setSelected(selected: boolean): void;
-  setPressure(level: PressureLevel | null): void;
+  setPressure(level: PressureLevel | null, latencyMs?: number | null): void;
   sync(node: ComponentNode): void;
   destroy(): void;
 }
@@ -61,6 +61,29 @@ function injectNodeCardStyles(): void {
     @keyframes sdq-pulse {
       50% { outline-color: #ef4444; }
     }
+    .sdq-node__load-label {
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-align: center;
+      padding: 2px 6px 0;
+    }
+    .sdq-node__load-label--hot { color: #F87171; }
+    .sdq-node__load-label--warn { color: #FBBF24; }
+    .sdq-node__ms-bar {
+      display: block;
+      margin: 4px 10px 6px;
+      height: 14px;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 700;
+      line-height: 14px;
+      text-align: center;
+      color: #0f172a;
+    }
+    .sdq-node__ms-bar--ok { background: #34D399; }
+    .sdq-node__ms-bar--warn { background: #FBBF24; }
+    .sdq-node__ms-bar--hot { background: #F87171; color: #1e1030; }
     .sdq-node__body { padding: 10px 12px 6px; display: flex; gap: 8px; align-items: flex-start; }
     .sdq-node__label { font-weight: 700; flex: 1; }
     .sdq-node__badge {
@@ -114,6 +137,16 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   badgeEl.hidden = true;
   body.append(labelEl, badgeEl);
 
+  const loadLabel = document.createElement('div');
+  loadLabel.className = 'sdq-node__load-label';
+  loadLabel.dataset.testid = 'load-label';
+  loadLabel.hidden = true;
+
+  const msBar = document.createElement('div');
+  msBar.className = 'sdq-node__ms-bar';
+  msBar.dataset.testid = 'ms-bar';
+  msBar.hidden = true;
+
   const footer = document.createElement('div');
   footer.className = 'sdq-node__footer';
   const minus = document.createElement('button');
@@ -130,7 +163,7 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   plus.setAttribute('aria-label', 'Aumentar replicas');
   footer.append(minus, repsLabel, plus);
 
-  root.append(handleIn, handleOut, body, footer);
+  root.append(handleIn, handleOut, body, loadLabel, msBar, footer);
 
   const sync = (n: ComponentNode): void => {
     const reps = n.replicas ?? 1;
@@ -181,13 +214,37 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     setSelected(selected) {
       root.classList.toggle('sdq-node--selected', selected);
     },
-    setPressure(level) {
+    setPressure(level, latencyMs = null) {
       root.classList.remove('sdq-node--pressure-warn', 'sdq-node--pressure-hot');
+      loadLabel.classList.remove('sdq-node__load-label--hot', 'sdq-node__load-label--warn');
+      msBar.classList.remove('sdq-node__ms-bar--ok', 'sdq-node__ms-bar--warn', 'sdq-node__ms-bar--hot');
+
+      if (level === null) {
+        loadLabel.hidden = true;
+        loadLabel.textContent = '';
+        msBar.hidden = true;
+        msBar.textContent = '';
+        return;
+      }
+
       if (level === 'warn') {
         root.classList.add('sdq-node--pressure-warn');
+        loadLabel.hidden = false;
+        loadLabel.textContent = 'QUEUEING';
+        loadLabel.classList.add('sdq-node__load-label--warn');
       } else if (level === 'hot') {
         root.classList.add('sdq-node--pressure-hot');
+        loadLabel.hidden = false;
+        loadLabel.textContent = 'BOTTLENECK';
+        loadLabel.classList.add('sdq-node__load-label--hot');
+      } else {
+        loadLabel.hidden = true;
+        loadLabel.textContent = '';
       }
+
+      msBar.hidden = false;
+      msBar.classList.add(`sdq-node__ms-bar--${level}`);
+      msBar.textContent = latencyMs != null ? `${latencyMs}ms` : '';
     },
     sync,
     destroy() {

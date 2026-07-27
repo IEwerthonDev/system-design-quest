@@ -189,12 +189,75 @@ describe('blueprint canvas', () => {
     connectForTest(canvas, cache, db, 'DB');
     connectForTest(canvas, app, db, 'DB');
     setNodeConfigForTest(canvas, cache, { kind: 'cache', hitRate: 10 });
-    canvas.updateSimulation({ running: true, traffic: 10, readRatio: 90, speed: 2 });
+    canvas.updateSimulation({ running: true, traffic: 5, readRatio: 90, speed: 2 });
     expect(canvas.getGraph().simulation?.running).toBe(true);
     const pressures = (window.__GAME_STATE__ as { pressures?: Record<string, string> }).pressures;
     expect(pressures?.[db]).toBe('hot');
     canvas.updateSimulation({ running: false });
     expect(canvas.getGraph().simulation?.running).toBe(false);
+    canvas.destroy();
+  });
+
+  it('shows BOTTLENECK / QUEUEING labels and ms bar from pressures when running', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const client = placeComponentForTest(canvas, 'client_web', { x: 0, y: 0 });
+    const app = placeComponentForTest(canvas, 'app_server', { x: 100, y: 0 });
+    const cache = placeComponentForTest(canvas, 'cache_redis', { x: 200, y: 0 });
+    const db = placeComponentForTest(canvas, 'sql_db', { x: 300, y: 0 });
+    connectForTest(canvas, client, app);
+    connectForTest(canvas, app, cache, 'CACHE');
+    connectForTest(canvas, cache, db, 'DB');
+    connectForTest(canvas, app, db, 'DB');
+    setNodeConfigForTest(canvas, cache, { kind: 'cache', hitRate: 10 });
+
+    canvas.updateSimulation({ running: true, traffic: 5, readRatio: 90, speed: 1 });
+    const hotCard = host.querySelector(`[data-testid="blueprint-node-${db}"]`) as HTMLElement;
+    const hotLabel = hotCard.querySelector('[data-testid="load-label"]') as HTMLElement;
+    const hotBar = hotCard.querySelector('[data-testid="ms-bar"]') as HTMLElement;
+    expect(hotLabel?.textContent).toBe('BOTTLENECK');
+    expect(hotLabel?.className).toMatch(/load-label--hot|load-label--red/);
+    expect(hotBar).toBeTruthy();
+    expect(hotBar.hidden).toBe(false);
+    expect(hotBar.className).toMatch(/ms-bar--hot|ms-bar--red/);
+    expect(hotBar.textContent).toMatch(/280/);
+    const gs = window.__GAME_STATE__ as {
+      pressures?: Record<string, string>;
+      latencyMs?: Record<string, number> | null;
+    };
+    expect(gs.pressures?.[db]).toBe('hot');
+    expect(gs.latencyMs?.[db]).toBe(280);
+
+    canvas.updateSimulation({ running: true, traffic: 1, readRatio: 90, speed: 1 });
+    const warnLabel = hotCard.querySelector('[data-testid="load-label"]') as HTMLElement;
+    const warnBar = hotCard.querySelector('[data-testid="ms-bar"]') as HTMLElement;
+    const warnState = window.__GAME_STATE__ as {
+      pressures?: Record<string, string>;
+      latencyMs?: Record<string, number>;
+    };
+    expect(warnState.pressures?.[db]).toBe('warn');
+    expect(warnLabel?.textContent).toBe('QUEUEING');
+    expect(warnLabel?.className).toMatch(/load-label--warn|load-label--yellow/);
+    expect(warnBar.className).toMatch(/ms-bar--warn|ms-bar--yellow/);
+    expect(warnBar.textContent).toMatch(/120/);
+    expect(warnState.latencyMs?.[db]).toBe(120);
+
+    setNodeConfigForTest(canvas, cache, { kind: 'cache', hitRate: 95 });
+    canvas.updateSimulation({ running: true, traffic: 1, readRatio: 90, speed: 1 });
+    const okCard = host.querySelector(`[data-testid="blueprint-node-${cache}"]`) as HTMLElement;
+    const okLabel = okCard.querySelector('[data-testid="load-label"]') as HTMLElement | null;
+    const okBar = okCard.querySelector('[data-testid="ms-bar"]') as HTMLElement;
+    expect(okLabel?.hidden).toBe(true);
+    expect(okLabel?.textContent ?? '').not.toMatch(/BOTTLENECK|QUEUEING/);
+    expect(okBar.hidden).toBe(false);
+    expect(okBar.className).toMatch(/ms-bar--ok|ms-bar--green/);
+
+    canvas.updateSimulation({ running: false });
+    const stoppedCard = host.querySelector(`[data-testid="blueprint-node-${db}"]`) as HTMLElement;
+    expect(stoppedCard.querySelector('[data-testid="load-label"]')?.textContent ?? '').toBe('');
+    expect((stoppedCard.querySelector('[data-testid="ms-bar"]') as HTMLElement).hidden).toBe(true);
+    expect((window.__GAME_STATE__ as { latencyMs?: Record<string, number> | null }).latencyMs).toBeNull();
     canvas.destroy();
   });
 });
