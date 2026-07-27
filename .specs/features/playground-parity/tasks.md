@@ -127,10 +127,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06, PP-07
 
 **Done when:**
-- [ ] Upsert by id; list filters nickname (+ optional status)
-- [ ] Unit tests cover CRUD basics
-- [ ] Gate: `npx nx test server`
-- [ ] Commit: `feat(server): in-memory design session store`
+- [x] Upsert by id; list filters nickname (+ optional status)
+- [x] Unit tests cover CRUD basics
+- [x] Gate: `npx nx test server`
+- [x] Commit: `feat(server): in-memory design session store`
 
 **Tests:** unit  
 **Gate:** quick server
