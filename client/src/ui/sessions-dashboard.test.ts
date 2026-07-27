@@ -285,4 +285,77 @@ describe('reopen persisted design session (PP-08)', () => {
 
     nav.destroy();
   });
+
+  it('reopen in_progress → re-submit → confirm upserts same session id with terminal status', async () => {
+    const record = fixture({
+      id: 'sess-reopen-confirm',
+      status: 'in_progress',
+      graph: savedGraph,
+      mode: 'study',
+      requirements: {
+        functional: ['Encurtar URLs'],
+        nonFunctional: ['Baixa latência'],
+      },
+    });
+
+    const passResult = {
+      verdict: 'PASS' as const,
+      score: 90,
+      summary: 'Bom design.',
+      nextStep: 'Escale o banco.',
+      strengths: [],
+      criticalIssues: [],
+      improvements: [],
+      requirementCoverage: [],
+      judgeDebate: {
+        rigorous: 'Ok.',
+        pragmatic: 'Ok.',
+        consensus: 'PASS.',
+      },
+    };
+
+    const upsertSessionFn = vi.fn().mockResolvedValue({
+      id: 'sess-reopen-confirm',
+      status: 'approved',
+    });
+
+    const { mountPhaseNavigation } = await import('../session/phase-navigation');
+    const { setGraph } = await import('../session/session-store');
+    const nav = mountPhaseNavigation(container, {
+      problemId: record.problemId,
+      mode: 'study',
+      designSession: record,
+      submitForJudging: vi.fn().mockResolvedValue(passResult),
+      upsertSessionFn,
+      getNickname: () => 'alice',
+    });
+
+    expect(getSession()?.id).toBe('sess-reopen-confirm');
+    expect(getSession()?.phase).toBe('canvas');
+
+    setGraph(savedGraph);
+    container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+
+    await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+    expect(getSession()?.id).toBe('sess-reopen-confirm');
+
+    container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-confirm"]')!.click();
+
+    await vi.waitFor(() =>
+      expect(upsertSessionFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'sess-reopen-confirm',
+          status: 'approved',
+          playerNickname: 'alice',
+        }),
+      ),
+    );
+
+    const terminalStatuses = new Set(['approved', 'rejected', 'partial']);
+    const upsertArg = upsertSessionFn.mock.calls[0]![0];
+    expect(upsertArg.id).toBe('sess-reopen-confirm');
+    expect(terminalStatuses.has(upsertArg.status)).toBe(true);
+
+    nav.destroy();
+  });
 });
