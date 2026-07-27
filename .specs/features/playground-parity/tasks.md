@@ -185,11 +185,11 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06, PP-07
 
 **Done when:**
-- [ ] PUT upsert returns record; GET list requires nickname (400 if missing)
-- [ ] GET by id 404 when missing
-- [ ] Default store for prod path documented (JsonFile or InMemory+env) per design
-- [ ] Gate: `npx nx test server`
-- [ ] Commit: `feat(server): design session HTTP routes`
+- [x] PUT upsert returns record; GET list requires nickname (400 if missing)
+- [x] GET by id 404 when missing
+- [x] Default store for prod path documented (JsonFile or InMemory+env) per design
+- [x] Gate: `npx nx test server`
+- [x] Commit: `feat(server): design session HTTP routes`
 
 **Tests:** unit  
 **Gate:** quick server

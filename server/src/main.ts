@@ -2,8 +2,10 @@ import Fastify from 'fastify';
 import { registerHealthRoutes } from './routes/health';
 import { registerJudgeRoutes } from './routes/judge';
 import { registerLeaderboardRoutes } from './routes/leaderboard';
+import { registerSessionRoutes } from './routes/sessions';
 import type { LlmClient } from './judge/mock-llm-client';
 import type { LeaderboardStore } from './leaderboard/store';
+import type { SessionStore } from './sessions/store';
 
 const PORT = Number(process.env.PORT ?? 3000);
 const VERSION = process.env.npm_package_version ?? '0.0.0';
@@ -12,6 +14,8 @@ export interface BuildAppOptions {
   env?: NodeJS.ProcessEnv;
   llmClient?: LlmClient;
   leaderboardStore?: LeaderboardStore;
+  /** Injected SessionStore (tests). Prod default: JsonFile at SESSIONS_DATA_PATH. */
+  sessionStore?: SessionStore;
 }
 
 export async function buildApp(options: BuildAppOptions = {}) {
@@ -20,6 +24,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   await registerHealthRoutes(app, VERSION);
   await registerJudgeRoutes(app, { env, llmClient: options.llmClient });
   await registerLeaderboardRoutes(app, { store: options.leaderboardStore });
+  await registerSessionRoutes(app, { env, store: options.sessionStore });
   return app;
 }
 
