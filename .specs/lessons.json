@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 2,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "ac_gap::when an ac requires highlighting multiple ui parts node and handle assert each part s observable state not only one of them",
+      "text": "When an AC requires highlighting multiple UI parts (node and handle), assert each part’s observable state—not only one of them",
+      "signal": "ac_gap",
+      "scope": "client/scene",
+      "status": "candidate",
+      "features": [
+        "canvas-graph-dnd"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "CGD-04 / canvas-interaction.test.ts:485-488 (validation.md Fix 1) (client/scene)"
+      ],
+      "created": "2026-07-27T17:05:16Z",
+      "last_seen": "2026-07-27T17:05:16Z"
+    }
+  ]
+}

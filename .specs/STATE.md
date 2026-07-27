@@ -22,41 +22,34 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Execute — Batch 1 worker (T1–T5) em andamento |
-| **Próximo passo** | Aguardar summary Batch 1 → despachar Batch 2 (T6–T11) |
-| **Feature ativa** | `canvas-graph-dnd` |
+| **Fase atual** | `canvas-graph-dnd` — **Verify PASS** ✅ |
+| **Próximo passo** | Merge `feature/canvas-graph-dnd` → `main` (push/PR se desejado) |
+| **Feature ativa** | `canvas-graph-dnd` (pronta) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | Specs Approved; modo Execute = sub-agents |
+| **Artefatos** | T1–T11 + fix `d7aa155`; validation PASS; gate 369 |
 
-### Context Checkpoint (2026-07-27 — Execute batch 1)
-
-| Sinal | Status |
-| ----- | ------ |
-| Chat length | AMBER — user escolheu sub-agents (1) |
-| Uncommitted | AMBER — specs ainda sem commit inicial |
-| Spec drift | GREEN |
-| Task clarity | GREEN — Batch 1 = T1–T5 |
-
-**Veredito:** **AMBER + “1”** → Execute via workers
-
-**Branch:** `feature/canvas-graph-dnd`  
-**Batch 1:** T1–T5 · **Batch 2:** T6–T11 (após Batch 1 PASS)
-
-
-### Context Checkpoint (2026-07-27 — context+spec draft)
+### Context Checkpoint (2026-07-27 — verify PASS)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — Discuss fechado |
-| Uncommitted | AMBER — docs novos + STATE (sem commit pedido) |
-| Spec drift | GREEN — decisões Discuss → context/spec |
-| Gate confidence | N/A Specify |
-| Task clarity | GREEN — aguarda confirm → Design |
+| Execute | T1–T11 + CGD-04 fix done |
+| Verifier | ✅ PASS (re-verify após `d7aa155`) |
+| Gate | 369 passed |
+| Sensor | 3/3 killed |
 
-**Veredito:** **GREEN** (Specify)
+**Veredito:** **GREEN** (feature complete)
 
 **Branch:** `feature/canvas-graph-dnd`  
-**Stash:** `stash@{0}` = `wip-pre-canvas-graph-dnd: interaction wiring + ui chrome + lessons` (aplicar só no Execute se ainda fizer sentido)
+**HEAD tip:** `d7aa155` (+ docs commit after)  
+**Report:** `.specs/features/canvas-graph-dnd/validation.md`  
+**Stash:** `stash@{0}` wip-pre-canvas-graph-dnd — pode dropar se obsoleto
+
+**Prompt pós-merge / PR:**
+```
+Branch feature/canvas-graph-dnd. Verify PASS. Ready to push SSH + gh pr create → main.
+Read .specs/STATE.md Handoff + validation.md.
+Gate already green: npx nx run-many -t lint test
+```
 
 ---
 
@@ -94,5 +87,6 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
 | 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
+| — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
 
 Detalhes em `docs/ROADMAP.md`.

@@ -213,12 +213,12 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Hover shows in/out handles; body drag still moves component when not on handle
-- [ ] Drag from out-handle enters `linking`; drop on valid in/body creates A→B + graph sync
-- [ ] Cancel on empty/outside; self/duplicate shows invalid + no edge
-- [ ] Orbit controls disabled while linking
-- [ ] Gate: `npx nx test client --testPathPattern=canvas-interaction`
-- [ ] Test count: ACs covered for create/cancel/invalid
+- [x] Hover shows in/out handles; body drag still moves component when not on handle
+- [x] Drag from out-handle enters `linking`; drop on valid in/body creates A→B + graph sync
+- [x] Cancel on empty/outside; self/duplicate shows invalid + no edge
+- [x] Orbit controls disabled while linking
+- [x] Gate: `npx nx test client --testPathPattern=canvas-interaction`
+- [x] Test count: ACs covered for create/cancel/invalid
 
 **Tests:** unit  
 **Gate:** quick  
@@ -239,12 +239,12 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Preview curve + flow light active while `linking` / exposed `previewActive`
-- [ ] Valid target: highlight node + in-handle; destination handles appear without prior hover
-- [ ] Invalid: `setValidTarget(false)` / forbidden cursor state; no snap
-- [ ] On success, preview hidden; permanent flow edge present
-- [ ] Gate: `npx nx test client --testPathPattern=canvas-interaction`
-- [ ] Test count: no silent deletions
+- [x] Preview curve + flow light active while `linking` / exposed `previewActive`
+- [x] Valid target: highlight node + in-handle; destination handles appear without prior hover
+- [x] Invalid: `setValidTarget(false)` / forbidden cursor state; no snap
+- [x] On success, preview hidden; permanent flow edge present
+- [x] Gate: `npx nx test client --testPathPattern=canvas-interaction`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
@@ -265,12 +265,12 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Click flow-edge mesh selects edge; panel shows edge mode
-- [ ] Delete/Backspace removes selected edge; panel delete too
-- [ ] Invert swaps endpoints + light direction immediately
-- [ ] Delete with component selected still deletes component + incident edges
-- [ ] Gate: `npx nx test client --testPathPattern=canvas-interaction`
-- [ ] Test count: no silent deletions
+- [x] Click flow-edge mesh selects edge; panel shows edge mode
+- [x] Delete/Backspace removes selected edge; panel delete too
+- [x] Invert swaps endpoints + light direction immediately
+- [x] Delete with component selected still deletes component + incident edges
+- [x] Gate: `npx nx test client --testPathPattern=canvas-interaction`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
@@ -291,11 +291,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Dragging tip enters `reconnecting`; preview follows pointer
-- [ ] Valid drop updates endpoint + graph; invalid restores previous
-- [ ] Controls disabled during reconnect
-- [ ] Gate: `npx nx test client --testPathPattern=canvas-interaction`
-- [ ] Test count: no silent deletions
+- [x] Dragging tip enters `reconnecting`; preview follows pointer
+- [x] Valid drop updates endpoint + graph; invalid restores previous
+- [x] Controls disabled during reconnect
+- [x] Gate: `npx nx test client --testPathPattern=canvas-interaction`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
@@ -316,11 +316,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Panel action toggles bidirectional on selected edge
-- [ ] `uBidirectional` / dual-pulse behavior asserted in unit tests
-- [ ] Forward restore shows single pulse from→to
-- [ ] Gate: `npx nx test client --testPathPattern='(canvas-interaction|flow-edge)'`
-- [ ] Test count: no silent deletions
+- [x] Panel action toggles bidirectional on selected edge
+- [x] `uBidirectional` / dual-pulse behavior asserted in unit tests
+- [x] Forward restore shows single pulse from→to
+- [x] Gate: `npx nx test client --testPathPattern='(canvas-interaction|flow-edge)'`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
@@ -341,11 +341,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Canvas boot mounts interaction when WebGL canvas exists
-- [ ] `__GAME_STATE__` exposes serializable `canvasInteraction` fields (mode, linking, selectedEdgeId, previewActive)
-- [ ] Palette drop creates component at drop XZ + syncs graph
-- [ ] Gate: `npx nx run-many -t lint test`
-- [ ] Test count: no silent deletions across client
+- [x] Canvas boot mounts interaction when WebGL canvas exists
+- [x] `__GAME_STATE__` exposes serializable `canvasInteraction` fields (mode, linking, selectedEdgeId, previewActive)
+- [x] Palette drop creates component at drop XZ + syncs graph
+- [x] Gate: `npx nx run-many -t lint test`
+- [x] Test count: no silent deletions across client
 
 **Tests:** unit  
 **Gate:** full  
