@@ -1,6 +1,6 @@
 import type { ArchitectureGraph } from '@sdq/shared';
-import { getGraph, setGraph } from '../session/session-store';
-import { getGameState } from '../test-hook';
+import { getGraph, setGraph } from './session/session-store';
+import { getGameState } from './test-hook';
 
 export interface SdqE2eHooks {
   setGraph: (graph: ArchitectureGraph) => void;

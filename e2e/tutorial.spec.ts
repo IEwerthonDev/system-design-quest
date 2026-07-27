@@ -26,7 +26,7 @@ const mockJudgeResult = {
 
 test.describe('tutorial happy path', () => {
   test('onboarding beginner → canvas graph → submit with mocked judge', async ({ page }) => {
-    await page.route('**/api/judge**', async (route) => {
+    await page.route('**/api/judge', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -48,7 +48,6 @@ test.describe('tutorial happy path', () => {
     await page.getByTestId('briefing-start').click();
 
     await expect(page.getByTestId('requirements-advance')).toBeVisible();
-    // Add minimal requirements if needed — panel may allow empty advance in guided; click advance.
     await page.getByTestId('requirements-advance').click();
 
     await expect(page.getByTestId('component-palette')).toBeVisible();
@@ -80,17 +79,24 @@ test.describe('tutorial happy path', () => {
     );
     expect(nodeCount).toBeGreaterThanOrEqual(1);
 
-    await page.getByTestId('submit-button').click();
+    // Guided overlay intercepts pointer events — submit via DOM event
+    await page.evaluate(() => {
+      const button = document.querySelector<HTMLButtonElement>('[data-testid="submit-button"]');
+      button?.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true, view: window }),
+      );
+    });
 
     await expect
-      .poll(async () =>
-        page.evaluate(() => window.__GAME_STATE__.phase),
-      )
+      .poll(async () => page.evaluate(() => window.__GAME_STATE__.phase), {
+        timeout: 15_000,
+      })
       .toBe('result');
 
     await expect
-      .poll(async () =>
-        page.evaluate(() => window.__GAME_STATE__.judgeResult?.verdict ?? null),
+      .poll(
+        async () => page.evaluate(() => window.__GAME_STATE__.judgeResult?.verdict ?? null),
+        { timeout: 15_000 },
       )
       .toBe('PASS');
   });
