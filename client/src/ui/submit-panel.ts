@@ -19,6 +19,7 @@ export interface SubmitPanelCallbacks {
   getGraph: () => ArchitectureGraph;
   buildJudgeInput: (graph: ArchitectureGraph) => JudgeInput;
   onJudgeSuccess: (result: JudgeResult) => void;
+  onSubmitStart?: () => void;
   submitForJudging?: typeof defaultSubmitForJudging;
   retryLastJudging?: typeof defaultRetryLastJudging;
 }
@@ -159,6 +160,7 @@ export function mountSubmitPanel(
     setJudgingState(true);
     progress.show();
     progress.clearError();
+    callbacks.onSubmitStart?.();
 
     try {
       const result = await submitFn(validation.graph, (step) => {
