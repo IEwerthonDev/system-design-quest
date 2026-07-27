@@ -7,6 +7,7 @@ export interface UserPreferences {
   experienceLevel: ExperienceLevel | null;
   guidedModeRequested: boolean;
   libraryUnlocked: boolean;
+  soundEnabled: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -14,6 +15,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   experienceLevel: null,
   guidedModeRequested: false,
   libraryUnlocked: false,
+  soundEnabled: true,
 };
 
 function resolveStorage(storage?: Storage): Storage {
