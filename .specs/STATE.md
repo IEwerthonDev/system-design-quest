@@ -22,19 +22,20 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 3 `problem-library` implementada** em `feature/problem-library` — Verifier PASS ✅ |
-| **Próximo passo** | Merge `feature/problem-library` → `main`; depois Fase 4 `speedrun` |
-| **Feature ativa** | `problem-library` — T1–T8 committed, validation PASS |
+| **Fase atual** | **Fase 3 `problem-library` merged em `main`** ✅ |
+| **Próximo passo** | Specify → Tasks para **Fase 4 `speedrun`** (timer + leaderboard) |
+| **Feature ativa** | `speedrun` (não iniciada) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | spec/design/tasks/validation em `.specs/features/problem-library/` |
+| **Artefatos** | `problem-library` spec/design/tasks/validation em `main` |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| Branch `feature/problem-library` | ✅ 9 commits |
-| Gate `npx nx run-many -t lint test` | ✅ 279 tests |
-| 27 problemas + library UI + progress | ✅ OK |
+| Merge `feature/problem-library` → `main` (fast-forward) | ✅ OK |
+| Gate `npx nx run-many -t lint test` pré-merge | ✅ OK |
+| HEAD `main` = `3ef6cfc` | ✅ OK |
+| Local ahead of `origin/main` by 10 commits | ⚠️ push pendente |
 
 **Veredito:** **GREEN**
 
@@ -42,9 +43,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch feature/problem-library. Fase 3 done (27 problems, library UI, progress, rubrics).
-validation.md PASS. Merge to main if approved.
-Next: Fase 4 speedrun (timer, leaderboard).
+Branch main. Fases 0–3 merged (foundation + mvp-canvas + ai-judge + problem-library).
+Iniciar Fase 4: Specify speedrun (.specs/features/speedrun/spec.md).
 Gate: npx nx run-many -t lint test
 ```
 
