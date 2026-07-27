@@ -12,6 +12,7 @@ import {
 import { fetchLeaderboard } from './leaderboard/leaderboard-api';
 import { mountOnboarding, type OnboardingResult } from './ui/onboarding';
 import { mountProblemLibrary, type LibrarySelection } from './ui/problem-library';
+import { mountSessionsDashboard } from './ui/sessions-dashboard';
 import { mountSettingsPanel } from './ui/settings-panel';
 
 export interface BootstrapOptions {
@@ -75,19 +76,43 @@ function mountAppSettings(
   });
 }
 
+function showSessionsDashboard(
+  container: HTMLElement,
+  blueprintHost: HTMLElement | null,
+  preferences: UserPreferences,
+): void {
+  mountSessionsDashboard(container, {
+    storage: optionsStorage,
+    onBack: () => {
+      clearAppUi(container, blueprintHost);
+      showLibrary(container, blueprintHost, preferences);
+      mountAppSettings(container, blueprintHost, optionsStorage);
+    },
+  });
+}
+
 function showLibrary(
   container: HTMLElement,
   blueprintHost: HTMLElement | null,
   preferences: UserPreferences,
 ): void {
-  mountProblemLibrary(container, {
-    onSelect: (selection) => {
-      clearAppUi(container, blueprintHost);
-      startGame(container, blueprintHost, preferences, selection);
-      mountAppSettings(container, blueprintHost, optionsStorage);
+  mountProblemLibrary(
+    container,
+    {
+      onSelect: (selection) => {
+        clearAppUi(container, blueprintHost);
+        startGame(container, blueprintHost, preferences, selection);
+        mountAppSettings(container, blueprintHost, optionsStorage);
+      },
+      onOpenSessions: () => {
+        clearAppUi(container, blueprintHost);
+        showSessionsDashboard(container, blueprintHost, preferences);
+        mountAppSettings(container, blueprintHost, optionsStorage);
+      },
+      fetchLeaderboard,
     },
-    fetchLeaderboard,
-  });
+    optionsStorage,
+  );
 }
 
 function shouldShowLibrary(preferences: UserPreferences): boolean {

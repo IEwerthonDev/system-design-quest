@@ -24,6 +24,7 @@ export interface LibrarySelection {
 
 export interface ProblemLibraryCallbacks {
   onSelect: (selection: LibrarySelection) => void;
+  onOpenSessions?: () => void;
   fetchLeaderboard?: (
     problemId: string,
   ) => Promise<{ problemId: string; entries: LeaderboardEntry[] }>;
@@ -88,11 +89,29 @@ function injectLibraryStyles(root: HTMLElement): void {
       border-radius: 12px;
       padding: 24px 26px 28px;
     }
+    .sdq-library__header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
     .sdq-library__title {
       margin: 0 0 6px;
       font-size: 24px;
       font-weight: 700;
       color: #f8fafc;
+    }
+    .sdq-library__sessions {
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(56, 189, 248, 0.12);
+      color: #7dd3fc;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font: 600 13px system-ui, sans-serif;
+      cursor: pointer;
+      white-space: nowrap;
     }
     .sdq-library__subtitle {
       margin: 0 0 18px;
@@ -257,9 +276,23 @@ export function mountProblemLibrary(
   const card = document.createElement('div');
   card.className = 'sdq-library__card';
 
+  const header = document.createElement('div');
+  header.className = 'sdq-library__header';
+
   const title = document.createElement('h1');
   title.className = 'sdq-library__title';
   title.textContent = 'Biblioteca de Problemas';
+
+  const sessionsButton = document.createElement('button');
+  sessionsButton.type = 'button';
+  sessionsButton.className = 'sdq-library__sessions';
+  sessionsButton.setAttribute('data-testid', 'library-open-sessions');
+  sessionsButton.textContent = 'Minhas sessões';
+  sessionsButton.addEventListener('click', () => {
+    callbacks.onOpenSessions?.();
+  });
+
+  header.append(title, sessionsButton);
 
   const subtitle = document.createElement('p');
   subtitle.className = 'sdq-library__subtitle';
@@ -282,7 +315,7 @@ export function mountProblemLibrary(
   grid.className = 'sdq-library__grid';
   grid.setAttribute('data-testid', 'library-grid');
 
-  card.append(title, subtitle, warning, filters, progressRow, grid);
+  card.append(header, subtitle, warning, filters, progressRow, grid);
   panel.append(card);
   container.append(panel);
 
