@@ -27,7 +27,7 @@ export interface NodeCardCallbacks {
 export interface NodeCardHandle {
   root: HTMLElement;
   setSelected(selected: boolean): void;
-  setPressure(level: PressureLevel | null, latencyMs?: number | null): void;
+  setPressure(level: PressureLevel | null, latencyMs?: number | null, reason?: string | null): void;
   sync(node: ComponentNode): void;
   destroy(): void;
 }
@@ -70,6 +70,15 @@ function injectNodeCardStyles(): void {
     }
     .sdq-node__load-label--hot { color: #F87171; }
     .sdq-node__load-label--warn { color: #FBBF24; }
+    .sdq-node__load-reason {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-align: center;
+      padding: 0 8px 2px;
+      color: #94a3b8;
+      line-height: 1.25;
+    }
     .sdq-node__ms-bar {
       display: block;
       margin: 4px 10px 6px;
@@ -142,6 +151,11 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   loadLabel.dataset.testid = 'load-label';
   loadLabel.hidden = true;
 
+  const loadReason = document.createElement('div');
+  loadReason.className = 'sdq-node__load-reason';
+  loadReason.dataset.testid = 'load-reason';
+  loadReason.hidden = true;
+
   const msBar = document.createElement('div');
   msBar.className = 'sdq-node__ms-bar';
   msBar.dataset.testid = 'ms-bar';
@@ -163,7 +177,7 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   plus.setAttribute('aria-label', 'Aumentar replicas');
   footer.append(minus, repsLabel, plus);
 
-  root.append(handleIn, handleOut, body, loadLabel, msBar, footer);
+  root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, footer);
 
   const sync = (n: ComponentNode): void => {
     const reps = n.replicas ?? 1;
@@ -214,7 +228,7 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     setSelected(selected) {
       root.classList.toggle('sdq-node--selected', selected);
     },
-    setPressure(level, latencyMs = null) {
+    setPressure(level, latencyMs = null, reason = null) {
       root.classList.remove('sdq-node--pressure-warn', 'sdq-node--pressure-hot');
       loadLabel.classList.remove('sdq-node__load-label--hot', 'sdq-node__load-label--warn');
       msBar.classList.remove('sdq-node__ms-bar--ok', 'sdq-node__ms-bar--warn', 'sdq-node__ms-bar--hot');
@@ -222,6 +236,9 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
       if (level === null) {
         loadLabel.hidden = true;
         loadLabel.textContent = '';
+        loadLabel.removeAttribute('title');
+        loadReason.hidden = true;
+        loadReason.textContent = '';
         msBar.hidden = true;
         msBar.textContent = '';
         return;
@@ -240,6 +257,20 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
       } else {
         loadLabel.hidden = true;
         loadLabel.textContent = '';
+        loadLabel.removeAttribute('title');
+      }
+
+      const reasonText = reason?.trim() ?? '';
+      if ((level === 'warn' || level === 'hot') && reasonText) {
+        loadReason.hidden = false;
+        loadReason.textContent = reasonText;
+        loadLabel.title = reasonText;
+      } else {
+        loadReason.hidden = true;
+        loadReason.textContent = '';
+        if (level === 'ok') {
+          loadLabel.removeAttribute('title');
+        }
       }
 
       msBar.hidden = false;

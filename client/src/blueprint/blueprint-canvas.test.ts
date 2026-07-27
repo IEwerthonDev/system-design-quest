@@ -218,6 +218,10 @@ describe('blueprint canvas', () => {
     const hotBar = hotCard.querySelector('[data-testid="ms-bar"]') as HTMLElement;
     expect(hotLabel?.textContent).toBe('BOTTLENECK');
     expect(hotLabel?.className).toMatch(/load-label--hot|load-label--red/);
+    const hotReason = hotCard.querySelector('[data-testid="load-reason"]') as HTMLElement;
+    expect(hotReason?.hidden).toBe(false);
+    expect(hotReason?.textContent?.length ?? 0).toBeGreaterThan(0);
+    expect(hotLabel?.title).toBe(hotReason?.textContent);
     expect(hotBar).toBeTruthy();
     expect(hotBar.hidden).toBe(false);
     expect(hotBar.className).toMatch(/ms-bar--hot|ms-bar--red/);
@@ -225,20 +229,27 @@ describe('blueprint canvas', () => {
     const gs = window.__GAME_STATE__ as {
       pressures?: Record<string, string>;
       latencyMs?: Record<string, number> | null;
+      pressureReasons?: Record<string, string> | null;
     };
     expect(gs.pressures?.[db]).toBe('hot');
     expect(gs.latencyMs?.[db]).toBe(280);
+    expect(gs.pressureReasons?.[db]).toContain('hit rate baixo');
 
     canvas.updateSimulation({ running: true, traffic: 1, readRatio: 90, speed: 1 });
     const warnLabel = hotCard.querySelector('[data-testid="load-label"]') as HTMLElement;
     const warnBar = hotCard.querySelector('[data-testid="ms-bar"]') as HTMLElement;
+    const warnReason = hotCard.querySelector('[data-testid="load-reason"]') as HTMLElement;
     const warnState = window.__GAME_STATE__ as {
       pressures?: Record<string, string>;
       latencyMs?: Record<string, number>;
+      pressureReasons?: Record<string, string>;
     };
     expect(warnState.pressures?.[db]).toBe('warn');
     expect(warnLabel?.textContent).toBe('QUEUEING');
     expect(warnLabel?.className).toMatch(/load-label--warn|load-label--yellow/);
+    expect(warnReason?.hidden).toBe(false);
+    expect(warnReason?.textContent?.length ?? 0).toBeGreaterThan(0);
+    expect(warnState.pressureReasons?.[db]).toEqual(expect.any(String));
     expect(warnBar.className).toMatch(/ms-bar--warn|ms-bar--yellow/);
     expect(warnBar.textContent).toMatch(/120/);
     expect(warnState.latencyMs?.[db]).toBe(120);
@@ -256,8 +267,12 @@ describe('blueprint canvas', () => {
     canvas.updateSimulation({ running: false });
     const stoppedCard = host.querySelector(`[data-testid="blueprint-node-${db}"]`) as HTMLElement;
     expect(stoppedCard.querySelector('[data-testid="load-label"]')?.textContent ?? '').toBe('');
+    expect((stoppedCard.querySelector('[data-testid="load-reason"]') as HTMLElement).hidden).toBe(true);
     expect((stoppedCard.querySelector('[data-testid="ms-bar"]') as HTMLElement).hidden).toBe(true);
     expect((window.__GAME_STATE__ as { latencyMs?: Record<string, number> | null }).latencyMs).toBeNull();
+    expect(
+      (window.__GAME_STATE__ as { pressureReasons?: Record<string, string> | null }).pressureReasons,
+    ).toBeNull();
     canvas.destroy();
   });
 });

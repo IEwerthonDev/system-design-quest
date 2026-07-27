@@ -1,4 +1,4 @@
-import type { ArchitectureGraph, PressureLevel } from '../schema/architecture-graph';
+import type { ArchitectureGraph, ComponentNode, PressureLevel } from '../schema/architecture-graph';
 import type { ComponentType } from '../schema/component-types';
 import { normalizeGraph } from '../schema/normalize-graph';
 
@@ -7,6 +7,7 @@ export type { PressureLevel };
 export interface SimulationEvaluation {
   nodes: Record<string, PressureLevel>;
   latencyMs: Record<string, number>;
+  reasons: Record<string, string>;
   hotReadPath: boolean;
 }
 
@@ -106,6 +107,43 @@ function pressureFromRatio(ratio: number): PressureLevel {
   return 'ok';
 }
 
+function buildPressureReason(
+  node: ComponentNode,
+  level: PressureLevel,
+  ratio: number,
+  traffic: number,
+  avgCacheHit: number | null,
+): string | undefined {
+  if (level === 'ok') {
+    return undefined;
+  }
+
+  const reps = node.replicas ?? 1;
+  const isDb = node.type === 'sql_db' || node.type === 'nosql_db';
+
+  if (isDb && avgCacheHit !== null && avgCacheHit < 70) {
+    return 'Muitas leituras chegam ao DB (hit rate baixo no cache)';
+  }
+
+  if (
+    node.config?.kind === 'sql_db' &&
+    (node.config.keySkew >= 40 || node.config.shardCount <= 1) &&
+    level === 'hot'
+  ) {
+    return 'Shards/skew limitam capacidade do SQL';
+  }
+
+  if (reps <= 2 && ratio >= 0.7 && traffic >= 3) {
+    return 'Carga alta para poucas replicas';
+  }
+
+  if (level === 'hot') {
+    return 'Carga acima da capacidade deste nó';
+  }
+
+  return 'Carga próxima da capacidade deste nó';
+}
+
 /**
  * Deterministic educational simulation (AD-020).
  * Speed is intentionally ignored — visual-only on the client.
@@ -141,8 +179,9 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
   }
 
   const caches = normalized.nodes.filter((n) => n.type === 'cache_redis' || n.type === 'cdn');
+  let avgCacheHit: number | null = null;
   if (caches.length > 0) {
-    const avgHit = caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
+    avgCacheHit = caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
     for (const edge of normalized.edges) {
       const from = typeById.get(edge.from);
       const to = typeById.get(edge.to);
@@ -154,7 +193,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
         (to.type === 'sql_db' || to.type === 'nosql_db')
       ) {
         // High hit rate should visibly unload parallel app→DB read pressure (pedagogical).
-        const reduction = readFrac * (avgHit / 100) * 0.95;
+        const reduction = readFrac * (avgCacheHit / 100) * 0.95;
         loadById[edge.to] = Math.max(0, (loadById[edge.to] ?? 0) * (1 - reduction));
       }
     }
@@ -162,6 +201,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
 
   const nodes: Record<string, PressureLevel> = {};
   const latencyMs: Record<string, number> = {};
+  const reasons: Record<string, string> = {};
   let anyHotOnReadPath = false;
 
   for (const node of normalized.nodes) {
@@ -171,6 +211,11 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
     const level = pressureFromRatio(ratio);
     nodes[node.id] = level;
     latencyMs[node.id] = LATENCY_MS_BY_PRESSURE[level];
+
+    const reason = buildPressureReason(node, level, ratio, traffic, avgCacheHit);
+    if (reason) {
+      reasons[node.id] = reason;
+    }
 
     if (
       level === 'hot' &&
@@ -187,6 +232,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
   return {
     nodes,
     latencyMs,
+    reasons,
     hotReadPath: anyHotOnReadPath && readFrac >= 0.7,
   };
 }

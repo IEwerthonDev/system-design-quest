@@ -60,6 +60,32 @@ describe('evaluateSimulation', () => {
   it('marks sql hot under high traffic when cache hitRate is low', () => {
     const low = evaluateSimulation(urlShortenerFixture(10, 5));
     expect(low.nodes.db).toBe('hot');
+    expect(low.reasons.db).toContain('hit rate baixo');
+  });
+
+  it('includes a PT-BR reason for QUEUEING (warn) pressure', () => {
+    const warn = evaluateSimulation(urlShortenerFixture(10, 1));
+    expect(warn.nodes.db).toBe('warn');
+    expect(warn.reasons.db).toEqual(expect.any(String));
+    expect(warn.reasons.db!.length).toBeGreaterThan(0);
+  });
+
+  it('omits reason for ok pressure', () => {
+    const idle = evaluateSimulation({
+      nodes: [
+        {
+          id: 'lonely',
+          type: 'monitoring',
+          label: 'Mon',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+        },
+      ],
+      edges: [],
+      simulation: { running: true, speed: 1, traffic: 1, readRatio: 80 },
+    });
+    expect(idle.nodes.lonely).toBe('ok');
+    expect(idle.reasons.lonely).toBeUndefined();
   });
 
   it('improves sql pressure when cache hitRate is high', () => {

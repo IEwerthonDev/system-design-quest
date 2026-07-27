@@ -219,10 +219,12 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     };
     (state as GameStateWithPressure).pressures = lastPressures;
     (state as GameStateWithPressure).latencyMs = lastLatencyMs;
+    (state as GameStateWithPressure).pressureReasons = lastPressureReasons;
   };
 
   let lastPressures: Record<string, PressureLevel> | null = null;
   let lastLatencyMs: Record<string, number> | null = null;
+  let lastPressureReasons: Record<string, string> | null = null;
 
   const persist = (): void => {
     graph = normalizeGraph(graph);
@@ -254,24 +256,28 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (!sim.running) {
       lastPressures = null;
       lastLatencyMs = null;
+      lastPressureReasons = null;
       for (const card of cards.values()) {
         card.setPressure(null);
       }
       const state = getGameState();
       (state as GameStateWithPressure).pressures = null;
       (state as GameStateWithPressure).latencyMs = null;
+      (state as GameStateWithPressure).pressureReasons = null;
       return;
     }
     const result = evaluateSimulation(graph);
     lastPressures = result.nodes;
     lastLatencyMs = result.latencyMs;
+    lastPressureReasons = result.reasons;
     for (const [id, card] of cards) {
       const level = result.nodes[id] ?? 'ok';
-      card.setPressure(level, result.latencyMs[id] ?? null);
+      card.setPressure(level, result.latencyMs[id] ?? null, result.reasons[id] ?? null);
     }
     const state = getGameState();
     (state as GameStateWithPressure).pressures = lastPressures;
     (state as GameStateWithPressure).latencyMs = lastLatencyMs;
+    (state as GameStateWithPressure).pressureReasons = lastPressureReasons;
     (state as GameStateWithPressure).hotReadPath = result.hotReadPath;
   };
 
@@ -520,6 +526,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
 interface GameStateWithPressure {
   pressures?: Record<string, PressureLevel> | null;
   latencyMs?: Record<string, number> | null;
+  pressureReasons?: Record<string, string> | null;
   hotReadPath?: boolean;
 }
 
