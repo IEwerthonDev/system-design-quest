@@ -123,4 +123,46 @@ describe('edge manager', () => {
     });
     expect(edges.getPendingSource()).toBeNull();
   });
+
+  it('canConnect rejects self-loop and duplicate ordered pair', () => {
+    const a = manager.addComponent('client_web', { x: 0, y: 0, z: 0 });
+    const b = manager.addComponent('cdn', { x: 2, y: 0, z: 0 });
+    edges.connect(a.id, b.id);
+
+    expect(edges.canConnect(a.id, a.id)).toBe(false);
+    expect(edges.canConnect(a.id, b.id)).toBe(false);
+    expect(edges.canConnect(b.id, a.id)).toBe(true);
+  });
+
+  it('invert swaps from/to and returns null when swap would duplicate', () => {
+    const a = manager.addComponent('api_gateway', { x: 0, y: 0, z: 0 });
+    const b = manager.addComponent('app_server', { x: 2, y: 0, z: 0 });
+    const ab = edges.connect(a.id, b.id)!;
+
+    const inverted = edges.invert(ab.id);
+    expect(inverted).toMatchObject({ from: b.id, to: a.id });
+    expect(edges.getEdge(ab.id)).toMatchObject({ from: b.id, to: a.id });
+
+    edges.connect(a.id, b.id);
+    expect(edges.invert(ab.id)).toBeNull();
+    expect(edges.getEdge(ab.id)).toMatchObject({ from: b.id, to: a.id });
+  });
+
+  it('reconnectEndpoint updates endpoint or returns null without mutating', () => {
+    const a = manager.addComponent('client_web', { x: 0, y: 0, z: 0 });
+    const b = manager.addComponent('load_balancer', { x: 2, y: 0, z: 0 });
+    const c = manager.addComponent('app_server', { x: 4, y: 0, z: 0 });
+    const ab = edges.connect(a.id, b.id)!;
+
+    const updated = edges.reconnectEndpoint(ab.id, 'to', c.id);
+    expect(updated).toMatchObject({ from: a.id, to: c.id });
+    expect(edges.getEdge(ab.id)).toMatchObject({ from: a.id, to: c.id });
+
+    expect(edges.reconnectEndpoint(ab.id, 'to', a.id)).toBeNull();
+    expect(edges.getEdge(ab.id)).toMatchObject({ from: a.id, to: c.id });
+
+    edges.connect(a.id, b.id);
+    expect(edges.reconnectEndpoint(ab.id, 'to', b.id)).toBeNull();
+    expect(edges.getEdge(ab.id)).toMatchObject({ from: a.id, to: c.id });
+  });
 });
