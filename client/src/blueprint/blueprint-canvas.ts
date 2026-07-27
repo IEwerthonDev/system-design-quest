@@ -412,14 +412,21 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if ((ev.target as HTMLElement).closest('.sdq-node') || (ev.target as HTMLElement).closest('.sdq-blueprint-zoom')) {
       return;
     }
+    if ((ev.target as HTMLElement).closest('[data-edge-id]')) {
+      return;
+    }
     if (ev.button === 0 || ev.button === 1) {
       panning = true;
       panStart = { x: ev.clientX, y: ev.clientY, panX, panY };
       popover.close();
+      intentPopover.close();
       selectedNodeId = null;
+      selectedEdgeId = null;
       for (const c of cards.values()) {
         c.setSelected(false);
       }
+      renderEdges();
+      publishInteraction();
     }
   });
 
@@ -427,24 +434,51 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   window.addEventListener('pointerup', onPointerUp);
   root.addEventListener(PALETTE_DROP_EVENT, onPaletteDrop as EventListener);
 
-  document.addEventListener('keydown', (ev) => {
-    if ((ev.key === 'Delete' || ev.key === 'Backspace') && selectedNodeId) {
+  const onKeyDown = (ev: KeyboardEvent): void => {
+    if (ev.key === 'Escape') {
+      intentPopover.close();
+      popover.close();
+      selectedEdgeId = null;
+      selectedNodeId = null;
+      for (const c of cards.values()) {
+        c.setSelected(false);
+      }
+      renderEdges();
+      publishInteraction();
+      return;
+    }
+    if ((ev.key === 'Delete' || ev.key === 'Backspace') && (selectedNodeId || selectedEdgeId)) {
       const target = ev.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
         return;
       }
-      graph = {
-        ...graph,
-        nodes: graph.nodes.filter((n) => n.id !== selectedNodeId),
-        edges: graph.edges.filter((e) => e.from !== selectedNodeId && e.to !== selectedNodeId),
-      };
-      cards.get(selectedNodeId)?.destroy();
-      cards.delete(selectedNodeId);
-      selectedNodeId = null;
-      popover.close();
-      persist();
+      if (selectedEdgeId) {
+        const removedId = selectedEdgeId;
+        graph = {
+          ...graph,
+          edges: graph.edges.filter((e) => e.id !== removedId),
+        };
+        selectedEdgeId = null;
+        intentPopover.close();
+        persist();
+        return;
+      }
+      if (selectedNodeId) {
+        graph = {
+          ...graph,
+          nodes: graph.nodes.filter((n) => n.id !== selectedNodeId),
+          edges: graph.edges.filter((e) => e.from !== selectedNodeId && e.to !== selectedNodeId),
+        };
+        cards.get(selectedNodeId)?.destroy();
+        cards.delete(selectedNodeId);
+        selectedNodeId = null;
+        popover.close();
+        persist();
+      }
     }
-  });
+  };
+
+  document.addEventListener('keydown', onKeyDown);
 
   persist();
 
@@ -469,6 +503,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     destroy() {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
+      document.removeEventListener('keydown', onKeyDown);
       root.removeEventListener(PALETTE_DROP_EVENT, onPaletteDrop as EventListener);
       popover.destroy();
       intentPopover.destroy();

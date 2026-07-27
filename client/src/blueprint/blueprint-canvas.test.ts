@@ -347,6 +347,60 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     expect(pill?.textContent).toContain('CACHE');
     canvas.destroy();
   });
+
+  it('Escape and canvas background close the intent popover (CI-02 AC5)', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'cache_redis', { x: 200, y: 0 });
+    connectForTest(canvas, a, b);
+    const edgeId = canvas.getGraph().edges[0]!.id;
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    expect((document.querySelector('[data-testid="connection-intent"]') as HTMLElement).hidden).toBe(
+      false,
+    );
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    expect((document.querySelector('[data-testid="connection-intent"]') as HTMLElement).hidden).toBe(
+      true,
+    );
+
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    expect((document.querySelector('[data-testid="connection-intent"]') as HTMLElement).hidden).toBe(
+      false,
+    );
+    host.dispatchEvent(createPointerEvent('pointerdown', { clientX: 5, clientY: 5, button: 0 }));
+    expect((document.querySelector('[data-testid="connection-intent"]') as HTMLElement).hidden).toBe(
+      true,
+    );
+    canvas.destroy();
+  });
+
+  it('Delete removes selected edge; focus in input does not (CI-02 AC6)', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'cache_redis', { x: 200, y: 0 });
+    connectForTest(canvas, a, b);
+    const edgeId = canvas.getGraph().edges[0]!.id;
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    expect(window.__GAME_STATE__.canvasInteraction?.selectedEdgeId).toBe(edgeId);
+
+    const input = document.createElement('input');
+    document.body.append(input);
+    input.focus();
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+    expect(canvas.getGraph().edges).toHaveLength(1);
+
+    document.body.focus();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
+    expect(canvas.getGraph().edges).toHaveLength(0);
+    expect(window.__GAME_STATE__.canvasInteraction?.selectedEdgeId ?? null).toBeNull();
+    input.remove();
+    canvas.destroy();
+  });
 });
 
 describe('config popover mount', () => {

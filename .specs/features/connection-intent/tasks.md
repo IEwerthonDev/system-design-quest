@@ -157,11 +157,11 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] Pointer on path/pill → `selectedEdgeId` set; intent popover visible; node config closed
-- [ ] Connect app→cache → `CACHE`; →sql → `DB`; client→lb → `REQ`
-- [ ] Choosing menu row updates graph label and pill; republishes `__GAME_STATE__`
-- [ ] Gate: `npx nx test client` PASS
-- [ ] Commit: `feat(client): wire edge select, heuristic labels, and intent apply`
+- [x] Pointer on path/pill → `selectedEdgeId` set; intent popover visible; node config closed
+- [x] Connect app→cache → `CACHE`; →sql → `DB`; client→lb → `REQ`
+- [x] Choosing menu row updates graph label and pill; republishes `__GAME_STATE__`
+- [x] Gate: `npx nx test client` PASS
+- [x] Commit: `feat(client): wire edge select, heuristic labels, and intent apply`
 
 **Tests:** unit (`__GAME_STATE__`)  
 **Gate:** quick
@@ -183,11 +183,11 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] Escape / canvas background closes `[data-testid="connection-intent"]`
-- [ ] Delete/Backspace with `selectedEdgeId` removes edge and clears selection
-- [ ] Focus in input does not delete edge
-- [ ] Full gate: `npx nx run-many -t lint test` PASS
-- [ ] Commit: `feat(client): dismiss intent popover and delete selected edge`
+- [x] Escape / canvas background closes `[data-testid="connection-intent"]`
+- [x] Delete/Backspace with `selectedEdgeId` removes edge and clears selection
+- [x] Focus in input does not delete edge
+- [x] Full gate: `npx nx run-many -t lint test` PASS
+- [x] Commit: `feat(client): dismiss intent popover and delete selected edge`
 
 **Tests:** unit (`__GAME_STATE__`)  
 **Gate:** full
