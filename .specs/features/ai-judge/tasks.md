@@ -173,10 +173,10 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-05, JUDGE-07
 
-- [ ] Verdict badge + score + summary + nextStep (always visible)
-- [ ] Expandable "Detalhes técnicos": strengths, criticalIssues, improvements, debate, req coverage
-- [ ] Toggle "Modo iniciante" (simple summary vs full jargon in collapsed view)
-- [ ] `data-testid` hooks for all sections
+- [x] Verdict badge + score + summary + nextStep (always visible)
+- [x] Expandable "Detalhes técnicos": strengths, criticalIssues, improvements, debate, req coverage
+- [x] Toggle "Modo iniciante" (simple summary vs full jargon in collapsed view)
+- [x] `data-testid` hooks for all sections
 - [ ] Commit: `feat(client): layered result panel UI`
 
 ---
