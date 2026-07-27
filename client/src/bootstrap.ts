@@ -20,6 +20,21 @@ export interface BootstrapOptions {
 
 let optionsStorage: Storage | undefined;
 
+/** Clear UI chrome without destroying the WebGL canvas. */
+export function clearAppUi(
+  container: HTMLElement,
+  canvas: HTMLCanvasElement | null,
+): void {
+  for (const child of [...container.children]) {
+    if (child !== canvas) {
+      child.remove();
+    }
+  }
+  if (canvas && !container.contains(canvas)) {
+    container.prepend(canvas);
+  }
+}
+
 function startGame(
   container: HTMLElement,
   canvas: HTMLCanvasElement | null,
@@ -50,11 +65,11 @@ function mountAppSettings(
   mountSettingsPanel(container, {
     storage,
     onRedoTutorial: () => {
-      container.replaceChildren();
+      clearAppUi(container, canvas);
       bootstrapApp(container, canvas, { storage });
     },
     onReplayOnboarding: () => {
-      container.replaceChildren();
+      clearAppUi(container, canvas);
       bootstrapApp(container, canvas, { storage });
     },
   });
@@ -67,7 +82,7 @@ function showLibrary(
 ): void {
   mountProblemLibrary(container, {
     onSelect: (selection) => {
-      container.replaceChildren();
+      clearAppUi(container, canvas);
       startGame(container, canvas, preferences, selection);
       mountAppSettings(container, canvas, optionsStorage);
     },
@@ -104,7 +119,7 @@ export function bootstrapApp(
     mountOnboarding(container, {
       onSkip: () => {
         const preferences = completeOnboardingSkip(storage);
-        container.replaceChildren();
+        clearAppUi(container, canvas);
         if (shouldShowLibrary(preferences)) {
           showLibrary(container, canvas, preferences);
         } else {
@@ -114,7 +129,7 @@ export function bootstrapApp(
       },
       onComplete: (result) => {
         const preferences = persistOnboardingResult(result, storage);
-        container.replaceChildren();
+        clearAppUi(container, canvas);
         if (shouldShowLibrary(preferences)) {
           showLibrary(container, canvas, preferences);
         } else {
