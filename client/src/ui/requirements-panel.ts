@@ -20,6 +20,7 @@ export interface RequirementsPanel {
   root: HTMLElement;
   getRequirements(): RequirementsState;
   setRequirements(state: RequirementsState): void;
+  addRequirement(kind: RequirementKind, text: string): boolean;
 }
 
 export function validateRequirementText(text: string): { valid: boolean; error?: string } {
@@ -367,9 +368,25 @@ export function mountRequirementsPanel(
     renderList(nonFunctionalSection);
   };
 
+  const addRequirement = (kind: RequirementKind, text: string): boolean => {
+    const validation = validateRequirementText(text);
+    const section = kind === 'functional' ? functionalSection : nonFunctionalSection;
+    if (!validation.valid) {
+      section.error.textContent = validation.error ?? SHORT_REQUIREMENT_MESSAGE;
+      section.error.hidden = false;
+      return false;
+    }
+
+    section.error.hidden = true;
+    getTargetList(kind).push(text.trim());
+    renderList(section);
+    return true;
+  };
+
   return {
     root: panel,
     getRequirements: () => cloneRequirements(state),
     setRequirements,
+    addRequirement,
   };
 }

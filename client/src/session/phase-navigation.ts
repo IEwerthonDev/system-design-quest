@@ -3,6 +3,7 @@ import type { GameMode, GamePhase } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
+import { mountSuggestionCards } from '../ui/requirement-suggestions';
 import { mountSubmitPanel } from '../ui/submit-panel';
 import { canGoBackPhase } from './phase-machine';
 import {
@@ -118,6 +119,16 @@ export function mountPhaseNavigation(
     },
     getRequirements(),
   );
+
+  const requirementsCard = requirementsPanel.root.querySelector('.sdq-requirements__card');
+  if (requirementsCard) {
+    mountSuggestionCards(requirementsCard, {
+      problemId,
+      onAdd: (text, kind) => {
+        requirementsPanel.addRequirement(kind, text);
+      },
+    });
+  }
 
   const palette = mountPalette(shell, {
     tier: 1,
