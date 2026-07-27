@@ -28,6 +28,12 @@ describe('@sdq/shared public API', () => {
         functional: ['User can shorten a URL'],
         nonFunctional: ['Redirect under 100ms'],
       },
+      estimatedMinutes: { study: 20, speedrun: 12 },
+      rubric: {
+        expectedComponents: ['app_server'],
+        criticalPatterns: ['Cache read path'],
+        commonMistakes: ['No cache'],
+      },
     };
 
     expect(validateGraph(graph).valid).toBe(true);

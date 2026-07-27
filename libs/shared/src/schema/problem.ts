@@ -1,5 +1,17 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+/** Hidden scoring guidance for the AI judge — not shown to the player */
+export interface JudgeRubric {
+  expectedComponents: string[];
+  criticalPatterns: string[];
+  commonMistakes: string[];
+}
+
+export interface EstimatedMinutes {
+  study: number;
+  speedrun: number;
+}
+
 export interface ProblemMetrics {
   /** Daily active users */
   dau?: number;
@@ -34,4 +46,10 @@ export interface Problem {
   isTutorial?: boolean;
   /** Order in the global recommended learning track */
   orderInTrack?: number;
+  /** Estimated completion time in minutes */
+  estimatedMinutes: EstimatedMinutes;
+  /** Hidden rubric for AI judge prompts */
+  rubric: JudgeRubric;
+  /** Badge "Recomendado" on the recommended learning track */
+  isRecommended?: boolean;
 }

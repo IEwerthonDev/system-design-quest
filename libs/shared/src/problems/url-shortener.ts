@@ -39,4 +39,27 @@ export const URL_SHORTENER: Problem = {
   },
   isTutorial: true,
   orderInTrack: 1,
+  isRecommended: true,
+  estimatedMinutes: { study: 20, speedrun: 12 },
+  rubric: {
+    expectedComponents: [
+      'client_web',
+      'load_balancer',
+      'app_server',
+      'cache_redis',
+      'sql_db',
+    ],
+    criticalPatterns: [
+      'Read path optimized with cache before database',
+      'Write path persists slug-to-URL mapping',
+      'Load balancer distributes redirect traffic',
+      'Base62 or hash-based short code generation',
+    ],
+    commonMistakes: [
+      'Client connects directly to database',
+      'No cache on a 100:1 read-heavy workload',
+      'Single app server with no load balancing at scale',
+      'Missing redirect (302) handling on read path',
+    ],
+  },
 };
