@@ -1,4 +1,5 @@
 import type { JudgeInput, Problem } from '@sdq/shared';
+import { normalizeGraph } from '@sdq/shared';
 
 function formatRequirements(input: JudgeInput): string {
   const { functional, nonFunctional } = input.requirements;
@@ -14,13 +15,30 @@ function formatRequirements(input: JudgeInput): string {
 }
 
 function formatGraph(input: JudgeInput): string {
-  const nodes = input.graph.nodes
-    .map((node) => `- ${node.label} (${node.type}, id=${node.id})`)
+  const graph = normalizeGraph(input.graph);
+  const nodes = graph.nodes
+    .map((node) => {
+      const parts = [
+        `${node.label} (${node.type}, id=${node.id}, replicas=${node.replicas ?? 1})`,
+      ];
+      if (node.config) {
+        parts.push(`config=${JSON.stringify(node.config)}`);
+      }
+      const notes = node.implementationNotes ?? node.note;
+      if (notes) {
+        parts.push(`notes=${JSON.stringify(notes)}`);
+      }
+      return `- ${parts.join('; ')}`;
+    })
     .join('\n');
-  const edges = input.graph.edges
+  const edges = graph.edges
     .map((edge) => `- ${edge.from} → ${edge.to}${edge.label ? ` [${edge.label}]` : ''}`)
     .join('\n');
-  return `Components:\n${nodes || '  (none)'}\n\nConnections:\n${edges || '  (none)'}`;
+  const sim = graph.simulation;
+  const simLine = sim
+    ? `Simulation: running=${sim.running}, speed=${sim.speed}, traffic=${sim.traffic}, readRatio=${sim.readRatio}`
+    : 'Simulation: (defaults)';
+  return `Components:\n${nodes || '  (none)'}\n\nConnections:\n${edges || '  (none)'}\n\n${simLine}`;
 }
 
 function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, input: JudgeInput): string {
@@ -70,3 +88,6 @@ export function buildRigorousPrompt(problem: Problem, input: JudgeInput): string
 export function buildPragmaticPrompt(problem: Problem, input: JudgeInput): string {
   return buildJudgePrompt('pragmatic', problem, input);
 }
+
+/** Exposed for unit tests */
+export { formatGraph };
