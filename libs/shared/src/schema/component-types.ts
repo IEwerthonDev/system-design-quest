@@ -13,7 +13,17 @@ export type ComponentType =
   | 'message_queue'
   | 'worker'
   | 'monitoring'
-  | 'auth_service';
+  | 'auth_service'
+  | 'microservice'
+  | 'nosql_db'
+  | 'kafka'
+  | 'pub_sub'
+  | 'search_engine'
+  | 'waf'
+  | 'reverse_proxy'
+  | 'logging'
+  | 'notification'
+  | 'serverless';
 
 export type ComponentCategory =
   | 'client'

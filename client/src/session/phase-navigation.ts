@@ -143,7 +143,7 @@ export function mountPhaseNavigation(
   }
 
   const palette = mountPalette(shell, {
-    tier: 1,
+    tier: 2,
     dropTarget: options.canvas ?? undefined,
   });
 

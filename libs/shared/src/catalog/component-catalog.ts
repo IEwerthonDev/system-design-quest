@@ -1,16 +1,20 @@
 import type { ComponentCategory, ComponentType, ComponentTypeMeta } from '../schema/component-types';
 import { TIER_1_COMPONENTS, TIER_1_TYPES } from './mvp-tier-1';
+import { TIER_2_ADDITIONS, TIER_2_ADDITION_TYPES } from './mvp-tier-2';
 
 export { TIER_1_TYPES };
+export { TIER_2_ADDITION_TYPES };
+export const TIER_2_TYPES = [...TIER_1_TYPES, ...TIER_2_ADDITION_TYPES] as const;
 
 export type CatalogTier = 1 | 2 | 3;
 
 const TIER_CATALOG: Partial<Record<CatalogTier, readonly ComponentTypeMeta[]>> = {
   1: TIER_1_COMPONENTS,
+  2: [...TIER_1_COMPONENTS, ...TIER_2_ADDITIONS],
 };
 
 const metaByType = new Map<ComponentType, ComponentTypeMeta>(
-  TIER_1_COMPONENTS.map((meta) => [meta.type, meta]),
+  (TIER_CATALOG[2] ?? []).map((meta) => [meta.type, meta]),
 );
 
 export function getComponentsForTier(tier: CatalogTier): readonly ComponentTypeMeta[] {

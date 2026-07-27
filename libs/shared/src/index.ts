@@ -11,6 +11,7 @@ export {
   getComponentsByCategory,
   getComponentsForTier,
   TIER_1_TYPES,
+  TIER_2_TYPES,
 } from './catalog/component-catalog';
 export type { CatalogTier } from './catalog/component-catalog';
 export { validateGraph } from './validation/validate-graph';

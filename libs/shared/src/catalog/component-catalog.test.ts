@@ -5,6 +5,7 @@ import {
   getComponentsByCategory,
   getComponentsForTier,
   TIER_1_TYPES,
+  TIER_2_TYPES,
 } from './component-catalog';
 
 const PALETTE_CATEGORIES: ComponentCategory[] = [
@@ -81,6 +82,48 @@ describe('component catalog — Tier 1', () => {
   });
 
   it('getComponentsForTier rejects unsupported tiers', () => {
-    expect(() => getComponentsForTier(2)).toThrow(/tier/i);
+    expect(() => getComponentsForTier(3)).toThrow(/tier/i);
+  });
+});
+
+describe('component catalog — Tier 2', () => {
+  it('getComponentsForTier(2) returns exactly 25 component types', () => {
+    expect(getComponentsForTier(2)).toHaveLength(25);
+  });
+
+  it('Tier 2 includes all Tier 1 types plus AD-017 additions', () => {
+    const types = getComponentsForTier(2).map((c) => c.type);
+    expect(types).toEqual(expect.arrayContaining([...TIER_2_TYPES]));
+    expect(new Set(types).size).toBe(25);
+  });
+
+  it('Tier 2 adds microservice, nosql_db, kafka, pub_sub, search_engine, waf, reverse_proxy, logging, notification, serverless', () => {
+    const types = getComponentsForTier(2).map((c) => c.type);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'microservice',
+        'nosql_db',
+        'kafka',
+        'pub_sub',
+        'search_engine',
+        'waf',
+        'reverse_proxy',
+        'logging',
+        'notification',
+        'serverless',
+      ]),
+    );
+  });
+
+  it('getComponentMeta returns metadata for Tier 2-only types', () => {
+    const meta = getComponentMeta('kafka');
+    expect(meta.label).toBe('Kafka');
+    expect(meta.whenToUse.length).toBeGreaterThan(0);
+  });
+
+  it('getComponentsByCategory(2) groups all 25 types', () => {
+    const grouped = getComponentsByCategory(2);
+    const groupedTypes = [...grouped.values()].flat().map((c) => c.type);
+    expect(groupedTypes).toHaveLength(25);
   });
 });
