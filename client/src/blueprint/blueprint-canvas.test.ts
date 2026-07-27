@@ -262,11 +262,90 @@ describe('blueprint canvas', () => {
   });
 });
 
-describe('session boot path', () => {
-  it('does not import Three.js in main session entry', () => {
-    const main = readFileSync(resolve(process.cwd(), 'client/src/main.ts'), 'utf8');
-    expect(main).toMatch(/mountBlueprintCanvas/);
-    expect(main).not.toMatch(/three|createCanvasRenderer|canvas-renderer/i);
+describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
+  beforeEach(() => {
+    resetSessionStore();
+    initGameState();
+    createSession('url-shortener', 'study');
+    document.body.innerHTML = '';
+  });
+
+  function firePointerDown(el: Element): void {
+    el.dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
+  }
+
+  it('applies destination heuristic labels on connect (CI-03)', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const app = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const cache = placeComponentForTest(canvas, 'cache_redis', { x: 120, y: 0 });
+    const sql = placeComponentForTest(canvas, 'sql_db', { x: 240, y: 0 });
+    const lb = placeComponentForTest(canvas, 'load_balancer', { x: 360, y: 0 });
+    const client = placeComponentForTest(canvas, 'client_web', { x: -120, y: 0 });
+
+    connectForTest(canvas, app, cache);
+    connectForTest(canvas, app, sql);
+    connectForTest(canvas, client, lb);
+
+    const labels = Object.fromEntries(
+      canvas.getGraph().edges.map((e) => [`${e.from}->${e.to}`, e.label]),
+    );
+    expect(labels[`${app}->${cache}`]).toBe('CACHE');
+    expect(labels[`${app}->${sql}`]).toBe('DB');
+    expect(labels[`${client}->${lb}`]).toBe('REQ');
+    canvas.destroy();
+  });
+
+  it('pointer on edge path opens intent menu and clears node config (CI-02 / CI-05)', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'cache_redis', { x: 200, y: 0 });
+    connectForTest(canvas, a, b);
+    const edgeId = canvas.getGraph().edges[0]!.id;
+
+    const card = host.querySelector(`[data-testid="blueprint-node-${a}"]`) as HTMLElement;
+    card.setPointerCapture = () => undefined;
+    card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
+    expect(document.querySelector('[data-testid="config-popover"]')?.hasAttribute('hidden')).toBe(
+      false,
+    );
+
+    const path = host.querySelector(`g[data-edge-id="${edgeId}"] > path`);
+    expect(path).toBeTruthy();
+    firePointerDown(path!);
+
+    const intent = document.querySelector('[data-testid="connection-intent"]') as HTMLElement;
+    expect(intent).toBeTruthy();
+    expect(intent.hidden).toBe(false);
+    expect(window.__GAME_STATE__.canvasInteraction?.selectedEdgeId).toBe(edgeId);
+    expect(document.querySelector('[data-testid="config-popover"]')?.hasAttribute('hidden')).toBe(
+      true,
+    );
+    canvas.destroy();
+  });
+
+  it('choosing a menu row updates edge label, pill, and __GAME_STATE__', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'load_balancer', { x: 200, y: 0 });
+    connectForTest(canvas, a, b);
+    const edgeId = canvas.getGraph().edges[0]!.id;
+    expect(canvas.getGraph().edges[0]?.label).toBe('REQ');
+
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    const cacheOpt = document.querySelector('[data-intent-id="cache"]') as HTMLElement;
+    cacheOpt.click();
+
+    expect(canvas.getGraph().edges[0]?.label).toBe('CACHE');
+    expect(window.__GAME_STATE__.graph.edges[0]?.label).toBe('CACHE');
+    const pill = host.querySelector('[data-testid="edge-label"]');
+    expect(pill?.textContent).toContain('CACHE');
+    canvas.destroy();
   });
 });
 

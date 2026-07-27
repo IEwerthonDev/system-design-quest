@@ -130,12 +130,12 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] `[data-testid="connection-intent"]` with title `CONNECTION INTENT`
-- [ ] Lists four intents with short code + role + description; onSelect passes option id
-- [ ] Custom label → header `CUSTOM`, no row selected
-- [ ] Viewport mock 375×667 (and/or width ≤640): open → `getBoundingClientRect` within viewport
-- [ ] Gate: `npx nx test client` PASS
-- [ ] Commit: `feat(client): connection intent popover with viewport-safe layout`
+- [x] `[data-testid="connection-intent"]` with title `CONNECTION INTENT`
+- [x] Lists four intents with short code + role + description; onSelect passes option id
+- [x] Custom label → header `CUSTOM`, no row selected
+- [x] Viewport mock 375×667 (and/or width ≤640): open → `getBoundingClientRect` within viewport
+- [x] Gate: `npx nx test client` PASS
+- [x] Commit: `feat(client): connection intent popover with viewport-safe layout`
 
 **Tests:** unit  
 **Gate:** quick

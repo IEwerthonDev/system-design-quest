@@ -15,6 +15,13 @@ import { getGameState } from '../test-hook';
 import { getSession, setGraph as setSessionGraph } from '../session/session-store';
 import { buildNewNode, createNodeCard, type NodeCardHandle } from './node-card';
 import { mountConfigPopover } from './config-popover';
+import { mountConnectionIntentPopover } from './connection-intent-popover';
+import {
+  defaultLabelForDestination,
+  rememberDbIntentRole,
+  shortLabelForIntentId,
+  type ConnectionIntentId,
+} from './connection-intents';
 import { createSvgEdgeLayer, type EdgeEndpoints } from './svg-edges';
 
 export interface BlueprintCanvas {
@@ -98,7 +105,11 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   world.setAttribute('data-testid', 'blueprint-world');
   root.append(world);
 
-  const edgeLayer = createSvgEdgeLayer(world);
+  const edgeLayer = createSvgEdgeLayer(world, {
+    onEdgeActivate: (edgeId) => {
+      activateEdge(edgeId);
+    },
+  });
   const cards = new Map<string, NodeCardHandle>();
 
   let graph: ArchitectureGraph = normalizeGraph({
@@ -133,6 +144,41 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       updateNode(id, (n) => ({ ...n, config }));
     },
   });
+
+  const intentPopover = mountConnectionIntentPopover(document.body, {
+    onClose: () => {
+      intentPopover.close();
+    },
+    onSelect: (edgeId, intentId) => {
+      applyIntent(edgeId, intentId);
+    },
+  });
+
+  const activateEdge = (edgeId: string): void => {
+    selectedEdgeId = edgeId;
+    selectedNodeId = null;
+    for (const card of cards.values()) {
+      card.setSelected(false);
+    }
+    popover.close();
+    const edge = graph.edges.find((e) => e.id === edgeId);
+    intentPopover.open(edgeId, edge?.label);
+    renderEdges();
+    publishInteraction();
+  };
+
+  const applyIntent = (edgeId: string, intentId: ConnectionIntentId): void => {
+    const short = shortLabelForIntentId(intentId);
+    if (intentId === 'db-default' || intentId === 'db-origin-fallback') {
+      rememberDbIntentRole(edgeId, intentId);
+    }
+    graph = {
+      ...graph,
+      edges: graph.edges.map((e) => (e.id === edgeId ? { ...e, label: short } : e)),
+    };
+    persist();
+    intentPopover.open(edgeId, short);
+  };
 
   const zoomBar = document.createElement('div');
   zoomBar.className = 'sdq-blueprint-zoom';
@@ -263,6 +309,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       onSelect: (id) => {
         selectedNodeId = id;
         selectedEdgeId = null;
+        intentPopover.close();
         for (const [cid, c] of cards) {
           c.setSelected(cid === id);
         }
@@ -270,6 +317,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         if (n) {
           popover.open(n, card.root.getBoundingClientRect());
         }
+        renderEdges();
         publishInteraction();
       },
       onReplicasChange: (id, replicas) => {
@@ -328,12 +376,13 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       const targetNode = el?.closest('.sdq-node') as HTMLElement | null;
       const toId = targetNode?.dataset.nodeId;
       if (toId && canConnect(linkingFrom, toId)) {
+        const toNode = graph.nodes.find((n) => n.id === toId);
         const edge: ConnectionEdge = {
           id: nextId('edge'),
           from: linkingFrom,
           to: toId,
           direction: 'forward',
-          label: 'REQ',
+          label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
         };
         graph = { ...graph, edges: [...graph.edges, edge] };
         persist();
@@ -422,6 +471,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       window.removeEventListener('pointerup', onPointerUp);
       root.removeEventListener(PALETTE_DROP_EVENT, onPaletteDrop as EventListener);
       popover.destroy();
+      intentPopover.destroy();
       edgeLayer.destroy();
       for (const card of cards.values()) {
         card.destroy();
@@ -450,13 +500,21 @@ export function placeComponentForTest(
   return node.id;
 }
 
-export function connectForTest(canvas: BlueprintCanvas, from: string, to: string, label = 'REQ'): void {
+export function connectForTest(
+  canvas: BlueprintCanvas,
+  from: string,
+  to: string,
+  label?: string,
+): void {
   const graph = canvas.getGraph();
+  const toNode = graph.nodes.find((n) => n.id === to);
+  const resolved =
+    label ?? (toNode ? defaultLabelForDestination(toNode.type) : 'REQ');
   canvas.setGraph({
     ...graph,
     edges: [
       ...graph.edges,
-      { id: nextId('edge'), from, to, direction: 'forward', label },
+      { id: nextId('edge'), from, to, direction: 'forward', label: resolved },
     ],
   });
 }
