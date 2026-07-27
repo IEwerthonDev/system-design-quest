@@ -8,6 +8,7 @@ import {
   updateInstanceLabel,
   type ComponentInstanceObject,
 } from './component-instance';
+import { playGameSound } from '../audio/game-sounds';
 
 export interface PointerNdc {
   x: number;
@@ -124,6 +125,7 @@ export function createComponentManager(options: ComponentManagerOptions): Compon
       const instance = createComponentInstance(type, position, nextComponentId());
       instances.set(instance.id, instance);
       scene.add(instance.group);
+      playGameSound('place');
       return instance;
     },
 

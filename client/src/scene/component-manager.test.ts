@@ -12,6 +12,7 @@ import {
   raycastToXZPlane,
   resetComponentIdCounter,
 } from './component-manager';
+import * as gameSounds from '../audio/game-sounds';
 
 describe('component instance', () => {
   it('creates a category-colored primitive with floating label', () => {
@@ -180,6 +181,7 @@ describe('component manager', () => {
   });
 
   it('addComponent(type, position) adds a 3D instance to the scene', () => {
+    const soundSpy = vi.spyOn(gameSounds, 'playGameSound').mockImplementation(() => undefined);
     const instance = manager.addComponent('cache_redis', { x: 2, y: 0, z: 3 });
 
     expect(instance.type).toBe('cache_redis');
@@ -187,6 +189,8 @@ describe('component manager', () => {
     expect(scene.children).toContain(instance.group);
     expect(manager.getAllInstances()).toHaveLength(1);
     expect(getInstancePosition(instance)).toMatchObject({ x: 2, y: 0, z: 3 });
+    expect(soundSpy).toHaveBeenCalledWith('place');
+    soundSpy.mockRestore();
   });
 
   it('drags the picked instance on the XZ plane via raycast', () => {

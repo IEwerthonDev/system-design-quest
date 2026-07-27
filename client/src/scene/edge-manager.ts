@@ -1,5 +1,6 @@
 import type { ConnectionEdge } from '@sdq/shared';
 import type { ComponentManager } from './component-manager';
+import { playGameSound } from '../audio/game-sounds';
 
 export type EdgeDirection = ConnectionEdge['direction'];
 
@@ -79,6 +80,7 @@ export function createEdgeManager(options: EdgeManagerOptions): EdgeManager {
     };
 
     registry.setEdges([...registry.getEdges(), edge]);
+    playGameSound('connect');
     return { ...edge };
   };
 
