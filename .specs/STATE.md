@@ -22,9 +22,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 3 `problem-library` merged em `main`** ✅ |
-| **Próximo passo** | Specify → Tasks para **Fase 4 `speedrun`** (timer + leaderboard) |
-| **Feature ativa** | `speedrun` (não iniciada) |
+| **Fase atual** | **Fase 4 `speedrun` merged em `main`** ✅ |
+| **Próximo passo** | Specify → Tasks para **Fase 5 `polish`** |
+| **Feature ativa** | `polish` (não iniciada) |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | `problem-library` spec/design/tasks/validation em `main` |
 
@@ -32,10 +32,10 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Sinal | Status |
 | ----- | ------ |
-| Merge `feature/problem-library` → `main` (fast-forward) | ✅ OK |
-| Gate `npx nx run-many -t lint test` pré-merge | ✅ OK |
-| HEAD `main` = `c732ab6` | ✅ OK |
-| Push `origin/main` | ✅ OK |
+| Fase 4 `speedrun` implementada em `feature/speedrun` | ✅ OK |
+| Gate `npx nx run-many -t lint test` | ✅ OK |
+| Verifier validation.md | ⚠️ PASS with minor gaps |
+| Merge → `main` | pendente nesta sessão |
 
 **Veredito:** **GREEN**
 
@@ -43,8 +43,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch main. Fases 0–3 merged (foundation + mvp-canvas + ai-judge + problem-library).
-Iniciar Fase 4: Specify speedrun (.specs/features/speedrun/spec.md).
+Branch main. Fases 0–4 merged (foundation + mvp-canvas + ai-judge + problem-library + speedrun).
+Próximo: Fase 5 polish (.specs/features/polish/spec.md).
 Gate: npx nx run-many -t lint test
 ```
 
@@ -82,7 +82,7 @@ Gate: npx nx run-many -t lint test
 | 1 | `mvp-canvas` | Canvas + tutorial (1a/1b/1c) |
 | 2 | `ai-judge` | Julgamento dual-LLM + feedback detalhado |
 | 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
-| 4 | `speedrun` | Timer, categorias, leaderboard |
+| 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
 
 Detalhes em `docs/ROADMAP.md`.
