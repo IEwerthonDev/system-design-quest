@@ -58,25 +58,25 @@ function urlShortenerFixture(hitRate: number, traffic: number): ArchitectureGrap
 
 describe('evaluateSimulation', () => {
   it('marks sql hot under high traffic when cache hitRate is low', () => {
-    const low = evaluateSimulation(urlShortenerFixture(10, 10));
+    const low = evaluateSimulation(urlShortenerFixture(10, 5));
     expect(low.nodes.db).toBe('hot');
   });
 
   it('improves sql pressure when cache hitRate is high', () => {
-    const low = evaluateSimulation(urlShortenerFixture(10, 10));
-    const high = evaluateSimulation(urlShortenerFixture(95, 10));
+    const low = evaluateSimulation(urlShortenerFixture(10, 5));
+    const high = evaluateSimulation(urlShortenerFixture(95, 5));
     const order = { ok: 0, warn: 1, hot: 2 } as const;
     expect(order[high.nodes.db!]).toBeLessThan(order[low.nodes.db!]);
   });
 
   it('ignores speed for pressure (same traffic/config → same pressures)', () => {
     const a = urlShortenerFixture(50, 5);
-    const b = { ...a, simulation: { ...a.simulation!, speed: 10 } };
+    const b = { ...a, simulation: { ...a.simulation!, speed: 1 } };
     expect(evaluateSimulation(a).nodes).toEqual(evaluateSimulation(b).nodes);
   });
 
   it('increases sql capacity with more shards', () => {
-    const base = urlShortenerFixture(20, 10);
+    const base = urlShortenerFixture(20, 5);
     const sharded: ArchitectureGraph = {
       ...base,
       nodes: base.nodes.map((n) =>

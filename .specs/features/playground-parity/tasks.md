@@ -89,10 +89,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-02
 
 **Done when:**
-- [ ] speed/traffic >5 normalize to 5; <1 to 1
-- [ ] Existing shared tests green
-- [ ] Gate: `npx nx test shared`
-- [ ] Commit: `fix(shared): clamp simulation speed and traffic to 1-5`
+- [x] speed/traffic >5 normalize to 5; <1 to 1
+- [x] Existing shared tests green
+- [x] Gate: `npx nx test shared`
+- [x] Commit: `fix(shared): clamp simulation speed and traffic to 1-5`
 
 **Tests:** unit  
 **Gate:** quick shared

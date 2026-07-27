@@ -91,8 +91,8 @@ export function normalizeSimulation(
 ): SimulationSettings {
   return {
     running: Boolean(simulation?.running),
-    speed: clamp(simulation?.speed ?? DEFAULT_SIMULATION.speed, 1, 10),
-    traffic: clamp(simulation?.traffic ?? DEFAULT_SIMULATION.traffic, 1, 10),
+    speed: clamp(simulation?.speed ?? DEFAULT_SIMULATION.speed, 1, 5),
+    traffic: clamp(simulation?.traffic ?? DEFAULT_SIMULATION.traffic, 1, 5),
     readRatio: clamp(simulation?.readRatio ?? DEFAULT_SIMULATION.readRatio, 0, 100),
   };
 }

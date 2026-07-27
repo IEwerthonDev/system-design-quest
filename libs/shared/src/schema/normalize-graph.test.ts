@@ -46,6 +46,24 @@ describe('normalizeGraph', () => {
     expect(defaultConfigForType('sql_db')?.kind).toBe('sql_db');
   });
 
+  it('clamps simulation speed and traffic to 1–5', () => {
+    const high = normalizeGraph({
+      nodes: [],
+      edges: [],
+      simulation: { running: true, speed: 10, traffic: 9, readRatio: 50 },
+    });
+    expect(high.simulation?.speed).toBe(5);
+    expect(high.simulation?.traffic).toBe(5);
+
+    const low = normalizeGraph({
+      nodes: [],
+      edges: [],
+      simulation: { running: false, speed: 0, traffic: -3, readRatio: 50 },
+    });
+    expect(low.simulation?.speed).toBe(1);
+    expect(low.simulation?.traffic).toBe(1);
+  });
+
   it('clamps hitRate and sql fields on existing config', () => {
     const cache = normalizeNode({
       id: 'c',
