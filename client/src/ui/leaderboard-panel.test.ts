@@ -6,6 +6,12 @@ describe('mountLeaderboardPanel', () => {
     document.body.replaceChildren();
   });
 
+  it('stays visually hidden on mount despite display:flex (empty Fechar modal regression)', () => {
+    const panel = mountLeaderboardPanel(document.body);
+    expect(panel.root.hidden).toBe(true);
+    expect(getComputedStyle(panel.root).display).toBe('none');
+  });
+
   it('renders entries from fetchLeaderboard', async () => {
     const fetchLeaderboard = vi.fn().mockResolvedValue({
       problemId: 'url-shortener',

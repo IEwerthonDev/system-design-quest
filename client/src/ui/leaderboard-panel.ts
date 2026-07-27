@@ -31,6 +31,10 @@ function injectLeaderboardStyles(root: HTMLElement): void {
       background: rgba(15, 20, 25, 0.92);
       z-index: 30;
     }
+    /* Author display:flex otherwise wins over the UA [hidden] rule. */
+    .sdq-leaderboard[hidden] {
+      display: none !important;
+    }
     .sdq-leaderboard__card {
       width: min(640px, 100%);
       background: rgba(30, 41, 59, 0.96);
