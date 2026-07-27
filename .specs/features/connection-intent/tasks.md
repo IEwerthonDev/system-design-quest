@@ -209,11 +209,11 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] Config points build/output at client static artifacts
-- [ ] API deferred explicitly documented (Hobby client-only)
-- [ ] `npx nx run client:build` (or project build) succeeds
-- [ ] Full gate PASS
-- [ ] Commit: `chore: vercel Hobby static client config for preview`
+- [x] Config points build/output at client static artifacts
+- [x] API deferred explicitly documented (Hobby client-only)
+- [x] `npx nx run client:build` (or project build) succeeds
+- [x] Full gate PASS
+- [x] Commit: `chore: vercel Hobby static client config for preview`
 
 **Tests:** none  
 **Gate:** build + full

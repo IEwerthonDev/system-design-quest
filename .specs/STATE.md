@@ -22,34 +22,19 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `connection-intent` — TLC Specify (edge label pill + CONNECTION INTENT menu) |
-| **Próximo passo** | Confirmar spec `connection-intent` → Discuss gray areas se necessário → Design/Tasks/Execute |
-| **Feature ativa** | `connection-intent` (filho de playground-parity / blueprint-2d) |
+| **Fase atual** | `connection-intent` — Execute T1–T5 done; T6 vercel.json in progress |
+| **Próximo passo** | T6 gate → T7 Hobby preview (team Spiral Out) → Verifier |
+| **Feature ativa** | `connection-intent` |
 | **Branch** | `feature/playground-parity` |
-| **Bloqueios** | Nenhum (Voltar hotfix + TLC playground-parity committed) |
-| **Artefatos** | `playground-parity` Verify PASS; hotfix `11d8dc8`; próximo: `.specs/features/connection-intent/` |
+| **Bloqueios** | Hobby preview = **static client only** (no Fastify). Set `VITE_API_URL` to a reachable API host for sessions/judge; without it, those calls fail soft as today. |
+| **Artefatos** | `vercel.json` → `npx nx run client:build` → `dist/client` |
 
-### Context Checkpoint (2026-07-27 — post-commit, Specify connection intent)
+### Deploy note (Hobby / T6)
 
-| Sinal | Status |
-| ----- | ------ |
-| Chat length | GREEN — turn 1, ordered steps |
-| Uncommitted | GREEN — Voltar + playground-parity `.specs` committed |
-| Spec drift | GREEN |
-| Gate | AMBER — full `run-many` não re-rodado nesta sessão (client tests PASS no hotfix) |
-| Task clarity | GREEN — Specify edge label preview + CONNECTION INTENT |
-
-**Veredito:** **GREEN**
-
-**Commits Execute (playground-parity):** `490ef2a`…`06c70e3` (T1–T17) + `dfd4080` `638ea33` (Verify) + `11d8dc8` (Voltar hotfix)
-
-**Prompt para nova sessão:**
-```
-Branch feature/playground-parity. playground-parity Verify PASS + Voltar hotfix committed (11d8dc8).
-Read .specs/STATE.md Handoff + .specs/features/connection-intent/spec.md (or create if missing).
-Continue TLC: confirm/discuss → Design/Tasks → Execute edge label pill + CONNECTION INTENT menu.
-Gate: npx nx run-many -t lint test
-```
+- **Serves:** Vite client static artifacts from `dist/client` (`vercel.json`)
+- **Does not serve:** Fastify `server/` on Hobby in this feature — deferred (serverless/proxy follow-up)
+- **Env:** optional `VITE_API_URL` (used by `sessions-api` / `leaderboard-api`) pointing at an external API base URL when available
+- **Build:** `client:build` uses `skipTypeCheck: true` so Hobby preview is not blocked by pre-existing TS errors in legacy/test surfaces; quality gate remains `nx run-many -t lint test`
 
 ---
 
@@ -94,6 +79,6 @@ Gate: npx nx run-many -t lint test
 | — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
 | — | `blueprint-2d-canvas` | Canvas 2D Playground + sim + configs | ✅ Merged (`4b8c87a`) |
 | — | `playground-parity` | Sim labels + judge sidebar + session history | ✅ Verify PASS (+ Voltar hotfix) |
-| — | `connection-intent` | Edge label pill + CONNECTION INTENT menu | 🔄 Specify |
+| — | `connection-intent` | Edge label pill + CONNECTION INTENT menu | ✅ Tasks approved → Execute |
 
 Detalhes em `docs/ROADMAP.md`.

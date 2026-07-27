@@ -1,4 +1,5 @@
-import type { ArchitectureGraph, ComponentType, PressureLevel } from '../schema/architecture-graph';
+import type { ArchitectureGraph, PressureLevel } from '../schema/architecture-graph';
+import type { ComponentType } from '../schema/component-types';
 import { normalizeGraph } from '../schema/normalize-graph';
 
 export type { PressureLevel };
