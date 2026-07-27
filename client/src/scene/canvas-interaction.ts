@@ -88,6 +88,7 @@ export function createCanvasInteraction(
   let selectedEdgeId: string | null = null;
   let invalidTarget = false;
   let highlightTargetId: string | null = null;
+  let highlightHandleId: string | null = null;
   let reconnectEnd: 'from' | 'to' | null = null;
 
   let pointerPhase: PointerPhase = 'none';
@@ -181,6 +182,23 @@ export function createCanvasInteraction(
       componentManager.setSelected(highlightTargetId, false);
       highlightTargetId = null;
     }
+    if (highlightHandleId) {
+      const pos = handles.getHandleWorldPosition(highlightHandleId, 'in');
+      void pos;
+      const instance = componentManager.getInstance(highlightHandleId);
+      if (instance) {
+        for (const child of instance.group.children) {
+          if (
+            child instanceof THREE.Mesh &&
+            child.userData.isHandle &&
+            child.userData.handleKind === 'in'
+          ) {
+            child.scale.setScalar(1);
+          }
+        }
+      }
+      highlightHandleId = null;
+    }
   };
 
   const setHighlight = (componentId: string | null): void => {
@@ -191,6 +209,19 @@ export function createCanvasInteraction(
     if (componentId) {
       componentManager.setSelected(componentId, true);
       highlightTargetId = componentId;
+      highlightHandleId = componentId;
+      const instance = componentManager.getInstance(componentId);
+      if (instance) {
+        for (const child of instance.group.children) {
+          if (
+            child instanceof THREE.Mesh &&
+            child.userData.isHandle &&
+            child.userData.handleKind === 'in'
+          ) {
+            child.scale.setScalar(1.45);
+          }
+        }
+      }
     }
   };
 

@@ -323,3 +323,214 @@ describe('canvas interaction — link gesture (CGD-01/02)', () => {
     expect(edgeManager.getEdges()).toHaveLength(0);
   });
 });
+
+describe('canvas interaction — preview + highlight (CGD-03/04)', () => {
+  let scene: THREE.Scene;
+  let camera: THREE.PerspectiveCamera;
+  let canvas: HTMLCanvasElement;
+  let controls: { enabled: boolean };
+  let raycaster: THREE.Raycaster;
+  let intersectObjects: ReturnType<typeof vi.fn>;
+  let componentManager: ReturnType<typeof createComponentManager>;
+  let edgeManager: ReturnType<typeof createEdgeManager>;
+  let handles: ReturnType<typeof createComponentHandles>;
+  let preview: ReturnType<typeof createLinkPreview>;
+  let panelHost: HTMLDivElement;
+  let interaction: CanvasInteraction;
+
+  beforeEach(() => {
+    resetComponentIdCounter();
+    resetEdgeIdCounter();
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+
+    canvas = document.createElement('canvas');
+    Object.defineProperty(canvas, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 600, configurable: true });
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    canvas.setPointerCapture = vi.fn();
+    document.body.append(canvas);
+    controls = { enabled: true };
+
+    intersectObjects = vi.fn().mockReturnValue([]);
+    raycaster = {
+      setFromCamera: vi.fn(),
+      intersectObjects,
+      ray: {
+        intersectPlane: vi.fn((_plane: THREE.Plane, target: THREE.Vector3) => {
+          target.set(2, 0, 2);
+          return target;
+        }),
+      },
+    } as unknown as THREE.Raycaster;
+
+    componentManager = createComponentManager({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      attachPointerHandlers: false,
+    });
+    edgeManager = createEdgeManager({ componentManager });
+    handles = createComponentHandles();
+    preview = createLinkPreview(scene);
+    panelHost = document.createElement('div');
+    document.body.append(panelHost);
+    interaction = createCanvasInteraction({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      componentManager,
+      edgeManager,
+      handles,
+      linkPreview: preview,
+      propertiesPanel: mountPropertiesPanel(panelHost, {
+        onLabelChange: () => undefined,
+        onNoteChange: () => undefined,
+        onDelete: () => undefined,
+      }),
+    });
+  });
+
+  afterEach(() => {
+    interaction.dispose();
+    componentManager.dispose();
+    handles.dispose();
+    preview.dispose();
+    panelHost.remove();
+    canvas.remove();
+  });
+
+  function attachBoth() {
+    const a = componentManager.addComponent('api_gateway', { x: 0, y: 0, z: 0 });
+    const b = componentManager.addComponent('app_server', { x: 3, y: 0, z: 0 });
+    handles.attach(a);
+    handles.attach(b);
+    return { a, b };
+  }
+
+  it('exposes previewActive with curved preview while linking', () => {
+    const { a, b } = attachBoth();
+    const aOut = handles.attach(a).out;
+    const bSet = handles.attach(b);
+
+    expect(bSet.in.visible).toBe(false);
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(aOut)) {
+        return [{ object: aOut }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+
+    expect(interaction.getInteractionState().mode).toBe('linking');
+    expect(interaction.getInteractionState().previewActive).toBe(true);
+    expect(preview.isActive).toBe(true);
+    expect(preview.mesh.visible).toBe(true);
+    expect(preview.mesh.geometry).toBeInstanceOf(THREE.TubeGeometry);
+    // Destination handles appear without prior hover (forced)
+    expect(bSet.in.visible).toBe(true);
+    expect(bSet.out.visible).toBe(true);
+
+    interaction.update(0.5);
+    const uniforms = (
+      preview.mesh.material as THREE.ShaderMaterial
+    ).uniforms as { uTime: { value: number } };
+    expect(uniforms.uTime.value).toBeGreaterThan(0);
+  });
+
+  it('highlights valid target node + in-handle; invalid uses setValidTarget(false)', () => {
+    const { a, b } = attachBoth();
+    const aOut = handles.attach(a).out;
+    const bIn = handles.attach(b).in;
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(aOut)) {
+        return [{ object: aOut }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(bIn) || targets.includes(b.mesh)) {
+        return [{ object: targets.includes(bIn) ? bIn : b.mesh }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(createPointerEvent('pointermove', { clientX: 200, clientY: 200 }));
+
+    expect(preview.isValidTarget).toBe(true);
+    expect(interaction.getInteractionState().invalidTarget).toBe(false);
+    const mat = b.mesh.material as THREE.MeshStandardMaterial;
+    expect(mat.emissiveIntensity).toBeGreaterThan(0);
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(a.mesh)) {
+        return [{ object: a.mesh }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(createPointerEvent('pointermove', { clientX: 50, clientY: 50 }));
+    expect(preview.isValidTarget).toBe(false);
+    expect(interaction.getInteractionState().invalidTarget).toBe(true);
+    expect(canvas.style.cursor).toBe('not-allowed');
+  });
+
+  it('hides preview and keeps permanent flow edge after successful drop', () => {
+    const { a, b } = attachBoth();
+    const aOut = handles.attach(a).out;
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(aOut)) {
+        return [{ object: aOut }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+    expect(interaction.getInteractionState().previewActive).toBe(true);
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(b.mesh)) {
+        return [{ object: b.mesh }];
+      }
+      return [];
+    });
+    window.dispatchEvent(createPointerEvent('pointerup', { pointerId: 1 }));
+
+    expect(interaction.getInteractionState().previewActive).toBe(false);
+    expect(preview.isActive).toBe(false);
+    expect(preview.mesh.visible).toBe(false);
+
+    const edges = edgeManager.getEdges();
+    expect(edges).toHaveLength(1);
+    const visual = interaction.getFlowEdges().get(edges[0].id);
+    expect(visual).toBeDefined();
+    expect(visual!.mesh.userData.isFlowEdge).toBe(true);
+    expect(visual!.mesh.visible).toBe(true);
+  });
+});
