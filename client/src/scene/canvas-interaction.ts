@@ -1,18 +1,34 @@
 import * as THREE from 'three';
-import type { ArchitectureGraph } from '@sdq/shared';
+import type { ArchitectureGraph, ComponentType } from '@sdq/shared';
 import type { ComponentManager } from './component-manager';
-import { pointerToNdc, raycastToXZPlane } from './component-manager';
-import type { EdgeManager } from './edge-manager';
+import {
+  createComponentManager,
+  pointerToNdc,
+  raycastToXZPlane,
+} from './component-manager';
+import { createEdgeManager, type EdgeManager } from './edge-manager';
 import { createFlowEdge, type FlowEdgeObject } from './edges/flow-edge';
-import type { LinkPreview } from './edges/link-preview';
+import { createLinkPreview, type LinkPreview } from './edges/link-preview';
 import { serializeGraph } from './graph-serializer';
-import type { ComponentHandles, HandlePick } from './handles/component-handles';
-import { getInstancePosition } from './component-instance';
+import {
+  createComponentHandles,
+  type ComponentHandles,
+  type HandlePick,
+} from './handles/component-handles';
+import {
+  getInstancePosition,
+  type ComponentInstanceObject,
+} from './component-instance';
 import {
   clampNote,
+  mountPropertiesPanel,
   type PropertiesPanel,
   type PropertiesPanelState,
 } from '../ui/properties-panel';
+import { PALETTE_DROP_EVENT, type PaletteDropDetail } from '../ui/palette';
+import type { CanvasRenderer } from './canvas-renderer';
+import { getSession, setGraph as setSessionGraph } from '../session/session-store';
+import { setCanvasInteraction, setGraph as setHookGraph } from '../test-hook';
 
 export type CanvasInteractionMode =
   | 'idle'
@@ -62,6 +78,10 @@ export interface CanvasInteraction {
     direction: 'forward' | 'bidirectional',
   ): boolean;
   deleteSelected(): boolean;
+  placeComponent(
+    type: ComponentType,
+    position: { x: number; y: number; z: number },
+  ): ComponentInstanceObject;
   syncStoreFromScene(): void;
   loadGraph(graph: ArchitectureGraph): void;
   update(dt: number): void;
@@ -761,6 +781,16 @@ export function createCanvasInteraction(
     return deleteSelectedComponent();
   };
 
+  const placeComponent = (
+    type: ComponentType,
+    position: { x: number; y: number; z: number },
+  ): ComponentInstanceObject => {
+    const instance = componentManager.addComponent(type, position);
+    handles.attach(instance);
+    syncStoreFromScene();
+    return instance;
+  };
+
   const prepareRaycaster = (clientX: number, clientY: number): void => {
     const ndc = pointerToNdc(clientX, clientY, getRect());
     raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
@@ -923,6 +953,7 @@ export function createCanvasInteraction(
     invertEdge,
     setEdgeDirection,
     deleteSelected,
+    placeComponent,
     syncStoreFromScene,
     loadGraph(graph) {
       for (const id of [...componentManager.getAllInstances().map((i) => i.id)]) {
@@ -958,6 +989,15 @@ export function createCanvasInteraction(
       for (const edge of edgeManager.getEdges()) {
         syncFlowEdgeGeometry(edge.id);
       }
+      const state = getState();
+      setCanvasInteraction({
+        mode: state.mode,
+        hoverComponentId: state.hoverComponentId,
+        linkingFromId: state.linkingFromId,
+        selectedEdgeId: state.selectedEdgeId,
+        previewActive: state.previewActive,
+        reconnectEnd: state.reconnectEnd,
+      });
     },
     dispose() {
       canvas.removeEventListener('pointerdown', onPointerDown);
@@ -976,6 +1016,107 @@ export function createCanvasInteraction(
         removeFlowEdgeVisual(id);
       }
       canvas.style.cursor = '';
+      setCanvasInteraction(null);
     },
   };
+}
+
+function defaultPersistGraph(graph: ArchitectureGraph): void {
+  if (getSession()) {
+    setSessionGraph(graph);
+  } else {
+    setHookGraph(graph);
+  }
+}
+
+export function mountCanvasInteraction(
+  renderer: Pick<CanvasRenderer, 'scene' | 'camera' | 'controls'>,
+  canvas: HTMLCanvasElement,
+  uiHost: HTMLElement,
+): CanvasInteraction {
+  const componentManager = createComponentManager({
+    scene: renderer.scene,
+    camera: renderer.camera,
+    canvas,
+    controls: renderer.controls,
+    attachPointerHandlers: false,
+  });
+  const edgeManager = createEdgeManager({ componentManager });
+  const handles = createComponentHandles();
+  const linkPreview = createLinkPreview(renderer.scene);
+
+  const interactionRef: { current: CanvasInteraction | null } = { current: null };
+
+  const propertiesPanel = mountPropertiesPanel(uiHost, {
+    onLabelChange: (id, label) => {
+      componentManager.setLabel(id, label.trim());
+      interactionRef.current?.syncStoreFromScene();
+    },
+    onNoteChange: (id, note) => {
+      componentManager.setNote(id, clampNote(note));
+      interactionRef.current?.syncStoreFromScene();
+    },
+    onDelete: () => {
+      interactionRef.current?.deleteSelected();
+    },
+    onEdgeDelete: (edgeId) => {
+      interactionRef.current?.deleteEdge(edgeId);
+    },
+    onEdgeInvert: (edgeId) => {
+      interactionRef.current?.invertEdge(edgeId);
+    },
+    onEdgeDirectionChange: (edgeId, direction) => {
+      interactionRef.current?.setEdgeDirection(edgeId, direction);
+    },
+  });
+
+  interactionRef.current = createCanvasInteraction({
+    scene: renderer.scene,
+    camera: renderer.camera,
+    canvas,
+    controls: renderer.controls,
+    componentManager,
+    edgeManager,
+    handles,
+    linkPreview,
+    propertiesPanel,
+    persistGraph: defaultPersistGraph,
+  });
+
+  const onPaletteDrop = (event: Event): void => {
+    const detail = (event as CustomEvent<PaletteDropDetail>).detail;
+    if (!detail?.type || !interactionRef.current) {
+      return;
+    }
+    const ndc = pointerToNdc(
+      detail.clientX,
+      detail.clientY,
+      canvas.getBoundingClientRect(),
+    );
+    const raycaster = new THREE.Raycaster();
+    const hit =
+      raycastToXZPlane(raycaster, renderer.camera, ndc) ??
+      new THREE.Vector3(0, 0, 0);
+    interactionRef.current.placeComponent(detail.type, {
+      x: hit.x,
+      y: 0,
+      z: hit.z,
+    });
+  };
+
+  canvas.addEventListener(PALETTE_DROP_EVENT, onPaletteDrop);
+
+  const interaction = interactionRef.current;
+  const baseDispose = interaction.dispose.bind(interaction);
+  interaction.dispose = () => {
+    canvas.removeEventListener(PALETTE_DROP_EVENT, onPaletteDrop);
+    handles.dispose();
+    linkPreview.dispose();
+    propertiesPanel.root.remove();
+    componentManager.dispose();
+    baseDispose();
+  };
+
+  interaction.update(0);
+  return interaction;
 }

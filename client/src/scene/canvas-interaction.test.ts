@@ -603,13 +603,17 @@ describe('canvas interaction — select/delete/invert edges (CGD-05/06)', () => 
     panelHost = document.createElement('div');
     document.body.append(panelHost);
 
-    let interactionRef: CanvasInteraction;
+    const interactionRef: { current: CanvasInteraction | null } = { current: null };
     const propertiesPanel = mountPropertiesPanel(panelHost, {
       onLabelChange: () => undefined,
       onNoteChange: () => undefined,
-      onDelete: (id) => interactionRef.deleteSelected(),
-      onEdgeDelete: (id) => interactionRef.deleteEdge(id),
-      onEdgeInvert: (id) => interactionRef.invertEdge(id),
+      onDelete: () => interactionRef.current?.deleteSelected(),
+      onEdgeDelete: (id) => {
+        interactionRef.current?.deleteEdge(id);
+      },
+      onEdgeInvert: (id) => {
+        interactionRef.current?.invertEdge(id);
+      },
     });
 
     interaction = createCanvasInteraction({
@@ -624,7 +628,7 @@ describe('canvas interaction — select/delete/invert edges (CGD-05/06)', () => 
       linkPreview: preview,
       propertiesPanel,
     });
-    interactionRef = interaction;
+    interactionRef.current = interaction;
   });
 
   afterEach(() => {
@@ -1020,7 +1024,7 @@ describe('canvas interaction — bidirectional dual-pulse (CGD-08)', () => {
     panelHost = document.createElement('div');
     document.body.append(panelHost);
 
-    let interactionRef: CanvasInteraction;
+    const interactionRef: { current: CanvasInteraction | null } = { current: null };
     interaction = createCanvasInteraction({
       scene,
       camera,
@@ -1035,11 +1039,12 @@ describe('canvas interaction — bidirectional dual-pulse (CGD-08)', () => {
         onLabelChange: () => undefined,
         onNoteChange: () => undefined,
         onDelete: () => undefined,
-        onEdgeDirectionChange: (id, direction) =>
-          interactionRef.setEdgeDirection(id, direction),
+        onEdgeDirectionChange: (id, direction) => {
+          interactionRef.current?.setEdgeDirection(id, direction);
+        },
       }),
     });
-    interactionRef = interaction;
+    interactionRef.current = interaction;
   });
 
   afterEach(() => {
@@ -1097,5 +1102,79 @@ describe('canvas interaction — bidirectional dual-pulse (CGD-08)', () => {
     expect(edgeManager.getEdge(edge.id)?.direction).toBe('forward');
     expect(visual.direction).toBe('forward');
     expect(uniforms.uBidirectional.value).toBe(0);
+  });
+});
+
+describe('canvas interaction — boot wiring (CGD-09)', () => {
+  it('mountCanvasInteraction exposes canvasInteraction on __GAME_STATE__ and places palette drops', async () => {
+    const { mountCanvasInteraction } = await import('./canvas-interaction');
+    const { initGameState, getGameState } = await import('../test-hook');
+    const { PALETTE_DROP_EVENT } = await import('../ui/palette');
+    const { resetComponentIdCounter } = await import('./component-manager');
+    const { resetEdgeIdCounter } = await import('./edge-manager');
+
+    resetComponentIdCounter();
+    resetEdgeIdCounter();
+    initGameState();
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+
+    const canvas = document.createElement('canvas');
+    Object.defineProperty(canvas, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 600, configurable: true });
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    canvas.setPointerCapture = vi.fn();
+    document.body.append(canvas);
+
+    const uiHost = document.createElement('div');
+    document.body.append(uiHost);
+
+    const interaction = mountCanvasInteraction(
+      {
+        scene,
+        camera,
+        controls: { enabled: true },
+      },
+      canvas,
+      uiHost,
+    );
+
+    interaction.update(0);
+    expect(getGameState().canvasInteraction).toMatchObject({
+      mode: 'idle',
+      linkingFromId: null,
+      selectedEdgeId: null,
+      previewActive: false,
+    });
+    expect(() => JSON.stringify(getGameState().canvasInteraction)).not.toThrow();
+
+    canvas.dispatchEvent(
+      new CustomEvent(PALETTE_DROP_EVENT, {
+        detail: { type: 'cache_redis', clientX: 400, clientY: 300 },
+      }),
+    );
+
+    const instances = interaction.getComponentManager().getAllInstances();
+    expect(instances).toHaveLength(1);
+    expect(instances[0].type).toBe('cache_redis');
+    expect(getGameState().graph.nodes).toHaveLength(1);
+
+    interaction.dispose();
+    canvas.remove();
+    uiHost.remove();
   });
 });

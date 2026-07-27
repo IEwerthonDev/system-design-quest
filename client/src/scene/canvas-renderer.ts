@@ -75,19 +75,26 @@ export function createCanvasRenderer(canvas: HTMLCanvasElement): CanvasRenderer 
   return { scene, camera, renderer, controls, render, resize, dispose };
 }
 
-export function startRenderLoop(renderer: CanvasRenderer): () => void {
+export function startRenderLoop(
+  renderer: CanvasRenderer,
+  onFrame?: (dt: number) => void,
+): () => void {
   let frameId = 0;
   let running = true;
+  let lastTime = performance.now();
 
-  const loop = (): void => {
+  const loop = (now: number): void => {
     if (!running) return;
+    const dt = Math.min(0.1, Math.max(0, (now - lastTime) / 1000));
+    lastTime = now;
+    onFrame?.(dt);
     renderer.render();
     frameId = requestAnimationFrame(loop);
   };
 
   const onResize = (): void => renderer.resize();
   window.addEventListener('resize', onResize);
-  loop();
+  frameId = requestAnimationFrame(loop);
 
   return () => {
     running = false;
