@@ -22,13 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `connection-intent` — Execute T1–T7 done; Verifier pending |
-| **Próximo passo** | Verifier → merge when PASS |
+| **Fase atual** | `connection-intent` — Execute + Verify **PASS** |
+| **Próximo passo** | Merge `feature/playground-parity` → `main` when ready |
 | **Feature ativa** | `connection-intent` |
 | **Branch** | `feature/playground-parity` |
 | **Bloqueios** | Hobby = static client only; set `VITE_API_URL` for sessions/judge API |
 | **Preview URL** | https://system-design-quest-6got4fdgs-spiral-out.vercel.app |
 | **Deployment** | `dpl_3oGFwtWvXsPb8a4ojxeBbwJmLaVd` (Spiral Out / Hobby) — READY |
+| **Validation** | `.specs/features/connection-intent/validation.md` — PASS (5 non-blocking test hardening gaps) |
 
 ### Deploy note (Hobby / T6–T7)
 
