@@ -4,7 +4,8 @@ export type {
   ConnectionEdge,
 } from './schema/architecture-graph';
 export type { ComponentCategory, ComponentType, ComponentTypeMeta } from './schema/component-types';
-export type { Difficulty, Problem } from './schema/problem';
+export type { Difficulty, Problem, ProblemMetrics, SuggestedRequirements } from './schema/problem';
+export { getProblem, listProblems, URL_SHORTENER, URL_SHORTENER_ID } from './problems/index';
 export {
   getComponentMeta,
   getComponentsByCategory,

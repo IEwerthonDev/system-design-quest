@@ -22,6 +22,12 @@ describe('@sdq/shared public API', () => {
       difficulty: 'easy',
       description: 'Design a URL shortener',
       metrics: { rps: 1000 },
+      constraints: ['Unique short codes'],
+      tags: ['cache'],
+      suggestedRequirements: {
+        functional: ['User can shorten a URL'],
+        nonFunctional: ['Redirect under 100ms'],
+      },
     };
 
     expect(validateGraph(graph).valid).toBe(true);
