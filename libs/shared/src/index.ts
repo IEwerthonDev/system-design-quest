@@ -48,6 +48,15 @@ export {
   NICKNAME_MAX_LENGTH,
   NICKNAME_MIN_LENGTH,
 } from './schema/leaderboard';
+export type {
+  DesignSessionRecord,
+  DesignSessionStatus,
+  DesignSessionUpsertInput,
+} from './schema/design-session';
+export {
+  SESSION_CAP_PER_NICKNAME,
+  verdictToSessionStatus,
+} from './schema/design-session';
 export { applyVerdictRules, isBlocker } from './judge/apply-verdict';
 export { getGoldenGraph } from './judge/golden-graphs';
 export type { GoldenGraphTier } from './judge/golden-graphs';
