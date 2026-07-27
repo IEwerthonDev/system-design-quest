@@ -107,8 +107,9 @@ function injectPhaseNavigationStyles(root: HTMLElement): void {
       font: 600 13px system-ui, sans-serif;
       cursor: pointer;
     }
+    /* Stay in the palette column — do not shift into the session header title. */
     .sdq-phase-back--with-palette {
-      left: 236px;
+      left: 16px;
     }
     .sdq-phase-back:hover {
       background: rgba(51, 65, 85, 0.95);

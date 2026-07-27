@@ -205,6 +205,9 @@ describe('phase navigation', () => {
           .querySelector('[data-testid="phase-back"]')
           ?.classList.contains('sdq-phase-back--with-palette'),
       ).toBe(true);
+      const phaseNavCss = document.getElementById('sdq-phase-nav-styles')?.textContent ?? '';
+      expect(phaseNavCss).toMatch(/\.sdq-phase-back--with-palette\s*\{\s*left:\s*16px/);
+      expect(phaseNavCss).not.toMatch(/\.sdq-phase-back--with-palette\s*\{[^}]*left:\s*236px/);
       expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
     });
 
