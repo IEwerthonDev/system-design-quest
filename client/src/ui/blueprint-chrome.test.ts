@@ -18,6 +18,25 @@ describe('sim controls', () => {
     });
 
     expect(host.querySelector('[data-testid="sim-controls"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="sim-speed"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="sim-traffic"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="sim-read-ratio"]')).toBeTruthy();
+
+    const traffic = host.querySelector('[data-testid="sim-traffic"]') as HTMLInputElement;
+    traffic.value = '5';
+    traffic.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(settings.traffic).toBe(5);
+
+    const speed = host.querySelector('[data-testid="sim-speed"]') as HTMLInputElement;
+    speed.value = '3';
+    speed.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(settings.speed).toBe(3);
+
+    const rw = host.querySelector('[data-testid="sim-read-ratio"]') as HTMLInputElement;
+    rw.value = '90';
+    rw.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(settings.readRatio).toBe(90);
+
     const start = host.querySelector('[data-testid="sim-start"]') as HTMLButtonElement;
     start.click();
     expect(settings.running).toBe(true);
