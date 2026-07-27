@@ -34,8 +34,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | ----- | ------ |
 | Merge `feature/problem-library` → `main` (fast-forward) | ✅ OK |
 | Gate `npx nx run-many -t lint test` pré-merge | ✅ OK |
-| HEAD `main` = `3ef6cfc` | ✅ OK |
-| Local ahead of `origin/main` by 10 commits | ⚠️ push pendente |
+| HEAD `main` = `c732ab6` | ✅ OK |
+| Push `origin/main` | ✅ OK |
 
 **Veredito:** **GREEN**
 
