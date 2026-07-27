@@ -122,21 +122,19 @@ describe('POST /api/judge', () => {
     );
   });
 
-  it('returns 503 in production when LLM_API_KEY is missing', async () => {
+  it('returns 200 with mock in production when LLM_API_KEY is missing', async () => {
     const app = await buildApp({ env: { NODE_ENV: 'production' } });
     const response = await app.inject({
       method: 'POST',
       url: '/api/judge',
+      remoteAddress: TEST_IP,
       payload: validPayload(),
     });
 
-    expect(response.statusCode).toBe(503);
-    expect(response.json()).toEqual(
-      expect.objectContaining({
-        error: 'Service unavailable',
-        message: 'LLM_API_KEY is not configured on the server.',
-      }),
-    );
+    expect(response.statusCode).toBe(200);
+    const body = response.json();
+    expect(body.verdict).toEqual(expect.any(String));
+    expect(body.score).toEqual(expect.any(Number));
   });
 
   it('returns 429 after 20 requests per IP in production', async () => {
