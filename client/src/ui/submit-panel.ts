@@ -6,6 +6,7 @@ import {
   submitForJudging as defaultSubmitForJudging,
 } from '../judge/judge-api';
 import { mountJudgingProgress } from '../judge/judging-progress';
+import { playGameSound } from '../audio/game-sounds';
 
 export const EMPTY_GRAPH_MESSAGE = 'Adicione pelo menos um componente';
 
@@ -158,6 +159,7 @@ export function mountSubmitPanel(
 
     clearError();
     setJudgingState(true);
+    playGameSound('submit');
     progress.show();
     progress.clearError();
     callbacks.onSubmitStart?.();

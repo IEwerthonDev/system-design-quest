@@ -7,6 +7,7 @@ export interface UserPreferences {
   experienceLevel: ExperienceLevel | null;
   guidedModeRequested: boolean;
   libraryUnlocked: boolean;
+  soundEnabled: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
@@ -14,6 +15,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
   experienceLevel: null,
   guidedModeRequested: false,
   libraryUnlocked: false,
+  soundEnabled: true,
 };
 
 function resolveStorage(storage?: Storage): Storage {
@@ -110,4 +112,34 @@ export function unlockProblemLibrary(storage?: Storage): UserPreferences {
 export function isProblemLibraryUnlocked(preferences?: UserPreferences): boolean {
   const prefs = preferences ?? loadPreferences();
   return prefs.libraryUnlocked;
+}
+
+/** Prepare prefs so the next bootstrap starts the guided URL Shortener tutorial. */
+export function requestRedoTutorial(storage?: Storage): UserPreferences {
+  return savePreferences(
+    {
+      onboardingCompleted: true,
+      experienceLevel: 'beginner',
+      guidedModeRequested: true,
+      libraryUnlocked: false,
+    },
+    storage,
+  );
+}
+
+/** Clear onboarding completion so the next bootstrap shows onboarding. */
+export function requestReplayOnboarding(storage?: Storage): UserPreferences {
+  return savePreferences(
+    {
+      onboardingCompleted: false,
+      experienceLevel: null,
+      guidedModeRequested: false,
+      libraryUnlocked: false,
+    },
+    storage,
+  );
+}
+
+export function setSoundEnabled(enabled: boolean, storage?: Storage): UserPreferences {
+  return savePreferences({ soundEnabled: enabled }, storage);
 }

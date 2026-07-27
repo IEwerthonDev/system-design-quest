@@ -1,7 +1,8 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import * as THREE from 'three';
 import { createComponentManager, resetComponentIdCounter } from './component-manager';
 import { createEdgeManager, resetEdgeIdCounter } from './edge-manager';
+import * as gameSounds from '../audio/game-sounds';
 
 describe('edge manager', () => {
   let scene: THREE.Scene;
@@ -27,6 +28,7 @@ describe('edge manager', () => {
   });
 
   it('connect(from, to) creates a forward ConnectionEdge between two components', () => {
+    const soundSpy = vi.spyOn(gameSounds, 'playGameSound').mockImplementation(() => undefined);
     const from = manager.addComponent('client_web', { x: 0, y: 0, z: 0 });
     const to = manager.addComponent('load_balancer', { x: 2, y: 0, z: 0 });
 
@@ -40,6 +42,8 @@ describe('edge manager', () => {
     });
     expect(edge!.id).toMatch(/^edge-/);
     expect(edges.getEdges()).toHaveLength(1);
+    expect(soundSpy).toHaveBeenCalledWith('connect');
+    soundSpy.mockRestore();
   });
 
   it('connect(from, to, bidirectional) creates a bidirectional ConnectionEdge', () => {

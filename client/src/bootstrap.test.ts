@@ -116,11 +116,35 @@ describe('bootstrapApp', () => {
         experienceLevel: 'beginner',
         guidedModeRequested: true,
         libraryUnlocked: true,
+        soundEnabled: true,
       }),
     );
 
     bootstrapApp(container, null, { storage });
     expect(mountProblemLibrary).toHaveBeenCalled();
+  });
+
+  it('Refazer tutorial from settings starts guided URL Shortener session', () => {
+    completeOnboardingExperienced(storage);
+    bootstrapApp(container, null, { storage });
+    expect(mountProblemLibrary).toHaveBeenCalled();
+    vi.clearAllMocks();
+
+    (
+      container.querySelector('[data-testid="settings-open"]') as HTMLButtonElement
+    ).click();
+    (
+      container.querySelector('[data-testid="settings-redo-tutorial"]') as HTMLButtonElement
+    ).click();
+
+    expect(mountPhaseNavigation).toHaveBeenCalledWith(
+      container,
+      expect.objectContaining({
+        problemId: 'url-shortener',
+        guidedMode: true,
+      }),
+    );
+    expect(mountProblemLibrary).not.toHaveBeenCalled();
   });
 });
 

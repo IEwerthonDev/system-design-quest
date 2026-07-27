@@ -22,31 +22,23 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 4 `speedrun` merged em `main`** ✅ |
-| **Próximo passo** | Specify → Tasks para **Fase 5 `polish`** |
-| **Feature ativa** | `polish` (não iniciada) |
+| **Fase atual** | **Fase 5 `polish` verified PASS** — merging to `main` |
+| **Próximo passo** | Merge completo; produto Fases 0–5 |
+| **Feature ativa** | `polish` (verify PASS) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `problem-library` spec/design/tasks/validation em `main` |
+| **Artefatos** | `.specs/features/polish/validation.md` PASS |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| Fase 4 `speedrun` implementada em `feature/speedrun` | ✅ OK |
-| Gate `npx nx run-many -t lint test` | ✅ OK |
-| Verifier validation.md | ⚠️ PASS with minor gaps |
-| Merge → `main` | pendente nesta sessão |
+| Verifier | ✅ PASS |
+| Gate lint/test + e2e | ✅ OK |
+| Merge → main | em progresso |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx run-many -t lint test`
-
-**Prompt para nova sessão:**
-```
-Branch main. Fases 0–4 merged (foundation + mvp-canvas + ai-judge + problem-library + speedrun).
-Próximo: Fase 5 polish (.specs/features/polish/spec.md).
-Gate: npx nx run-many -t lint test
-```
+**Gate:** `npx nx run-many -t lint test` && `npx playwright test`
 
 ---
 

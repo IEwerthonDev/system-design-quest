@@ -26,6 +26,12 @@ Read `.specs/STATE.md` before any architectural decision. Active `AD-NNN` entrie
 - `feature/<story-slug>` = development branch per story/phase
 - Merge to `main` only after Verify PASS
 
+## Git remote (SSH only)
+
+- Remote URL **must** use SSH: `git@github.com:IEwerthonDev/system-design-quest.git`
+- Do **not** switch `origin` to HTTPS; push/fetch/PR via SSH
+- Repo: https://github.com/IEwerthonDev/system-design-quest (browse only)
+
 ## Testing principles
 
 1. **Tests derive from spec acceptance criteria** — never mirror implementation
@@ -55,4 +61,4 @@ docs/            # Roadmap, component catalog
 
 ## Current phase
 
-**Foundation complete** — active feature: `mvp-canvas` (sub-phase 1a). See `.specs/STATE.md` Handoff section for details.
+**Fases 0–4 complete** — active feature: `polish` (Fase 5). See `.specs/STATE.md` Handoff.

@@ -173,10 +173,28 @@ export function mountPalette(
   palette.className = 'sdq-palette';
   palette.setAttribute('data-testid', 'component-palette');
 
+  const header = document.createElement('div');
+  header.className = 'sdq-palette__header';
+
   const title = document.createElement('div');
   title.className = 'sdq-palette__title';
   title.textContent = 'Componentes';
-  palette.append(title);
+
+  const collapseBtn = document.createElement('button');
+  collapseBtn.type = 'button';
+  collapseBtn.className = 'sdq-palette__collapse';
+  collapseBtn.setAttribute('data-testid', 'palette-collapse');
+  collapseBtn.setAttribute('aria-expanded', 'true');
+  collapseBtn.textContent = 'Recolher paleta';
+  collapseBtn.addEventListener('click', () => {
+    const collapsed = !palette.classList.contains('sdq-palette--collapsed');
+    palette.classList.toggle('sdq-palette--collapsed', collapsed);
+    collapseBtn.textContent = collapsed ? 'Expandir paleta' : 'Recolher paleta';
+    collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+  });
+
+  header.append(title, collapseBtn);
+  palette.append(header);
 
   for (const category of PALETTE_CATEGORY_ORDER) {
     const components = grouped.get(category);
