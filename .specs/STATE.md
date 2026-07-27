@@ -22,22 +22,22 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `connection-intent` — Execute + Verify **PASS** |
-| **Próximo passo** | Merge `feature/playground-parity` → `main` when ready |
-| **Feature ativa** | `connection-intent` |
-| **Branch** | `feature/playground-parity` |
-| **Bloqueios** | Hobby = static client only; set `VITE_API_URL` for sessions/judge API |
-| **Preview URL** | https://system-design-quest-6got4fdgs-spiral-out.vercel.app |
+| **Fase atual** | `vercel-judge` — Execute in progress |
+| **Próximo passo** | Implement serverless `/api/judge` + pressure reasons |
+| **Feature ativa** | `vercel-judge` |
+| **Branch** | `feature/vercel-judge` |
+| **Bloqueios** | Sessions/leaderboard still need external API / durable store |
+| **Preview URL** | https://system-design-quest-6got4fdgs-spiral-out.vercel.app (pre-judge; redeploy after T5) |
 | **Deployment** | `dpl_3oGFwtWvXsPb8a4ojxeBbwJmLaVd` (Spiral Out / Hobby) — READY |
-| **Validation** | `.specs/features/connection-intent/validation.md` — PASS (5 non-blocking test hardening gaps) |
+| **Validation** | `.specs/features/connection-intent/validation.md` — PASS; `vercel-judge` pending |
 
-### Deploy note (Hobby / T6–T7)
+### Deploy note (Hobby)
 
-- **Serves:** Vite client static artifacts from `dist/client` (`vercel.json`)
-- **Does not serve:** Fastify `server/` on Hobby in this feature — deferred (serverless/proxy follow-up)
-- **Env:** optional `VITE_API_URL` (used by `sessions-api` / `leaderboard-api`) pointing at an external API base URL when available
-- **Build:** `client:build` uses `skipTypeCheck: true` so Hobby preview is not blocked by pre-existing TS errors in legacy/test surfaces; quality gate remains `nx run-many -t lint test`
-- **Preview:** https://system-design-quest-6got4fdgs-spiral-out.vercel.app (team Spiral Out)
+- **Serves:** Vite client `dist/client` + serverless `api/judge` (this feature)
+- **Does not serve:** sessions/leaderboard Fastify routes on Hobby (deferred)
+- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `VITE_API_URL` only for sessions/leaderboard
+- **Build:** `client:build`; quality gate `nx run-many -t lint test`
+- **Preview:** update after vercel-judge deploy
 
 ---
 
