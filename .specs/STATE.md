@@ -28,6 +28,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Branch** | `main` |
 | **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
 | **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: bottom palette dock; tap component to place; touch-action none for drag/pan; larger handles; link hint; node delete (×) |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
