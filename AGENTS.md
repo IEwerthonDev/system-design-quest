@@ -55,4 +55,4 @@ docs/            # Roadmap, component catalog
 
 ## Current phase
 
-See `.specs/STATE.md` Handoff section for active feature and next step.
+**Foundation complete** — active feature: `mvp-canvas` (sub-phase 1a). See `.specs/STATE.md` Handoff section for details.

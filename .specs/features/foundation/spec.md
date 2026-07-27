@@ -37,11 +37,11 @@ Antes de construir o jogo, precisamos de um monorepo funcional com canvas Three.
 
 | ID | Story | Status |
 | -- | ----- | ------ |
-| FND-01 | Monorepo scaffold | Pending |
-| FND-02 | Canvas vazio 3D | Pending |
-| FND-03 | Shared types | Pending |
-| FND-04 | Server health check | Pending |
-| FND-05 | Vitest setup | Pending |
-| FND-06 | Test hook | Pending |
-| FND-07 | CI GitHub Actions | Pending |
-| FND-08 | AGENTS.md + README | Pending |
+| FND-01 | Monorepo scaffold | Done |
+| FND-02 | Canvas vazio 3D | Done |
+| FND-03 | Shared types | Done |
+| FND-04 | Server health check | Done |
+| FND-05 | Vitest setup | Done |
+| FND-06 | Test hook | Done |
+| FND-07 | CI GitHub Actions | Done |
+| FND-08 | AGENTS.md + README | Done |

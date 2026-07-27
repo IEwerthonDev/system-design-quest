@@ -31,9 +31,9 @@
 
 **Req:** FND-01
 
-- [ ] Criar workspace Nx com apps client/server e lib shared
-- [ ] Configurar scripts: `dev`, `build`, `test`, `lint`
-- [ ] Commit: `feat(foundation): init nx monorepo`
+- [x] Criar workspace Nx com apps client/server e lib shared
+- [x] Configurar scripts: `dev`, `build`, `test`, `lint`
+- [x] Commit: `feat(foundation): init nx monorepo`
 
 ---
 
@@ -51,10 +51,10 @@
 
 **Req:** FND-03
 
-- [ ] Definir tipos base do grafo de arquitetura
-- [ ] Implementar `validateGraph` (mínimo: nodes não-vazio, IDs únicos, edges referenciam nodes existentes)
-- [ ] Testes unitários cobrindo grafo válido, vazio, edge órfã
-- [ ] Commit: `feat(shared): architecture graph types and validation`
+- [x] Definir tipos base do grafo de arquitetura
+- [x] Implementar `validateGraph` (mínimo: nodes não-vazio, IDs únicos, edges referenciam nodes existentes)
+- [x] Testes unitários cobrindo grafo válido, vazio, edge órfã
+- [x] Commit: `feat(shared): architecture graph types and validation`
 
 ---
 
@@ -70,10 +70,10 @@
 
 **Req:** FND-04
 
-- [ ] Server Fastify na porta 3000
-- [ ] Health check endpoint
-- [ ] Teste de integração do endpoint
-- [ ] Commit: `feat(server): health check endpoint`
+- [x] Server Fastify na porta 3000
+- [x] Health check endpoint
+- [x] Teste de integração do endpoint
+- [x] Commit: `feat(server): health check endpoint`
 
 ---
 
@@ -91,10 +91,10 @@
 
 **Req:** FND-02
 
-- [ ] Canvas full-screen com grid no plano XZ
-- [ ] Câmera isométrica + OrbitControls (zoom/pan, sem rotação livre excessiva)
-- [ ] Render loop 60 FPS
-- [ ] Commit: `feat(client): empty 3d canvas with isometric camera`
+- [x] Canvas full-screen com grid no plano XZ
+- [x] Câmera isométrica + OrbitControls (zoom/pan, sem rotação livre excessiva)
+- [x] Render loop 60 FPS
+- [x] Commit: `feat(client): empty 3d canvas with isometric camera`
 
 ---
 
@@ -109,9 +109,9 @@
 
 **Req:** FND-06
 
-- [ ] Hook expõe estado serializável
-- [ ] Teste em jsdom verifica presença e shape
-- [ ] Commit: `feat(client): test hook for game state`
+- [x] Hook expõe estado serializável
+- [x] Teste em jsdom verifica presença e shape
+- [x] Commit: `feat(client): test hook for game state`
 
 ---
 
@@ -123,9 +123,9 @@
 
 **Req:** FND-01
 
-- [ ] `npm run dev` inicia client + server em paralelo (nx run-many)
-- [ ] Proxy API no Vite dev server
-- [ ] Commit: `feat(foundation): dev orchestration with api proxy`
+- [x] `npm run dev` inicia client + server em paralelo (nx run-many)
+- [x] Proxy API no Vite dev server
+- [x] Commit: `feat(foundation): dev orchestration with api proxy`
 
 ---
 
@@ -138,10 +138,10 @@
 
 **Req:** FND-05
 
-- [ ] Vitest configurado para shared, client (jsdom), server
-- [ ] ESLint + Prettier
-- [ ] `npx nx run-many -t lint test` passa
-- [ ] Commit: `feat(foundation): vitest and eslint setup`
+- [x] Vitest configurado para shared, client (jsdom), server
+- [x] ESLint + Prettier
+- [x] `npx nx run-many -t lint test` passa
+- [x] Commit: `feat(foundation): vitest and eslint setup`
 
 ---
 
@@ -156,10 +156,10 @@
 
 **Req:** FND-07, FND-08
 
-- [ ] GitHub Actions: install → lint → test
-- [ ] README com setup, dev, e link para specs
-- [ ] AGENTS.md com regras de spec-driven dev
-- [ ] Commit: `feat(foundation): ci pipeline and project docs`
+- [x] GitHub Actions: install → lint → test
+- [x] README com setup, dev, e link para specs
+- [x] AGENTS.md com regras de spec-driven dev
+- [x] Commit: `feat(foundation): ci pipeline and project docs`
 
 ---
 
@@ -176,7 +176,7 @@ T7 → T8
 
 ## Verification (post-T8)
 
-- [ ] `npm install && npm run dev` — canvas visível
-- [ ] `npx nx run-many -t lint test` — all green
+- [x] `npm install && npm run dev` — canvas visível
+- [x] `npx nx run-many -t lint test` — all green
 - [ ] CI passa no GitHub
 - [ ] Verifier sub-agent roda contra spec FND-*
