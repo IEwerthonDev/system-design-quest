@@ -140,4 +140,48 @@ describe('component palette', () => {
     expect(event.detail.clientX).toBe(120);
     expect(event.detail.clientY).toBe(80);
   });
+
+  it('tap-to-add places a component on phone / coarse pointer', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    const matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query.includes('pointer: coarse') || query.includes('hover: none'),
+      media: query,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    }));
+    vi.stubGlobal('matchMedia', matchMedia);
+
+    dropTarget.getBoundingClientRect = () =>
+      ({
+        left: 0,
+        top: 0,
+        width: 400,
+        height: 600,
+        right: 400,
+        bottom: 600,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }) as DOMRect;
+
+    mountPalette(container, { tier: 1, dropTarget });
+    const handler = vi.fn();
+    dropTarget.addEventListener(PALETTE_DROP_EVENT, handler);
+
+    const item = container.querySelector('[data-component-type="cache_redis"]') as HTMLElement;
+    item.click();
+
+    expect(handler).toHaveBeenCalledTimes(1);
+    const event = handler.mock.calls[0]?.[0] as CustomEvent<{
+      type: ComponentType;
+      source?: string;
+    }>;
+    expect(event.detail.type).toBe('cache_redis');
+    expect(event.detail.source).toBe('tap');
+    expect(container.querySelector('.sdq-palette')?.classList.contains('sdq-palette--collapsed')).toBe(
+      true,
+    );
+
+    vi.unstubAllGlobals();
+  });
 });

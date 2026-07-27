@@ -22,20 +22,21 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Session confirm fix on Hobby (`localStorage` fallback) |
-| **Próximo passo** | Redeploy production after commit; optional durable remote sessions later |
-| **Feature ativa** | `vercel-judge` + sessions Hobby fallback (on `main`) |
+| **Fase atual** | Mobile web canvas UX (tap-to-add + touch drag/link) |
+| **Próximo passo** | Dogfood on phone at production URL; optional durable remote sessions later |
+| **Feature ativa** | mobile canvas playability on `main` |
 | **Branch** | `main` |
 | **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_EWLtWhBzJ3rsoXg1JSt1uBk2yqUC` (Spiral Out / Hobby) — READY |
-| **Bugfix** | Confirm "Design aprovado" no longer fails with `Session upsert failed` when `/api/sessions` is absent |
-| **UI fix** | Voltar in session-header leading; Componentes palette minimizable («/») |
+| **Mobile UX** | Phone ≤768: bottom palette dock; tap component to place; touch-action none for drag/pan; larger handles; link hint; node delete (×) |
+| **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
+| **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
 
 ### Deploy note (Hobby)
 
 - **Serves:** Vite client `dist/client` + serverless `api/judge.js` (esbuild CJS bundle from `server/src/vercel/api-judge.ts`)
 - **Sessions on Hobby:** client falls back to `localStorage` (`sdq-sessions`) when `PUT/GET /api/sessions` returns 404/405 or network fails; optional `VITE_SESSIONS_MODE=local`
+- **Mobile:** tap-to-add when `(pointer: coarse)` or width ≤768; HTML5 DnD remains desktop path
 - **Does not serve:** Fastify sessions/leaderboard routes (leaderboard still deferred)
 - **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` for remote sessions/leaderboard when available
 - **Build:** esbuild judge bundle then `client:build`; quality gate `nx run-many -t lint test`
@@ -44,6 +45,10 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 ### AD-022 (active)
 
 Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full Fastify). Hybrid LLM: real when `LLM_API_KEY` set, mock otherwise (including production). Design sessions persist via localStorage fallback on Hobby (AD-021 server store still used when Fastify `/api/sessions` is reachable).
+
+### AD-023 (active)
+
+Mobile web playability: phone layout uses bottom thumb-zone component dock; palette tap places nodes (HTML5 drag unreliable on touch); canvas/nodes use `touch-action: none` for pan/drag; connection via out-handle arm + second tap (or drag); selected nodes expose delete control for no-keyboard devices.
 
 ---
 
@@ -73,6 +78,7 @@ Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
 | AD-021 | active | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
 | AD-022 | active | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
+| AD-023 | active | **Mobile web canvas** = phone bottom dock + tap-to-add; `touch-action: none` drag/pan; arm+tap (or drag) connect; delete control on selected nodes | HTML5 DnD fails on touch; thumb-zone / 44px targets from mobile-app-ui-design + mobile-touch |
 
 ---
 

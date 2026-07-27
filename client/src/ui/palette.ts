@@ -5,6 +5,7 @@ import {
   type ComponentType,
 } from '@sdq/shared';
 import { bindComponentTooltip } from './glossary';
+import { isCoarsePointer, PHONE_MAX_WIDTH } from './responsive';
 
 export const PALETTE_DROP_EVENT = 'palette:drop';
 export const PALETTE_MIME_TYPE = 'application/x-sdq-component';
@@ -46,11 +47,45 @@ export interface PaletteDropDetail {
   type: ComponentType;
   clientX: number;
   clientY: number;
+  /** Tap/click place (mobile) vs HTML5 drag drop */
+  source?: 'drag' | 'tap';
 }
 
 export interface MountPaletteOptions {
   tier?: CatalogTier;
   dropTarget?: HTMLElement;
+  /** Called after a tap-to-add so chrome can collapse the phone dock. */
+  onTapPlace?: (type: ComponentType) => void;
+}
+
+export function resolvePaletteDropTarget(explicit?: HTMLElement): HTMLElement | null {
+  if (explicit) {
+    return explicit;
+  }
+  return document.querySelector<HTMLElement>('[data-testid="blueprint-canvas"]');
+}
+
+export function dispatchPalettePlace(
+  dropTarget: HTMLElement,
+  type: ComponentType,
+  clientX: number,
+  clientY: number,
+  source: 'drag' | 'tap' = 'tap',
+): void {
+  dropTarget.dispatchEvent(
+    new CustomEvent<PaletteDropDetail>(PALETTE_DROP_EVENT, {
+      detail: { type, clientX, clientY, source },
+      bubbles: true,
+    }),
+  );
+}
+
+function centerOf(el: HTMLElement): { clientX: number; clientY: number } {
+  const rect = el.getBoundingClientRect();
+  return {
+    clientX: rect.left + rect.width / 2,
+    clientY: rect.top + rect.height / 2,
+  };
 }
 
 function injectPaletteStyles(root: HTMLElement): void {
@@ -129,9 +164,20 @@ function injectPaletteStyles(root: HTMLElement): void {
       background: rgba(30, 41, 59, 0.6);
       cursor: grab;
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
     }
     .sdq-palette__item:active {
       cursor: grabbing;
+      transform: scale(0.97);
+      transition: transform 0.12s ease;
+    }
+    .sdq-palette__hint {
+      display: none;
+      font-size: 11px;
+      color: #64748b;
+      margin: -4px 0 10px;
+      line-height: 1.35;
     }
     /* Desktop minimize: slim rail with toggle only */
     .sdq-palette.sdq-palette--collapsed {
@@ -182,16 +228,7 @@ function attachDropTarget(dropTarget: HTMLElement): () => void {
       return;
     }
 
-    dropTarget.dispatchEvent(
-      new CustomEvent<PaletteDropDetail>(PALETTE_DROP_EVENT, {
-        detail: {
-          type,
-          clientX: event.clientX,
-          clientY: event.clientY,
-        },
-        bubbles: true,
-      }),
-    );
+    dispatchPalettePlace(dropTarget, type, event.clientX, event.clientY, 'drag');
   };
 
   dropTarget.addEventListener('dragover', onDragOver);
@@ -233,8 +270,9 @@ export function mountPalette(
   collapseBtn.textContent = '«';
   collapseBtn.addEventListener('click', () => {
     const collapsed = !palette.classList.contains('sdq-palette--collapsed');
+    const phone = window.innerWidth <= PHONE_MAX_WIDTH;
     palette.classList.toggle('sdq-palette--collapsed', collapsed);
-    collapseBtn.textContent = collapsed ? '»' : '«';
+    collapseBtn.textContent = collapsed ? (phone ? '▲' : '»') : phone ? '▼' : '«';
     collapseBtn.title = collapsed ? 'Expandir' : 'Minimizar';
     collapseBtn.setAttribute(
       'aria-label',
@@ -246,6 +284,17 @@ export function mountPalette(
 
   header.append(title, collapseBtn);
   palette.append(header);
+
+  const hint = document.createElement('p');
+  hint.className = 'sdq-palette__hint';
+  hint.setAttribute('data-testid', 'palette-tap-hint');
+  hint.textContent = 'Toque em um componente para colocá-lo no canvas. Arraste os cards e use o ponto ○→ para ligar.';
+  palette.append(hint);
+  if (typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX_WIDTH) {
+    hint.style.display = 'block';
+  }
+
+  let suppressClickUntil = 0;
 
   for (const category of PALETTE_CATEGORY_ORDER) {
     const components = grouped.get(category);
@@ -280,13 +329,42 @@ export function mountPalette(
         if (!event.dataTransfer) {
           return;
         }
+        suppressClickUntil = Date.now() + 500;
         event.dataTransfer.setData(PALETTE_MIME_TYPE, meta.type);
         // Some browsers only expose text/* during drop — keep a plain fallback.
         event.dataTransfer.setData('text/plain', meta.type);
         event.dataTransfer.effectAllowed = 'copy';
       });
 
-      bindComponentTooltip(item, meta.type);
+      item.addEventListener('click', () => {
+        if (Date.now() < suppressClickUntil) {
+          return;
+        }
+        const coarse = isCoarsePointer();
+        const phone = window.innerWidth <= PHONE_MAX_WIDTH;
+        // HTML5 DnD is unreliable on touch — tap-to-add is the mobile path.
+        if (!coarse && !phone) {
+          return;
+        }
+        const target = resolvePaletteDropTarget(options.dropTarget);
+        if (!target) {
+          return;
+        }
+        const point = centerOf(target);
+        dispatchPalettePlace(target, meta.type, point.clientX, point.clientY, 'tap');
+        options.onTapPlace?.(meta.type);
+        palette.classList.add('sdq-palette--collapsed');
+        document.documentElement.classList.add('sdq-palette-is-collapsed');
+        collapseBtn.textContent = phone ? '▲' : '»';
+        collapseBtn.setAttribute('aria-expanded', 'false');
+        collapseBtn.setAttribute('aria-label', 'Expandir componentes');
+        collapseBtn.title = 'Expandir';
+      });
+
+      // Desktop keeps hover glossary; touch devices skip sticky tooltips on tap-add.
+      if (!isCoarsePointer()) {
+        bindComponentTooltip(item, meta.type);
+      }
 
       list.append(item);
     }

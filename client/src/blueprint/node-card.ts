@@ -22,6 +22,7 @@ export interface NodeCardCallbacks {
   onReplicasChange(id: string, replicas: number): void;
   onDragStart(id: string, ev: PointerEvent): void;
   onOutHandleDown(id: string, ev: PointerEvent): void;
+  onDelete?(id: string): void;
 }
 
 export interface NodeCardHandle {
@@ -51,6 +52,8 @@ function injectNodeCardStyles(): void {
       box-shadow: 0 0 12px rgba(0,0,0,0.35);
       cursor: grab;
       user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
       z-index: 2;
     }
     .sdq-node--selected {
@@ -110,9 +113,33 @@ function injectNodeCardStyles(): void {
       position: absolute; width: 12px; height: 12px; border-radius: 50%;
       background: #e2e8f0; border: 2px solid #0f1e37; top: 50%; transform: translateY(-50%);
       z-index: 3;
+      touch-action: none;
     }
     .sdq-node__handle--in { left: -7px; }
     .sdq-node__handle--out { right: -7px; }
+    .sdq-node__handle::after {
+      content: "";
+      position: absolute;
+      inset: -10px;
+    }
+    .sdq-node__delete {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      min-height: 36px;
+      margin-left: 4px;
+      border-radius: 6px;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+      background: rgba(127, 29, 29, 0.55);
+      color: #fecaca;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .sdq-node--selected .sdq-node__delete {
+      display: inline-flex;
+    }
   `;
   document.head.append(style);
 }
@@ -175,7 +202,13 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   plus.className = 'sdq-node__rep-btn';
   plus.textContent = '+';
   plus.setAttribute('aria-label', 'Aumentar replicas');
-  footer.append(minus, repsLabel, plus);
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.className = 'sdq-node__delete';
+  del.setAttribute('data-testid', `node-delete-${node.id}`);
+  del.setAttribute('aria-label', 'Remover componente');
+  del.textContent = '×';
+  footer.append(minus, repsLabel, plus, del);
 
   root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, footer);
 
@@ -198,16 +231,19 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
 
   root.addEventListener('pointerdown', (ev) => {
     const t = ev.target as HTMLElement;
-    if (t.closest('.sdq-node__rep-btn')) {
+    if (t.closest('.sdq-node__rep-btn') || t.closest('.sdq-node__delete')) {
       return;
     }
-    if (t.dataset.handle === 'out') {
+    if (t.dataset.handle === 'out' || t.closest('[data-handle="out"]')) {
+      ev.preventDefault();
+      ev.stopPropagation();
       callbacks.onOutHandleDown(node.id, ev);
       return;
     }
-    if (t.dataset.handle === 'in') {
+    if (t.dataset.handle === 'in' || t.closest('[data-handle="in"]')) {
       return;
     }
+    ev.preventDefault();
     callbacks.onSelect(node.id);
     callbacks.onDragStart(node.id, ev);
   });
@@ -221,6 +257,10 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     ev.stopPropagation();
     const current = Number.parseInt(repsLabel.textContent ?? '1', 10) || 1;
     callbacks.onReplicasChange(node.id, current + 1);
+  });
+  del.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    callbacks.onDelete?.(node.id);
   });
 
   return {

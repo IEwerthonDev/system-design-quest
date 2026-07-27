@@ -416,6 +416,53 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     input.remove();
     canvas.destroy();
   });
+
+  it('tap palette drop places a node near canvas center', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    Object.defineProperty(host, 'getBoundingClientRect', {
+      value: () => ({
+        left: 0,
+        top: 0,
+        width: 400,
+        height: 600,
+        right: 400,
+        bottom: 600,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      }),
+    });
+    const canvas = mountBlueprintCanvas(host);
+    host.dispatchEvent(
+      new CustomEvent<PaletteDropDetail>(PALETTE_DROP_EVENT, {
+        detail: {
+          type: 'load_balancer',
+          clientX: 200,
+          clientY: 300,
+          source: 'tap',
+        },
+      }),
+    );
+    expect(canvas.getGraph().nodes).toHaveLength(1);
+    expect(canvas.getGraph().nodes[0]?.type).toBe('load_balancer');
+    canvas.destroy();
+  });
+
+  it('delete button removes the selected node', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const id = placeComponentForTest(canvas, 'cdn', { x: 40, y: 40 });
+    const card = host.querySelector(`[data-testid="blueprint-node-${id}"]`) as HTMLElement;
+    card.setPointerCapture = () => undefined;
+    card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 50, clientY: 50 }));
+    const del = host.querySelector(`[data-testid="node-delete-${id}"]`) as HTMLButtonElement;
+    expect(del).toBeTruthy();
+    del.click();
+    expect(canvas.getGraph().nodes).toHaveLength(0);
+    canvas.destroy();
+  });
 });
 
 describe('config popover mount', () => {

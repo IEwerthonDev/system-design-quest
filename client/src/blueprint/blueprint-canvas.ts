@@ -49,6 +49,7 @@ function injectBlueprintStyles(): void {
       position: absolute;
       inset: 0;
       overflow: hidden;
+      touch-action: none;
       background-color: #0a2744;
       background-image:
         linear-gradient(rgba(56, 120, 180, 0.18) 1px, transparent 1px),
@@ -77,6 +78,27 @@ function injectBlueprintStyles(): void {
       width: 32px; height: 32px; border-radius: 6px;
       border: 1px solid rgba(148,163,184,0.4);
       background: rgba(15,30,55,0.92); color: #e2e8f0; cursor: pointer; font-weight: 700;
+      touch-action: manipulation;
+    }
+    .sdq-blueprint-link-hint {
+      position: fixed;
+      left: 50%;
+      top: 72px;
+      transform: translateX(-50%);
+      z-index: 21;
+      max-width: min(92vw, 420px);
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(30, 58, 95, 0.95);
+      border: 1px solid rgba(96, 165, 250, 0.45);
+      color: #e2e8f0;
+      font: 600 13px system-ui, sans-serif;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+    .sdq-blueprint-link-hint[hidden] {
+      display: none !important;
     }
   `;
   document.head.append(style);
@@ -127,6 +149,12 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   let dragOffset = { x: 0, y: 0 };
   let panning = false;
   let panStart = { x: 0, y: 0, panX: 0, panY: 0 };
+  let linkGesture: {
+    pointerId: number;
+    x: number;
+    y: number;
+    moved: boolean;
+  } | null = null;
 
   const popover = mountConfigPopover(document.body, {
     onClose: () => {
@@ -192,6 +220,22 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   zoomOut.setAttribute('aria-label', 'Zoom out');
   zoomBar.append(zoomIn, zoomOut);
   root.append(zoomBar);
+
+  const linkHint = document.createElement('div');
+  linkHint.className = 'sdq-blueprint-link-hint';
+  linkHint.setAttribute('data-testid', 'blueprint-link-hint');
+  linkHint.hidden = true;
+  linkHint.textContent = 'Toque em outro componente para conectar · Esc cancela';
+  root.append(linkHint);
+
+  const setLinking = (fromId: string | null): void => {
+    linkingFrom = fromId;
+    linkHint.hidden = !fromId;
+    if (!fromId) {
+      linkGesture = null;
+    }
+    publishInteraction();
+  };
 
   const applyTransform = (): void => {
     world.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
@@ -339,12 +383,38 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         const worldX = (ev.clientX - rect.left - panX) / scale;
         const worldY = (ev.clientY - rect.top - panY) / scale;
         dragOffset = { x: worldX - n.position.x, y: worldY - n.position.y };
-        card.root.setPointerCapture(ev.pointerId);
+        try {
+          card.root.setPointerCapture(ev.pointerId);
+        } catch {
+          // Some test environments lack pointer capture
+        }
       },
       onOutHandleDown: (id, ev) => {
         ev.stopPropagation();
-        linkingFrom = id;
-        publishInteraction();
+        setLinking(id);
+        linkGesture = {
+          pointerId: ev.pointerId,
+          x: ev.clientX,
+          y: ev.clientY,
+          moved: false,
+        };
+      },
+      onDelete: (id) => {
+        graph = {
+          ...graph,
+          nodes: graph.nodes.filter((n) => n.id !== id),
+          edges: graph.edges.filter((e) => e.from !== id && e.to !== id),
+        };
+        cards.get(id)?.destroy();
+        cards.delete(id);
+        if (selectedNodeId === id) {
+          selectedNodeId = null;
+          popover.close();
+        }
+        if (linkingFrom === id) {
+          setLinking(null);
+        }
+        persist();
       },
     });
     world.append(card.root);
@@ -359,6 +429,13 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   };
 
   const onPointerMove = (ev: PointerEvent): void => {
+    if (linkGesture && ev.pointerId === linkGesture.pointerId) {
+      const dx = ev.clientX - linkGesture.x;
+      const dy = ev.clientY - linkGesture.y;
+      if (dx * dx + dy * dy > 100) {
+        linkGesture.moved = true;
+      }
+    }
     if (dragNodeId) {
       const rect = root.getBoundingClientRect();
       const worldX = (ev.clientX - rect.left - panX) / scale - dragOffset.x;
@@ -376,25 +453,50 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     }
   };
 
+  const tryCompleteLink = (clientX: number, clientY: number): boolean => {
+    if (!linkingFrom) {
+      return false;
+    }
+    const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+    const targetNode = el?.closest('.sdq-node') as HTMLElement | null;
+    const toId = targetNode?.dataset.nodeId;
+    if (toId && canConnect(linkingFrom, toId)) {
+      const toNode = graph.nodes.find((n) => n.id === toId);
+      const edge: ConnectionEdge = {
+        id: nextId('edge'),
+        from: linkingFrom,
+        to: toId,
+        direction: 'forward',
+        label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
+      };
+      graph = { ...graph, edges: [...graph.edges, edge] };
+      persist();
+      setLinking(null);
+      return true;
+    }
+    return false;
+  };
+
   const onPointerUp = (ev: PointerEvent): void => {
-    if (linkingFrom) {
-      const el = document.elementFromPoint(ev.clientX, ev.clientY) as HTMLElement | null;
-      const targetNode = el?.closest('.sdq-node') as HTMLElement | null;
-      const toId = targetNode?.dataset.nodeId;
-      if (toId && canConnect(linkingFrom, toId)) {
-        const toNode = graph.nodes.find((n) => n.id === toId);
-        const edge: ConnectionEdge = {
-          id: nextId('edge'),
-          from: linkingFrom,
-          to: toId,
-          direction: 'forward',
-          label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
-        };
-        graph = { ...graph, edges: [...graph.edges, edge] };
-        persist();
+    if (linkingFrom && linkGesture && ev.pointerId === linkGesture.pointerId) {
+      if (linkGesture.moved) {
+        tryCompleteLink(ev.clientX, ev.clientY);
+        if (linkingFrom) {
+          setLinking(null);
+        }
+      } else {
+        // Tap on out-handle: keep armed for a second tap on the target node.
+        linkGesture = null;
       }
-      linkingFrom = null;
-      publishInteraction();
+      dragNodeId = null;
+      panning = false;
+      return;
+    }
+
+    if (linkingFrom) {
+      if (!tryCompleteLink(ev.clientX, ev.clientY)) {
+        setLinking(null);
+      }
     }
     dragNodeId = null;
     panning = false;
@@ -406,8 +508,13 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       return;
     }
     const rect = root.getBoundingClientRect();
-    const x = (detail.clientX - rect.left - panX) / scale - 70;
-    const y = (detail.clientY - rect.top - panY) / scale - 30;
+    let x = (detail.clientX - rect.left - panX) / scale - 70;
+    let y = (detail.clientY - rect.top - panY) / scale - 30;
+    if (detail.source === 'tap') {
+      const stagger = graph.nodes.length * 28;
+      x += (stagger % 160) - 40;
+      y += Math.floor(stagger / 5) % 120;
+    }
     const node = buildNewNode(detail.type, { x, y }, nextId('node'));
     graph = { ...graph, nodes: [...graph.nodes, node] };
     addCard(node);
@@ -421,13 +528,17 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if ((ev.target as HTMLElement).closest('[data-edge-id]')) {
       return;
     }
-    if (ev.button === 0 || ev.button === 1) {
+    if (ev.button === 0 || ev.button === 1 || ev.pointerType === 'touch') {
+      ev.preventDefault();
       panning = true;
       panStart = { x: ev.clientX, y: ev.clientY, panX, panY };
       popover.close();
       intentPopover.close();
       selectedNodeId = null;
       selectedEdgeId = null;
+      if (linkingFrom) {
+        setLinking(null);
+      }
       for (const c of cards.values()) {
         c.setSelected(false);
       }
@@ -444,6 +555,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (ev.key === 'Escape') {
       intentPopover.close();
       popover.close();
+      setLinking(null);
       selectedEdgeId = null;
       selectedNodeId = null;
       for (const c of cards.values()) {
@@ -518,6 +630,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         card.destroy();
       }
       zoomBar.remove();
+      linkHint.remove();
       world.remove();
     },
   };
