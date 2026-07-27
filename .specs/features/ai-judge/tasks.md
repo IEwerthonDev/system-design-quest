@@ -158,9 +158,9 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-06
 
-- [ ] `submitForJudging` with 60s timeout, progress steps, cached payload for retry
-- [ ] Progress overlay: 4 steps (analisando → rigoroso → pragmático → consenso)
-- [ ] Tests: mock fetch success, timeout error, 429 message, retry reuses payload
+- [x] `submitForJudging` with 60s timeout, progress steps, cached payload for retry
+- [x] Progress overlay: 4 steps (analisando → rigoroso → pragmático → consenso)
+- [x] Tests: mock fetch success, timeout error, 429 message, retry reuses payload
 - [ ] Commit: `feat(client): judge API client and progress UI`
 
 ---
