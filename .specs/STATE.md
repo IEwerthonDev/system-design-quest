@@ -22,19 +22,19 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Hotfix `hidden` leaderboard modal merged |
-| **Próximo passo** | Hard refresh no browser (localhost:4200) |
+| **Fase atual** | Hotfix layout+canvas DnD merged (`f0d02cd`) |
+| **Próximo passo** | Hard refresh localhost:4200 — testar palette + handles |
 | **Feature ativa** | nenhuma |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `fix/hidden-leaderboard-modal` → `main` |
+| **Artefatos** | clearAppUi + Voltar/Dicas offset + palette text/plain |
 
-### Context Checkpoint (2026-07-27 — empty Fechar modal)
+### Context Checkpoint (2026-07-27 — canvas overlap + DnD)
 
 | Sinal | Status |
 | ----- | ------ |
-| Bug | `.sdq-leaderboard { display:flex }` vs `[hidden]` |
-| Fix | `[hidden]{display:none!important}` + leaderboard rule |
-| Gate | leaderboard-panel + client tests PASS |
+| Bugs | Dicas/Voltar sob paleta; canvas destruído no nav |
+| Fix | clearAppUi; left 236px; drag text/plain |
+| Merge | `f0d02cd` → main |
 
 **Veredito:** **GREEN** (hotfix)
 
