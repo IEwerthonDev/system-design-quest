@@ -1,13 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx nx run client:build",
+  "buildCommand": "npx esbuild server/src/vercel/api-judge.ts --bundle --platform=node --format=cjs --outfile=api/judge.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx nx run client:build",
   "outputDirectory": "dist/client",
   "installCommand": "npm install",
   "framework": "vite",
   "functions": {
-    "api/judge.ts": {
-      "maxDuration": 60,
-      "includeFiles": "{libs/shared/src/**,server/src/**}"
+    "api/judge.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [

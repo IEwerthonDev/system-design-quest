@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { handleJudgeRequest } from '../server/src/judge/handle-judge-request';
+import { handleJudgeRequest } from '../judge/handle-judge-request';
 
 export const config = {
   maxDuration: 60,

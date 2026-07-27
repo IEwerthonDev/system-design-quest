@@ -10,3 +10,6 @@ tmp/
 .vite/
 playwright-report/
 test-results/
+.vercel
+.env*
+api/judge.js
