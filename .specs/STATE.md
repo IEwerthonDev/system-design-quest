@@ -22,22 +22,26 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `vercel-judge` — Execute in progress |
-| **Próximo passo** | Implement serverless `/api/judge` + pressure reasons |
+| **Fase atual** | `vercel-judge` — Execute done; Verify pending formal report |
+| **Próximo passo** | Formal Verify / merge `feature/vercel-judge` when ready |
 | **Feature ativa** | `vercel-judge` |
 | **Branch** | `feature/vercel-judge` |
 | **Bloqueios** | Sessions/leaderboard still need external API / durable store |
-| **Preview URL** | https://system-design-quest-6got4fdgs-spiral-out.vercel.app (pre-judge; redeploy after T5) |
-| **Deployment** | `dpl_3oGFwtWvXsPb8a4ojxeBbwJmLaVd` (Spiral Out / Hobby) — READY |
-| **Validation** | `.specs/features/connection-intent/validation.md` — PASS; `vercel-judge` pending |
+| **Preview URL** | https://system-design-quest-4o5und3uf-spiral-out.vercel.app |
+| **Deployment** | `dpl_5xcs42kmn6JoeFiynFa4ZbC2DYAS` (Spiral Out / Hobby) — READY |
+| **Validation** | Smoke: `POST /api/judge` returns `JudgeResult` (mock without key); gates shared/server/client green |
 
 ### Deploy note (Hobby)
 
-- **Serves:** Vite client `dist/client` + serverless `api/judge` (this feature)
+- **Serves:** Vite client `dist/client` + serverless `api/judge.js` (esbuild CJS bundle from `server/src/vercel/api-judge.ts`)
 - **Does not serve:** sessions/leaderboard Fastify routes on Hobby (deferred)
-- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `VITE_API_URL` only for sessions/leaderboard
-- **Build:** `client:build`; quality gate `nx run-many -t lint test`
-- **Preview:** update after vercel-judge deploy
+- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` only for sessions/leaderboard
+- **Build:** esbuild judge bundle then `client:build`; quality gate `nx run-many -t lint test`
+- **Preview:** https://system-design-quest-4o5und3uf-spiral-out.vercel.app
+
+### AD-022 (active)
+
+Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full Fastify). Hybrid LLM: real when `LLM_API_KEY` set, mock otherwise (including production).
 
 ---
 
