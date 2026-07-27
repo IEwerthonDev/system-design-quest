@@ -72,7 +72,7 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 - [x] `createSession(problemId, mode)` com fases: `briefing | requirements | canvas | result`
 - [x] `advancePhase`, `setGraph`, `getGraph`
 - [x] Expõe via `window.__GAME_STATE__`
-- [ ] Commit: `feat(client): session store and phase machine`
+- [x] Commit: `feat(client): session store and phase machine`
 
 ---
 
