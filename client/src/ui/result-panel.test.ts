@@ -176,4 +176,19 @@ describe('result panel', () => {
     );
     expect(container.querySelector('[data-testid="result-score"]')?.textContent).toContain('42');
   });
+
+  it('mounts as a right sidebar with judge-sidebar testid', () => {
+    mountResultPanel(container, sampleResult, {
+      beginnerMode: true,
+      onToggleBeginner: () => undefined,
+    });
+
+    const sidebar = container.querySelector('[data-testid="judge-sidebar"]') as HTMLElement;
+    expect(sidebar).toBeTruthy();
+    expect(sidebar.classList.contains('sdq-result')).toBe(true);
+    const styles = document.getElementById('sdq-result-styles')?.textContent ?? '';
+    expect(styles).toMatch(/\.sdq-result\s*\{[^}]*right:\s*0/s);
+    expect(styles).toMatch(/\.sdq-result\s*\{[^}]*left:\s*auto/s);
+    expect(container.querySelector('[data-testid="result-panel"]')).toBeTruthy();
+  });
 });

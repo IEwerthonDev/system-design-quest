@@ -296,9 +296,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-05
 
 **Done when:**
-- [ ] Sidebar mounts on right; testid present
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): mount AI judge as right sidebar`
+- [x] Sidebar mounts on right; testid present
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): mount AI judge as right sidebar`
 
 **Tests:** unit  
 **Gate:** quick client

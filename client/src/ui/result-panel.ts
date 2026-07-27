@@ -47,21 +47,30 @@ function injectResultStyles(root: HTMLElement): void {
   style.textContent = `
     .sdq-result {
       position: fixed;
-      inset: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: auto;
+      width: min(420px, 100vw);
+      max-width: 100%;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      background: rgba(15, 20, 25, 0.92);
+      align-items: stretch;
+      justify-content: flex-start;
+      padding: 0;
+      background: rgba(15, 20, 25, 0.96);
+      border-left: 1px solid rgba(148, 163, 184, 0.25);
       z-index: 15;
-      overflow-y: auto;
+      overflow: hidden;
+      box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
     }
     .sdq-result__card {
-      width: min(760px, 100%);
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
       background: rgba(30, 41, 59, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: 24px 26px 28px;
+      border: none;
+      border-radius: 0;
+      padding: 20px 18px 28px;
       color: #e2e8f0;
       font-family: system-ui, sans-serif;
     }
@@ -403,10 +412,11 @@ export function mountResultPanel(
 
   const panel = document.createElement('div');
   panel.className = 'sdq-result';
-  panel.setAttribute('data-testid', 'result-panel');
+  panel.setAttribute('data-testid', 'judge-sidebar');
 
   const card = document.createElement('div');
   card.className = 'sdq-result__card';
+  card.setAttribute('data-testid', 'result-panel');
 
   const header = document.createElement('div');
   header.className = 'sdq-result__header';
