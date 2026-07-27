@@ -165,11 +165,11 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06
 
 **Done when:**
-- [ ] Invalid nickname → error outcome
-- [ ] 51st distinct id for same nick evicts oldest
-- [ ] Re-upsert same id does not inflate count
-- [ ] Gate: `npx nx test server`
-- [ ] Commit: `feat(server): design session service with cap-50 eviction`
+- [x] Invalid nickname → error outcome
+- [x] 51st distinct id for same nick evicts oldest
+- [x] Re-upsert same id does not inflate count
+- [x] Gate: `npx nx test server`
+- [x] Commit: `feat(server): design session service with cap-50 eviction`
 
 **Tests:** unit  
 **Gate:** quick server
