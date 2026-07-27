@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@sdq/shared": ["./libs/shared/src/index.ts"]
+    }
+  },
+  "include": ["api/**/*.ts", "server/src/**/*.ts", "libs/shared/src/**/*.ts"]
+}
