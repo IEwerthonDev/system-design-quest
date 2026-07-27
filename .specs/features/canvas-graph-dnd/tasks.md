@@ -88,11 +88,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven` (Execute)
 
 **Done when:**
-- [ ] `canConnect(from, to)` rejects self-loop and duplicate ordered pair
-- [ ] `invert(edgeId)` swaps from/to or returns null if would duplicate
-- [ ] `reconnectEndpoint(edgeId, end, newNodeId)` updates endpoint or returns null (invalid → no mutate)
-- [ ] Gate: `npx nx test client --testPathPattern=edge-manager`
-- [ ] Test count: existing + new cases ≥ previous (no silent deletions)
+- [x] `canConnect(from, to)` rejects self-loop and duplicate ordered pair
+- [x] `invert(edgeId)` swaps from/to or returns null if would duplicate
+- [x] `reconnectEndpoint(edgeId, end, newNodeId)` updates endpoint or returns null (invalid → no mutate)
+- [x] Gate: `npx nx test client --testPathPattern=edge-manager`
+- [x] Test count: existing + new cases ≥ previous (no silent deletions)
 
 **Tests:** unit  
 **Gate:** quick  
@@ -113,11 +113,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Curve is `QuadraticBezierCurve3` (or equivalent smooth curve), not `LineCurve3`
-- [ ] `setDirection` / rebuild updates uniforms + geometry endpoints
-- [ ] Bidirectional still sets `uBidirectional=1`; forward = `0`
-- [ ] Gate: `npx nx test client --testPathPattern=flow-edge`
-- [ ] Test count: no silent deletions
+- [x] Curve is `QuadraticBezierCurve3` (or equivalent smooth curve), not `LineCurve3`
+- [x] `setDirection` / rebuild updates uniforms + geometry endpoints
+- [x] Bidirectional still sets `uBidirectional=1`; forward = `0`
+- [x] Gate: `npx nx test client --testPathPattern=flow-edge`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
@@ -138,11 +138,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] Each component can have distinct `in` and `out` handles with `userData`
-- [ ] Visibility API: hover vs forced (for linking targets)
-- [ ] `pickHandle` distinguishes in vs out
-- [ ] Gate: `npx nx test client --testPathPattern=component-handles`
-- [ ] Test count: new file tests pass
+- [x] Each component can have distinct `in` and `out` handles with `userData`
+- [x] Visibility API: hover vs forced (for linking targets)
+- [x] `pickHandle` distinguishes in vs out
+- [x] Gate: `npx nx test client --testPathPattern=component-handles`
+- [x] Test count: new file tests pass
 
 **Tests:** unit  
 **Gate:** quick  
@@ -163,11 +163,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] `showPreview` / `updatePreview` / `hidePreview` work
-- [ ] `update(dt)` advances flow uniform (light on preview)
-- [ ] `setValidTarget` toggles invalid vs valid feedback state (testable flag)
-- [ ] Gate: `npx nx test client --testPathPattern=link-preview`
-- [ ] Test count: new tests pass
+- [x] `showPreview` / `updatePreview` / `hidePreview` work
+- [x] `update(dt)` advances flow uniform (light on preview)
+- [x] `setValidTarget` toggles invalid vs valid feedback state (testable flag)
+- [x] Gate: `npx nx test client --testPathPattern=link-preview`
+- [x] Test count: new tests pass
 
 **Tests:** unit  
 **Gate:** quick  
@@ -188,11 +188,11 @@ T9 → T10 → T11
 - Skill: `tlc-spec-driven`
 
 **Done when:**
-- [ ] State supports `mode: 'component' | 'edge' | 'hidden'`
-- [ ] Edge mode exposes delete / invert / bidirectional controls + callbacks
-- [ ] Component mode behavior unchanged
-- [ ] Gate: `npx nx test client --testPathPattern=properties-panel`
-- [ ] Test count: no silent deletions
+- [x] State supports `mode: 'component' | 'edge' | 'hidden'`
+- [x] Edge mode exposes delete / invert / bidirectional controls + callbacks
+- [x] Component mode behavior unchanged
+- [x] Gate: `npx nx test client --testPathPattern=properties-panel`
+- [x] Test count: no silent deletions
 
 **Tests:** unit  
 **Gate:** quick  
