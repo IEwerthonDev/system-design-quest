@@ -3,11 +3,17 @@ import type { ArchitectureGraph } from '@sdq/shared';
 export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
 export type GameMode = 'study' | 'speedrun';
 
+export interface GameRequirements {
+  functional: string[];
+  nonFunctional: string[];
+}
+
 export interface GameState {
   problemId: string;
   graph: ArchitectureGraph;
   phase: GamePhase;
   mode: GameMode;
+  requirements: GameRequirements;
 }
 
 declare global {
@@ -18,17 +24,21 @@ declare global {
 
 const emptyGraph: ArchitectureGraph = { nodes: [], edges: [] };
 
+const emptyRequirements: GameRequirements = { functional: [], nonFunctional: [] };
+
 const initialState: GameState = {
   problemId: '',
   graph: emptyGraph,
   phase: 'canvas',
   mode: 'study',
+  requirements: emptyRequirements,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
   window.__GAME_STATE__ = {
     ...initialState,
     graph: { ...emptyGraph, nodes: [], edges: [] },
+    requirements: { functional: [], nonFunctional: [] },
     ...overrides,
   };
   return window.__GAME_STATE__;
@@ -50,6 +60,13 @@ export function setGraph(graph: ArchitectureGraph): void {
 
 export function setPhase(phase: GamePhase): void {
   getGameState().phase = phase;
+}
+
+export function setRequirements(requirements: GameRequirements): void {
+  getGameState().requirements = {
+    functional: [...requirements.functional],
+    nonFunctional: [...requirements.nonFunctional],
+  };
 }
 
 export function setMode(mode: GameMode): void {

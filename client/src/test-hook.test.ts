@@ -14,6 +14,7 @@ describe('__GAME_STATE__ test hook', () => {
       phase: 'canvas',
       mode: 'study',
       graph: { nodes: [], edges: [] },
+      requirements: { functional: [], nonFunctional: [] },
     });
   });
 

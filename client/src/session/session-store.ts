@@ -44,6 +44,7 @@ function syncToGameState(session: Session): void {
     mode: session.mode,
     phase: session.phase,
     graph: cloneGraph(session.graph),
+    requirements: cloneRequirements(session.requirements),
   });
 }
 
@@ -101,6 +102,7 @@ export function setRequirements(requirements: SessionRequirements): void {
     ...activeSession,
     requirements: cloneRequirements(requirements),
   };
+  syncToGameState(activeSession);
 }
 
 export function getRequirements(): SessionRequirements {
