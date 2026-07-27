@@ -951,3 +951,151 @@ describe('canvas interaction — reconnect endpoint (CGD-07)', () => {
     expect(controls.enabled).toBe(true);
   });
 });
+
+describe('canvas interaction — bidirectional dual-pulse (CGD-08)', () => {
+  let scene: THREE.Scene;
+  let camera: THREE.PerspectiveCamera;
+  let canvas: HTMLCanvasElement;
+  let controls: { enabled: boolean };
+  let raycaster: THREE.Raycaster;
+  let intersectObjects: ReturnType<typeof vi.fn>;
+  let componentManager: ReturnType<typeof createComponentManager>;
+  let edgeManager: ReturnType<typeof createEdgeManager>;
+  let handles: ReturnType<typeof createComponentHandles>;
+  let preview: ReturnType<typeof createLinkPreview>;
+  let panelHost: HTMLDivElement;
+  let interaction: CanvasInteraction;
+
+  beforeEach(() => {
+    resetComponentIdCounter();
+    resetEdgeIdCounter();
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+
+    canvas = document.createElement('canvas');
+    Object.defineProperty(canvas, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 600, configurable: true });
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    canvas.setPointerCapture = vi.fn();
+    document.body.append(canvas);
+    controls = { enabled: true };
+
+    intersectObjects = vi.fn().mockReturnValue([]);
+    raycaster = {
+      setFromCamera: vi.fn(),
+      intersectObjects,
+      ray: {
+        intersectPlane: vi.fn((_plane: THREE.Plane, target: THREE.Vector3) => {
+          target.set(1, 0, 1);
+          return target;
+        }),
+      },
+    } as unknown as THREE.Raycaster;
+
+    componentManager = createComponentManager({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      attachPointerHandlers: false,
+    });
+    edgeManager = createEdgeManager({ componentManager });
+    handles = createComponentHandles();
+    preview = createLinkPreview(scene);
+    panelHost = document.createElement('div');
+    document.body.append(panelHost);
+
+    let interactionRef: CanvasInteraction;
+    interaction = createCanvasInteraction({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      componentManager,
+      edgeManager,
+      handles,
+      linkPreview: preview,
+      propertiesPanel: mountPropertiesPanel(panelHost, {
+        onLabelChange: () => undefined,
+        onNoteChange: () => undefined,
+        onDelete: () => undefined,
+        onEdgeDirectionChange: (id, direction) =>
+          interactionRef.setEdgeDirection(id, direction),
+      }),
+    });
+    interactionRef = interaction;
+  });
+
+  afterEach(() => {
+    interaction.dispose();
+    componentManager.dispose();
+    handles.dispose();
+    preview.dispose();
+    panelHost.remove();
+    canvas.remove();
+  });
+
+  it('panel toggle sets bidirectional uBidirectional=1 then restores forward single pulse', async () => {
+    const { getFlowEdgeUniforms } = await import('./edges/flow-edge');
+    const a = componentManager.addComponent('client_web', { x: 0, y: 0, z: 0 });
+    const b = componentManager.addComponent('load_balancer', { x: 3, y: 0, z: 0 });
+    handles.attach(a);
+    handles.attach(b);
+
+    const aOut = handles.attach(a).out;
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(aOut)) {
+        return [{ object: aOut }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(b.mesh)) {
+        return [{ object: b.mesh }];
+      }
+      return [];
+    });
+    window.dispatchEvent(createPointerEvent('pointerup', { pointerId: 1 }));
+
+    const edge = edgeManager.getEdges()[0];
+    interaction.selectEdge(edge.id);
+    const visual = interaction.getFlowEdges().get(edge.id)!;
+    const uniforms = getFlowEdgeUniforms(visual.mesh)!;
+    expect(uniforms.uBidirectional.value).toBe(0);
+
+    panelHost
+      .querySelector<HTMLButtonElement>('[data-testid="prop-edge-bidirectional"]')!
+      .click();
+
+    expect(edgeManager.getEdge(edge.id)?.direction).toBe('bidirectional');
+    expect(visual.direction).toBe('bidirectional');
+    expect(uniforms.uBidirectional.value).toBe(1);
+
+    panelHost
+      .querySelector<HTMLButtonElement>('[data-testid="prop-edge-bidirectional"]')!
+      .click();
+
+    expect(edgeManager.getEdge(edge.id)?.direction).toBe('forward');
+    expect(visual.direction).toBe('forward');
+    expect(uniforms.uBidirectional.value).toBe(0);
+  });
+});

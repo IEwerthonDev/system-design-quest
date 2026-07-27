@@ -57,6 +57,10 @@ export interface CanvasInteraction {
   selectEdge(edgeId: string | null): void;
   deleteEdge(edgeId: string): boolean;
   invertEdge(edgeId: string): boolean;
+  setEdgeDirection(
+    edgeId: string,
+    direction: 'forward' | 'bidirectional',
+  ): boolean;
   deleteSelected(): boolean;
   syncStoreFromScene(): void;
   loadGraph(graph: ArchitectureGraph): void;
@@ -707,6 +711,22 @@ export function createCanvasInteraction(
     return true;
   };
 
+  const setEdgeDirection = (
+    edgeId: string,
+    direction: 'forward' | 'bidirectional',
+  ): boolean => {
+    if (!edgeManager.setDirection(edgeId, direction)) {
+      return false;
+    }
+    const visual = flowEdges.get(edgeId);
+    visual?.setDirection(direction);
+    if (selectedEdgeId === edgeId) {
+      syncComponentPanel();
+    }
+    syncStoreFromScene();
+    return true;
+  };
+
   const deleteSelectedComponent = (id?: string): boolean => {
     const targetId = id ?? selectedComponentId;
     if (!targetId) {
@@ -901,6 +921,7 @@ export function createCanvasInteraction(
     selectEdge,
     deleteEdge,
     invertEdge,
+    setEdgeDirection,
     deleteSelected,
     syncStoreFromScene,
     loadGraph(graph) {
