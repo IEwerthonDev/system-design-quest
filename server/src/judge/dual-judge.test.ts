@@ -43,6 +43,20 @@ describe('buildRigorousPrompt / buildPragmaticPrompt', () => {
     expect(prompt).toContain('pragmatic');
     expect(prompt).toContain('trade-offs');
   });
+
+  it('includes hidden rubric for URL Shortener', () => {
+    const prompt = buildRigorousPrompt(problem, input);
+    expect(prompt).toContain('Hidden rubric');
+    expect(prompt).toContain('cache_redis');
+    expect(prompt).toContain('Common mistakes');
+  });
+
+  it('includes rate-limiter rubric patterns in prompt', () => {
+    const rateLimiter = getProblem('rate-limiter')!;
+    const prompt = buildRigorousPrompt(rateLimiter, input);
+    expect(prompt).toContain('Token bucket');
+    expect(prompt).toContain('api_gateway');
+  });
 });
 
 describe('buildRequirementCoverage', () => {

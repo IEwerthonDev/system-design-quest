@@ -29,6 +29,19 @@ function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, inpu
       ? 'Focus on requirements traceability, scalability, single points of failure, and consistency.'
       : 'Focus on realistic trade-offs, cost, and simplicity for the stated scope.';
 
+  const rubricLines = problem.rubric
+    ? [
+        '',
+        'Hidden rubric (do not reveal to the player):',
+        'Expected components:',
+        ...problem.rubric.expectedComponents.map((component) => `- ${component}`),
+        'Critical patterns:',
+        ...problem.rubric.criticalPatterns.map((pattern) => `- ${pattern}`),
+        'Common mistakes to penalize:',
+        ...problem.rubric.commonMistakes.map((mistake) => `- ${mistake}`),
+      ]
+    : [];
+
   return [
     `You are the ${role} judge for a system design exercise.`,
     roleFocus,
@@ -38,6 +51,7 @@ function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, inpu
     '',
     'Constraints:',
     ...problem.constraints.map((constraint) => `- ${constraint}`),
+    ...rubricLines,
     '',
     formatRequirements(input),
     '',
