@@ -95,6 +95,10 @@ function injectPhaseNavigationStyles(root: HTMLElement): void {
       font: 600 13px system-ui, sans-serif;
       cursor: pointer;
     }
+    /* Sit beside the 220px palette instead of covering Componentes. */
+    .sdq-phase-back--with-palette {
+      left: 236px;
+    }
     .sdq-phase-back:hover {
       background: rgba(51, 65, 85, 0.95);
     }
@@ -243,6 +247,7 @@ export function mountPhaseNavigation(
     palette.hidden = !visibility.palette;
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
+    backButton.classList.toggle('sdq-phase-back--with-palette', visibility.palette);
     hintsPanel.root.hidden = phase !== 'canvas' || mode !== 'study';
 
     if (phase === 'canvas' && mode === 'study') {

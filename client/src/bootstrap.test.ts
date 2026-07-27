@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { bootstrapApp } from './bootstrap';
+import { bootstrapApp, clearAppUi } from './bootstrap';
 import {
   completeOnboardingExperienced,
   completeOnboardingBeginner,
@@ -77,6 +77,19 @@ describe('bootstrapApp', () => {
 
   afterEach(() => {
     container.remove();
+  });
+
+  it('preserves the WebGL canvas when clearing UI chrome', () => {
+    const canvas = document.createElement('canvas');
+    canvas.id = 'canvas';
+    const chrome = document.createElement('div');
+    chrome.setAttribute('data-testid', 'chrome');
+    container.append(canvas, chrome);
+
+    clearAppUi(container, canvas);
+
+    expect(container.contains(canvas)).toBe(true);
+    expect(container.querySelector('[data-testid="chrome"]')).toBeNull();
   });
 
   it('shows onboarding when preferences indicate first visit', () => {

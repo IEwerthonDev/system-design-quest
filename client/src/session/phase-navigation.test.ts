@@ -200,6 +200,11 @@ describe('phase navigation', () => {
         false,
       );
       expect(window.__GAME_STATE__.phase).toBe('canvas');
+      expect(
+        container
+          .querySelector('[data-testid="phase-back"]')
+          ?.classList.contains('sdq-phase-back--with-palette'),
+      ).toBe(true);
     });
 
     it('restores requirements when going back from canvas', () => {

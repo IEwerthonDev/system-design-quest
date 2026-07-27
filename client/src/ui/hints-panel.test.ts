@@ -29,6 +29,16 @@ describe('contextual hints panel', () => {
     expect(hints[0]?.text).toMatch(/read-heavy|cache|armazenamento|Load Balancer/i);
   });
 
+  it('positions hints beside the component palette, not over it', () => {
+    const panel = mountHintsPanel(container, {
+      problemId: URL_SHORTENER_ID,
+      getGraph: () => emptyGraph,
+    });
+    const style = document.getElementById('sdq-hints-styles')?.textContent ?? '';
+    expect(style).toMatch(/left:\s*236px/);
+    expect(panel.root.className).toBe('sdq-hints');
+  });
+
   it('marks hint resolved when relevant component is added', () => {
     const hints = getHintsForProblem(URL_SHORTENER_ID);
     const graphWithCache: ArchitectureGraph = {

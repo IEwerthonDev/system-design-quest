@@ -79,10 +79,10 @@ function injectHintsStyles(root: HTMLElement): void {
   style.textContent = `
     .sdq-hints {
       position: fixed;
-      bottom: 16px;
-      left: 16px;
-      z-index: 25;
-      width: min(320px, calc(100vw - 32px));
+      bottom: 72px;
+      left: 236px;
+      z-index: 12;
+      width: min(320px, calc(100vw - 252px));
       border-radius: 10px;
       border: 1px solid rgba(148, 163, 184, 0.25);
       background: rgba(30, 41, 59, 0.94);

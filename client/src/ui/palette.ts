@@ -116,7 +116,8 @@ function injectPaletteStyles(root: HTMLElement): void {
 }
 
 function readComponentType(dataTransfer: DataTransfer): ComponentType | null {
-  const raw = dataTransfer.getData(PALETTE_MIME_TYPE);
+  const raw =
+    dataTransfer.getData(PALETTE_MIME_TYPE) || dataTransfer.getData('text/plain');
   return raw ? (raw as ComponentType) : null;
 }
 
@@ -230,6 +231,8 @@ export function mountPalette(
           return;
         }
         event.dataTransfer.setData(PALETTE_MIME_TYPE, meta.type);
+        // Some browsers only expose text/* during drop — keep a plain fallback.
+        event.dataTransfer.setData('text/plain', meta.type);
         event.dataTransfer.effectAllowed = 'copy';
       });
 
