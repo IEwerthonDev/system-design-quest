@@ -5,6 +5,8 @@ import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
 import { unlockProblemLibrary } from '../storage/preferences';
 import { isQualifyingCompletion, recordCompletion } from '../storage/progress';
+import { getOrCreateNickname } from '../storage/nickname';
+import { submitLeaderboardScore } from '../leaderboard/leaderboard-api';
 import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
@@ -15,15 +17,18 @@ import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
 import { mountResultPanel, type ResultPanel } from '../ui/result-panel';
 import { mountSubmitPanel } from '../ui/submit-panel';
+import { mountTimerPanel } from '../ui/timer-panel';
 import { canGoBackPhase } from './phase-machine';
 import {
   advancePhase,
   createSession,
+  getElapsedMs,
   getGraph,
   getJudgeResult,
   getRequirements,
   getSession,
   goBackPhase,
+  markSubmitted,
   setGraph,
   setJudgeResult,
   setRequirements,
@@ -47,6 +52,9 @@ export interface MountPhaseNavigationOptions {
   experienceLevel?: ExperienceLevel | null;
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
+  submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
+  getNickname?: () => string;
+  now?: () => number;
 }
 
 export interface PhaseNavigation {
@@ -108,7 +116,11 @@ export function mountPhaseNavigation(
   }
 
   injectPhaseNavigationStyles(document.head);
-  createSession(problemId, mode, { guidedMode, experienceLevel });
+  const now = options.now ?? Date.now;
+  createSession(problemId, mode, { guidedMode, experienceLevel }, now);
+
+  const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
+  const getNickname = options.getNickname ?? getOrCreateNickname;
 
   let beginnerMode = experienceLevel === 'beginner';
 
@@ -175,6 +187,11 @@ export function mountPhaseNavigation(
   });
   hintsPanel.root.hidden = true;
 
+  const timerPanel = mountTimerPanel(shell, {
+    getMode: () => getSession()?.mode ?? mode,
+    now,
+  });
+
   const submitPanel = mountSubmitPanel(shell, {
     getGraph,
     buildJudgeInput: (graph) => ({
@@ -183,6 +200,12 @@ export function mountPhaseNavigation(
       graph,
       mode,
     }),
+    onSubmitStart: () => {
+      if (mode === 'speedrun') {
+        markSubmitted(now);
+        timerPanel.sync();
+      }
+    },
     onJudgeSuccess: (result) => {
       setGraph(getGraph());
       setJudgeResult(result);
@@ -235,6 +258,18 @@ export function mountPhaseNavigation(
       if (isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
         recordCompletion(problemId, judgeResult.verdict, judgeResult.score);
       }
+      if (mode === 'speedrun' && isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
+        const session = getSession();
+        if (session) {
+          void submitScore({
+            problemId,
+            playerNickname: getNickname(),
+            elapsedMs: getElapsedMs(session, now),
+            score: judgeResult.score,
+            verdict: judgeResult.verdict,
+          });
+        }
+      }
       if (!resultPanel) {
         resultPanel = mountResultPanel(resultHost, judgeResult, {
           beginnerMode,
@@ -255,6 +290,8 @@ export function mountPhaseNavigation(
       guidedOverlay.sync(phase, session.graph);
       setGuidedStep(getCurrentStep(guidedOverlay.getState())?.id ?? null);
     }
+
+    timerPanel.sync();
   };
 
   backButton.addEventListener('click', () => {
