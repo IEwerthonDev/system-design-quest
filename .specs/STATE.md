@@ -22,27 +22,41 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 5 `polish` merged em `main`** ✅ |
-| **Próximo passo** | Produto Fases 0–5 completo; backlog / polish deferred (PNG, 2D fallback, 36 tipos) |
-| **Feature ativa** | nenhuma |
+| **Fase atual** | Execute — Batch 1 worker (T1–T5) em andamento |
+| **Próximo passo** | Aguardar summary Batch 1 → despachar Batch 2 (T6–T11) |
+| **Feature ativa** | `canvas-graph-dnd` |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | polish validation PASS em `main` |
+| **Artefatos** | Specs Approved; modo Execute = sub-agents |
 
-### Context Checkpoint (2026-07-27)
+### Context Checkpoint (2026-07-27 — Execute batch 1)
 
 | Sinal | Status |
 | ----- | ------ |
-| Verifier | ✅ PASS |
-| Merge → `main` | ✅ `cb5ffba` via SSH |
+| Chat length | AMBER — user escolheu sub-agents (1) |
+| Uncommitted | AMBER — specs ainda sem commit inicial |
+| Spec drift | GREEN |
+| Task clarity | GREEN — Batch 1 = T1–T5 |
 
-**Veredito:** **GREEN**
+**Veredito:** **AMBER + “1”** → Execute via workers
 
-**Prompt para nova sessão:**
-```
-Branch main. Fases 0–5 merged (foundation → polish).
-Deferred: Export PNG, 2D WebGL fallback, catalog 36 types.
-Gate: npx nx run-many -t lint test && npx playwright test
-```
+**Branch:** `feature/canvas-graph-dnd`  
+**Batch 1:** T1–T5 · **Batch 2:** T6–T11 (após Batch 1 PASS)
+
+
+### Context Checkpoint (2026-07-27 — context+spec draft)
+
+| Sinal | Status |
+| ----- | ------ |
+| Chat length | GREEN — Discuss fechado |
+| Uncommitted | AMBER — docs novos + STATE (sem commit pedido) |
+| Spec drift | GREEN — decisões Discuss → context/spec |
+| Gate confidence | N/A Specify |
+| Task clarity | GREEN — aguarda confirm → Design |
+
+**Veredito:** **GREEN** (Specify)
+
+**Branch:** `feature/canvas-graph-dnd`  
+**Stash:** `stash@{0}` = `wip-pre-canvas-graph-dnd: interaction wiring + ui chrome + lessons` (aplicar só no Execute se ainda fizer sentido)
 
 ---
 
