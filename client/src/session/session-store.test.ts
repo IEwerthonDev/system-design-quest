@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import type { ArchitectureGraph } from '@sdq/shared';
+import type { ArchitectureGraph, DesignSessionRecord } from '@sdq/shared';
 import { PHASE_ORDER } from './phase-machine';
 import {
   advancePhase,
@@ -7,6 +7,7 @@ import {
   getElapsedMs,
   getGraph,
   getSession,
+  hydrateFromDesignSession,
   markSubmitted,
   resetSessionStore,
   setGraph,
@@ -113,5 +114,30 @@ describe('session store', () => {
     resetSessionStore();
     createSession('url-shortener', 'study', {}, clock);
     expect(window.__GAME_STATE__.elapsedMs).toBeNull();
+  });
+
+  it('hydrateFromDesignSession restores id, graph, requirements and canvas phase (PP-08)', () => {
+    const record: DesignSessionRecord = {
+      id: 'persisted-42',
+      problemId: 'url-shortener',
+      playerNickname: 'alice',
+      status: 'in_progress',
+      graph: sampleGraph,
+      requirements: { functional: ['A'], nonFunctional: ['B'] },
+      mode: 'study',
+      createdAt: '2026-07-27T10:00:00.000Z',
+      updatedAt: '2026-07-27T12:00:00.000Z',
+    };
+
+    const session = hydrateFromDesignSession(record);
+
+    expect(session.id).toBe('persisted-42');
+    expect(session.phase).toBe('canvas');
+    expect(getGraph()).toEqual(sampleGraph);
+    expect(window.__GAME_STATE__.graph).toEqual(sampleGraph);
+    expect(window.__GAME_STATE__.requirements).toEqual({
+      functional: ['A'],
+      nonFunctional: ['B'],
+    });
   });
 });

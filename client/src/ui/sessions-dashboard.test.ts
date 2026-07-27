@@ -1,9 +1,26 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ArchitectureGraph, DesignSessionRecord } from '@sdq/shared';
 import { saveNickname } from '../storage/nickname';
+import {
+  getSession,
+  hydrateFromDesignSession,
+  resetSessionStore,
+} from '../session/session-store';
 import { mountSessionsDashboard } from './sessions-dashboard';
 
 const emptyGraph: ArchitectureGraph = { nodes: [], edges: [] };
+
+const savedGraph: ArchitectureGraph = {
+  nodes: [
+    {
+      id: 'cdn-1',
+      type: 'cdn',
+      label: 'CDN',
+      position: { x: 2, y: 0, z: 1 },
+    },
+  ],
+  edges: [],
+};
 
 function fixture(
   overrides: Partial<DesignSessionRecord> & Pick<DesignSessionRecord, 'id' | 'status'>,
@@ -56,11 +73,13 @@ describe('sessions dashboard (PP-07)', () => {
     storage = new MemoryStorage();
     saveNickname('alice', storage);
     document.getElementById('sdq-sessions-dashboard-styles')?.remove();
+    resetSessionStore();
   });
 
   afterEach(() => {
     container.remove();
     document.getElementById('sdq-sessions-dashboard-styles')?.remove();
+    resetSessionStore();
   });
 
   it('lists sessions in four buckets Approved / Rejected / Partial / In Progress via API', async () => {
@@ -115,7 +134,9 @@ describe('sessions dashboard (PP-07)', () => {
       expect(tab).toBeTruthy();
       tab!.click();
       const list = container.querySelector('[data-testid="sessions-list"]');
-      const card = container.querySelector(`[data-testid="session-card-${seeded.find((s) => s.status === status)!.id}"]`);
+      const card = container.querySelector(
+        `[data-testid="session-card-${seeded.find((s) => s.status === status)!.id}"]`,
+      );
       expect(card).toBeTruthy();
       expect(list?.textContent).toContain('Encurtador de URL');
       expect(list?.textContent).toMatch(/2026-07-27/);
@@ -175,5 +196,93 @@ describe('sessions dashboard (PP-07)', () => {
     expect(link?.textContent).toMatch(/minhas sessões/i);
     link!.click();
     expect(onOpenSessions).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('reopen persisted design session (PP-08)', () => {
+  let container: HTMLDivElement;
+  let storage: MemoryStorage;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.append(container);
+    storage = new MemoryStorage();
+    saveNickname('alice', storage);
+    document.getElementById('sdq-sessions-dashboard-styles')?.remove();
+    document.getElementById('sdq-phase-nav-styles')?.remove();
+    resetSessionStore();
+  });
+
+  afterEach(() => {
+    container.remove();
+    document.getElementById('sdq-sessions-dashboard-styles')?.remove();
+    document.getElementById('sdq-phase-nav-styles')?.remove();
+    resetSessionStore();
+  });
+
+  it('opening in_progress hydrates __GAME_STATE__.graph to the saved graph', async () => {
+    const record = fixture({
+      id: 'sess-in-progress',
+      status: 'in_progress',
+      graph: savedGraph,
+      requirements: {
+        functional: ['Encurtar URLs'],
+        nonFunctional: ['Baixa latência'],
+      },
+      mode: 'study',
+    });
+    const listSessionsFn = vi.fn().mockResolvedValue([record]);
+    const onOpenSession = vi.fn((session: DesignSessionRecord) => {
+      hydrateFromDesignSession(session);
+    });
+
+    const dashboard = mountSessionsDashboard(container, {
+      storage,
+      listSessionsFn,
+      onOpenSession,
+    });
+    await dashboard.ready;
+
+    container.querySelector<HTMLButtonElement>('[data-testid="sessions-tab-in_progress"]')!.click();
+    container
+      .querySelector<HTMLButtonElement>('[data-testid="session-card-sess-in-progress"]')!
+      .click();
+
+    expect(onOpenSession).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'sess-in-progress', status: 'in_progress' }),
+    );
+    expect(window.__GAME_STATE__.graph).toEqual(savedGraph);
+    expect(window.__GAME_STATE__.graph.nodes[0]?.id).toBe('cdn-1');
+    expect(window.__GAME_STATE__.requirements).toEqual({
+      functional: ['Encurtar URLs'],
+      nonFunctional: ['Baixa latência'],
+    });
+    expect(window.__GAME_STATE__.phase).toBe('canvas');
+  });
+
+  it('hydrated in_progress keeps the same id so later confirm can re-submit', async () => {
+    const record = fixture({
+      id: 'sess-reopen-1',
+      status: 'in_progress',
+      graph: savedGraph,
+      mode: 'study',
+    });
+
+    const { mountPhaseNavigation } = await import('../session/phase-navigation');
+    const nav = mountPhaseNavigation(container, {
+      problemId: record.problemId,
+      mode: 'study',
+      designSession: record,
+    });
+
+    expect(getSession()?.id).toBe('sess-reopen-1');
+    expect(getSession()?.phase).toBe('canvas');
+    expect(window.__GAME_STATE__.graph).toEqual(savedGraph);
+    expect(container.querySelector('[data-testid="submit-button"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="submit-bar"]')?.hasAttribute('hidden')).toBe(
+      false,
+    );
+
+    nav.destroy();
   });
 });

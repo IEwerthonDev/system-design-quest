@@ -1,4 +1,4 @@
-import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
+import type { ArchitectureGraph, DesignSessionRecord, JudgeResult } from '@sdq/shared';
 import type { ExperienceLevel } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
 import { initGameState } from '../test-hook';
@@ -110,6 +110,36 @@ export function createSession(
     phase: 'briefing',
     requirements: { functional: [], nonFunctional: [] },
     graph: { nodes: [], edges: [] },
+    guidedMode: options.guidedMode ?? false,
+    experienceLevel: options.experienceLevel ?? null,
+    startedAt: now(),
+    submittedAt: null,
+    judgeResult: null,
+  };
+  syncToGameState(activeSession, now);
+  return activeSession;
+}
+
+/**
+ * Restore a persisted design session into the active session store (PP-08).
+ * Keeps the same id so later confirm upserts update the same record.
+ * Starts at canvas so the player can continue drawing / re-submit.
+ */
+export function hydrateFromDesignSession(
+  record: DesignSessionRecord,
+  options: CreateSessionOptions = {},
+  now: () => number = Date.now,
+): Session {
+  const mode: GameMode = record.mode ?? 'study';
+  activeSession = {
+    id: record.id,
+    problemId: record.problemId,
+    mode,
+    phase: 'canvas',
+    requirements: record.requirements
+      ? cloneRequirements(record.requirements)
+      : { functional: [], nonFunctional: [] },
+    graph: cloneGraph(record.graph),
     guidedMode: options.guidedMode ?? false,
     experienceLevel: options.experienceLevel ?? null,
     startedAt: now(),

@@ -1,5 +1,5 @@
 import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
-import type { DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
+import type { DesignSessionRecord, DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
@@ -36,6 +36,7 @@ import {
   getRequirements,
   getSession,
   goBackPhase,
+  hydrateFromDesignSession,
   markSubmitted,
   setGraph,
   setJudgeResult,
@@ -58,6 +59,8 @@ export interface MountPhaseNavigationOptions {
   canvas?: HTMLElement | null;
   guidedMode?: boolean;
   experienceLevel?: ExperienceLevel | null;
+  /** When set, hydrate this persisted session instead of creating a new one (PP-08). */
+  designSession?: DesignSessionRecord;
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
@@ -129,7 +132,21 @@ export function mountPhaseNavigation(
 
   injectPhaseNavigationStyles(document.head);
   const now = options.now ?? Date.now;
-  createSession(problemId, mode, { guidedMode, experienceLevel }, now);
+  if (options.designSession) {
+    hydrateFromDesignSession(
+      options.designSession,
+      { guidedMode, experienceLevel },
+      now,
+    );
+    const blueprint = (
+      window as Window & { __BLUEPRINT__?: import('../blueprint/blueprint-canvas').BlueprintCanvas }
+    ).__BLUEPRINT__;
+    if (blueprint) {
+      blueprint.setGraph(getGraph());
+    }
+  } else {
+    createSession(problemId, mode, { guidedMode, experienceLevel }, now);
+  }
 
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
   const getNickname = options.getNickname ?? getOrCreateNickname;

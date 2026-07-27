@@ -88,6 +88,17 @@ function showSessionsDashboard(
       showLibrary(container, blueprintHost, preferences);
       mountAppSettings(container, blueprintHost, optionsStorage);
     },
+    onOpenSession: (record) => {
+      clearAppUi(container, blueprintHost);
+      mountPhaseNavigation(container, {
+        canvas: blueprintHost,
+        problemId: record.problemId,
+        mode: record.mode ?? 'study',
+        designSession: record,
+        experienceLevel: preferences.experienceLevel,
+      });
+      mountAppSettings(container, blueprintHost, optionsStorage);
+    },
   });
 }
 

@@ -351,9 +351,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-07
 
 **Done when:**
-- [ ] Four buckets; empty state; list renders seeded fixtures via mock API
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): sessions history dashboard`
+- [x] Four buckets; empty state; list renders seeded fixtures via mock API
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): sessions history dashboard`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -369,9 +369,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-08
 
 **Done when:**
-- [ ] Open in_progress → `__GAME_STATE__.graph` matches saved
-- [ ] Gate: `npx nx run-many -t lint test` (full feature gate)
-- [ ] Commit: `feat(client): reopen persisted design sessions`
+- [x] Open in_progress → `__GAME_STATE__.graph` matches saved
+- [x] Gate: `npx nx run-many -t lint test` (full feature gate)
+- [x] Commit: `feat(client): reopen persisted design sessions`
 
 **Tests:** unit  
 **Gate:** full
