@@ -175,12 +175,18 @@ describe('onboarding', () => {
       bootstrapApp(container, null, { storage });
 
       expect(container.querySelector('[data-testid="onboarding-panel"]')).toBeNull();
-      expect(container.querySelector('[data-testid="briefing-panel"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="problem-library"]')).toBeTruthy();
     });
 
     it('starts without guided mode when onboarding is skipped', () => {
       bootstrapApp(container, null, { storage });
       container.querySelector<HTMLButtonElement>('[data-testid="onboarding-skip"]')!.click();
+
+      expect(container.querySelector('[data-testid="problem-library"]')).toBeTruthy();
+
+      container
+        .querySelector<HTMLButtonElement>('[data-testid="problem-study-url-shortener"]')
+        ?.click();
 
       expect(window.__GAME_STATE__).toMatchObject({
         guidedMode: false,

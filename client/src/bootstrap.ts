@@ -4,11 +4,13 @@ import {
   completeOnboardingBeginner,
   completeOnboardingExperienced,
   completeOnboardingSkip,
+  isProblemLibraryUnlocked,
   loadPreferences,
   shouldShowOnboarding,
   type UserPreferences,
 } from './storage/preferences';
 import { mountOnboarding, type OnboardingResult } from './ui/onboarding';
+import { mountProblemLibrary, type LibrarySelection } from './ui/problem-library';
 
 export interface BootstrapOptions {
   storage?: Storage;
@@ -18,13 +20,42 @@ function startGame(
   container: HTMLElement,
   canvas: HTMLCanvasElement | null,
   preferences: UserPreferences,
+  selection?: LibrarySelection,
 ): void {
+  const problemId = selection?.problemId ?? URL_SHORTENER_ID;
+  const mode = selection?.mode ?? 'study';
+  const guidedMode =
+    selection === undefined &&
+    preferences.guidedModeRequested &&
+    problemId === URL_SHORTENER_ID;
+
   mountPhaseNavigation(container, {
     canvas,
-    problemId: URL_SHORTENER_ID,
-    guidedMode: preferences.guidedModeRequested,
+    problemId,
+    mode,
+    guidedMode,
     experienceLevel: preferences.experienceLevel,
   });
+}
+
+function showLibrary(
+  container: HTMLElement,
+  canvas: HTMLCanvasElement | null,
+  preferences: UserPreferences,
+): void {
+  mountProblemLibrary(container, {
+    onSelect: (selection) => {
+      container.replaceChildren();
+      startGame(container, canvas, preferences, selection);
+    },
+  });
+}
+
+function shouldShowLibrary(preferences: UserPreferences): boolean {
+  if (preferences.guidedModeRequested && !preferences.libraryUnlocked) {
+    return false;
+  }
+  return true;
 }
 
 function persistOnboardingResult(
@@ -49,16 +80,32 @@ export function bootstrapApp(
       onSkip: () => {
         const preferences = completeOnboardingSkip(storage);
         container.replaceChildren();
-        startGame(container, canvas, preferences);
+        if (shouldShowLibrary(preferences)) {
+          showLibrary(container, canvas, preferences);
+        } else {
+          startGame(container, canvas, preferences);
+        }
       },
       onComplete: (result) => {
         const preferences = persistOnboardingResult(result, storage);
         container.replaceChildren();
-        startGame(container, canvas, preferences);
+        if (shouldShowLibrary(preferences)) {
+          showLibrary(container, canvas, preferences);
+        } else {
+          startGame(container, canvas, preferences);
+        }
       },
     });
     return;
   }
 
-  startGame(container, canvas, loadPreferences(storage));
+  const preferences = loadPreferences(storage);
+  if (shouldShowLibrary(preferences)) {
+    showLibrary(container, canvas, preferences);
+    return;
+  }
+
+  startGame(container, canvas, preferences);
 }
+
+export { isProblemLibraryUnlocked, shouldShowLibrary };

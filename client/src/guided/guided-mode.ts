@@ -160,7 +160,7 @@ export const GUIDED_STEPS: readonly GuidedStepDefinition[] = [
     title: 'Tutorial concluído!',
     body:
       'Parabéns — você completou o URL Shortener guiado. ' +
-      'A biblioteca completa será desbloqueada em breve (Modo Livre).',
+      'A biblioteca completa está desbloqueada: escolha o próximo problema na tela inicial.',
     targetSelector: '[data-testid="result-placeholder"]',
     phase: 'result',
   },
