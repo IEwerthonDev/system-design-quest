@@ -5,8 +5,10 @@ import {
   buildMetricEntries,
   DIFFICULTY_LABELS,
   formatCompactNumber,
+  metricLabelToTestId,
   mountBriefingPanel,
 } from './briefing-panel';
+import { getMetricExplanation } from './glossary';
 
 describe('briefing panel', () => {
   let container: HTMLDivElement;
@@ -58,6 +60,43 @@ describe('briefing panel', () => {
       URL_SHORTENER.tags.length,
     );
     expect(container.querySelector('[data-testid="briefing-tags"]')?.textContent).toContain('cache');
+  });
+
+  it('renders a help button for each metric with a glossary explanation', () => {
+    const panel = mountBriefingPanel(container, { onStart: () => undefined });
+    panel.render(URL_SHORTENER);
+
+    for (const entry of buildMetricEntries(URL_SHORTENER.metrics)) {
+      const explanation = getMetricExplanation(entry.label);
+      if (!explanation) {
+        continue;
+      }
+
+      const slug = metricLabelToTestId(entry.label);
+      expect(container.querySelector(`[data-testid="briefing-metric-help-${slug}"]`)).toBeTruthy();
+    }
+  });
+
+  it('shows metric explanation when the help button is clicked', () => {
+    const panel = mountBriefingPanel(container, { onStart: () => undefined });
+    panel.render(URL_SHORTENER);
+
+    const helpButton = container.querySelector<HTMLButtonElement>(
+      '[data-testid="briefing-metric-help-read-rps-pico"]',
+    )!;
+    const explanation = container.querySelector(
+      '[data-testid="briefing-metric-explanation-read-rps-pico"]',
+    ) as HTMLElement;
+
+    expect(explanation.hidden).toBe(true);
+    helpButton.click();
+    expect(explanation.hidden).toBe(false);
+    expect(explanation.textContent).toMatch(/RPS/i);
+    expect(helpButton.getAttribute('aria-expanded')).toBe('true');
+
+    helpButton.click();
+    expect(explanation.hidden).toBe(true);
+    expect(helpButton.getAttribute('aria-expanded')).toBe('false');
   });
 
   it('calls onStart when Começar is clicked', () => {

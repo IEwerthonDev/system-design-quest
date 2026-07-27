@@ -1,4 +1,5 @@
 import type { Difficulty, Problem, ProblemMetrics } from '@sdq/shared';
+import { getMetricExplanation } from './glossary';
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
   easy: 'Fácil',
@@ -51,6 +52,65 @@ export function buildMetricEntries(metrics: ProblemMetrics): Array<{ label: stri
   }
 
   return entries;
+}
+
+export function metricLabelToTestId(label: string): string {
+  return label
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function createMetricCard(entry: { label: string; value: string }): HTMLElement {
+  const metric = document.createElement('div');
+  metric.className = 'sdq-briefing__metric';
+  metric.setAttribute('data-testid', `briefing-metric-${metricLabelToTestId(entry.label)}`);
+
+  const labelRow = document.createElement('div');
+  labelRow.className = 'sdq-briefing__metric-label-row';
+
+  const label = document.createElement('span');
+  label.className = 'sdq-briefing__metric-label';
+  label.textContent = entry.label;
+  labelRow.append(label);
+
+  const explanation = getMetricExplanation(entry.label);
+  if (explanation) {
+    const helpButton = document.createElement('button');
+    helpButton.type = 'button';
+    helpButton.className = 'sdq-briefing__metric-help';
+    helpButton.setAttribute('data-testid', `briefing-metric-help-${metricLabelToTestId(entry.label)}`);
+    helpButton.setAttribute('aria-label', `Explicação de ${entry.label}`);
+    helpButton.setAttribute('aria-expanded', 'false');
+    helpButton.textContent = '?';
+
+    const explanationEl = document.createElement('p');
+    explanationEl.className = 'sdq-briefing__metric-explanation';
+    explanationEl.setAttribute(
+      'data-testid',
+      `briefing-metric-explanation-${metricLabelToTestId(entry.label)}`,
+    );
+    explanationEl.hidden = true;
+    explanationEl.textContent = explanation;
+
+    helpButton.addEventListener('click', () => {
+      const isVisible = !explanationEl.hidden;
+      explanationEl.hidden = isVisible;
+      helpButton.setAttribute('aria-expanded', String(!isVisible));
+    });
+
+    labelRow.append(helpButton);
+    metric.append(labelRow, explanationEl);
+  } else {
+    metric.append(labelRow);
+  }
+
+  const value = document.createElement('span');
+  value.className = 'sdq-briefing__metric-value';
+  value.textContent = entry.value;
+  metric.append(value);
+
+  return metric;
 }
 
 function injectBriefingStyles(root: HTMLElement): void {
@@ -138,11 +198,37 @@ function injectBriefingStyles(root: HTMLElement): void {
       border-radius: 8px;
       padding: 10px 12px;
     }
+    .sdq-briefing__metric-label-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
     .sdq-briefing__metric-label {
-      display: block;
       font-size: 11px;
       color: #94a3b8;
-      margin-bottom: 4px;
+    }
+    .sdq-briefing__metric-help {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+      background: rgba(30, 41, 59, 0.9);
+      color: #7dd3fc;
+      font: 700 11px system-ui, sans-serif;
+      line-height: 1;
+      cursor: pointer;
+    }
+    .sdq-briefing__metric-help:hover {
+      background: rgba(51, 65, 85, 0.95);
+      border-color: rgba(56, 189, 248, 0.55);
+    }
+    .sdq-briefing__metric-explanation {
+      margin: 0 0 8px;
+      font-size: 11px;
+      line-height: 1.45;
+      color: #cbd5e1;
     }
     .sdq-briefing__metric-value {
       font-size: 15px;
@@ -251,13 +337,7 @@ export function mountBriefingPanel(
 
     metricsGrid.replaceChildren();
     for (const entry of buildMetricEntries(problem.metrics)) {
-      const metric = document.createElement('div');
-      metric.className = 'sdq-briefing__metric';
-      metric.innerHTML = `
-        <span class="sdq-briefing__metric-label">${entry.label}</span>
-        <span class="sdq-briefing__metric-value">${entry.value}</span>
-      `;
-      metricsGrid.append(metric);
+      metricsGrid.append(createMetricCard(entry));
     }
 
     tagsContainer.replaceChildren();

@@ -308,7 +308,7 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 **Req:** PROD-13
 
 - [x] Hover em componente: nome, descrição ≤2 frases, "quando usar"
-- [ ] Commit: `feat(client): component palette tooltips`
+- [x] Commit: `feat(client): component palette tooltips`
 
 ---
 
@@ -320,7 +320,7 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-14
 
-- [ ] Ícone `?` em cada métrica → explicação em linguagem simples
+- [x] Ícone `?` em cada métrica → explicação em linguagem simples
 - [ ] Commit: `feat(client): briefing metric explanations`
 
 ---

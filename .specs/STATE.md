@@ -23,7 +23,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | Campo | Valor |
 | ----- | ----- |
 | **Fase atual** | Foundation mergeada em `main` — MVP Canvas sub-fase 1a |
-| **Próximo passo** | **T18** — Briefing metric explanations (`feat(client): briefing metric explanations`) |
+| **Próximo passo** | **T19** — Glossary panel atalho G (`feat(client): glossary panel`) |
 | **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) — **Checkpoint 1b concluído** |
 | **Bloqueios** | Nenhum |
 | **Artefatos aprovados** | `foundation/validation.md` PASS, `mvp-canvas/tasks.md`, AD-016, AD-017 |
@@ -32,19 +32,19 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Sinal | Status |
 | ----- | ------ |
-| T1–T17 implemented on `feature/mvp-canvas` | ✅ OK |
-| Sub-fase 1c em andamento (T18–T22) | ✅ OK |
-| Gate `npx nx test shared client` | ✅ 140 testes |
+| T1–T18 implemented on `feature/mvp-canvas` | ✅ OK |
+| Sub-fase 1c em andamento (T19–T22) | ✅ OK |
+| Gate `npx nx test shared client` | ✅ 142 testes |
 
 **Veredito:** **GREEN**
 
 **Gate:** `npx nx test shared client`
 
-**Prompt para nova sessão (T18):**
+**Prompt para nova sessão (T19):**
 ```
-Branch feature/mvp-canvas. T1–T17 committed.
-Read .specs/STATE.md Handoff + .specs/features/mvp-canvas/tasks.md T18.
-Implement T18: briefing metric explanations (? icons).
+Branch feature/mvp-canvas. T1–T18 committed.
+Read .specs/STATE.md Handoff + .specs/features/mvp-canvas/tasks.md T19.
+Implement T19: glossary panel (atalho G).
 Gate: npx nx test shared client
 ```
 
