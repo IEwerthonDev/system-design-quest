@@ -22,20 +22,19 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge` merged em `main`** — loop pedagógico completo ✅ |
-| **Próximo passo** | Specify → Tasks para **Fase 3 `problem-library`** (27 problemas) |
-| **Feature ativa** | `problem-library` (não iniciada — sem spec/tasks ainda) |
+| **Fase atual** | **Fase 3 `problem-library` implementada** em `feature/problem-library` — Verifier PASS ✅ |
+| **Próximo passo** | Merge `feature/problem-library` → `main`; depois Fase 4 `speedrun` |
+| **Feature ativa** | `problem-library` — T1–T8 committed, validation PASS |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `ai-judge` spec/design/tasks/validation em `main`; catálogo em `docs/PROBLEM-LIBRARY.md` |
+| **Artefatos** | spec/design/tasks/validation em `.specs/features/problem-library/` |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| Merge `feature/ai-judge` → `main` (fast-forward) | ✅ OK |
-| Gate `npx nx run-many -t lint test` pré-merge | ✅ OK |
-| HEAD `main` = `a4e995c` | ✅ OK |
-| Stash: docs unrelated (`AGENTS.md`, foundation) | ⚠️ ver `git stash list` |
+| Branch `feature/problem-library` | ✅ 9 commits |
+| Gate `npx nx run-many -t lint test` | ✅ 279 tests |
+| 27 problemas + library UI + progress | ✅ OK |
 
 **Veredito:** **GREEN**
 
@@ -43,9 +42,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch main. Fases 0–2 merged (foundation + mvp-canvas + ai-judge).
-Iniciar Fase 3: Specify problem-library (.specs/features/problem-library/spec.md).
-Catálogo: docs/PROBLEM-LIBRARY.md (27 problemas). Só url-shortener implementado hoje.
+Branch feature/problem-library. Fase 3 done (27 problems, library UI, progress, rubrics).
+validation.md PASS. Merge to main if approved.
+Next: Fase 4 speedrun (timer, leaderboard).
 Gate: npx nx run-many -t lint test
 ```
 
