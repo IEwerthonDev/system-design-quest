@@ -20,6 +20,13 @@ export interface EdgeManager extends EdgeRegistry {
     to: string,
     direction?: EdgeDirection,
   ): ConnectionEdge | null;
+  canConnect(from: string, to: string): boolean;
+  invert(edgeId: string): ConnectionEdge | null;
+  reconnectEndpoint(
+    edgeId: string,
+    end: 'from' | 'to',
+    newNodeId: string,
+  ): ConnectionEdge | null;
   getEdge(id: string): ConnectionEdge | undefined;
   setDirection(edgeId: string, direction: EdgeDirection): boolean;
   removeEdge(edgeId: string): boolean;
@@ -63,12 +70,15 @@ export function createEdgeManager(options: EdgeManagerOptions): EdgeManager {
 
   const nodeExists = (id: string): boolean => componentManager.getInstance(id) !== undefined;
 
+  const canConnect = (from: string, to: string): boolean =>
+    from !== to && nodeExists(from) && nodeExists(to) && !hasOrderedPair(from, to);
+
   const connect = (
     from: string,
     to: string,
     direction: EdgeDirection = 'forward',
   ): ConnectionEdge | null => {
-    if (from === to || !nodeExists(from) || !nodeExists(to) || hasOrderedPair(from, to)) {
+    if (!canConnect(from, to)) {
       return null;
     }
 
@@ -84,8 +94,66 @@ export function createEdgeManager(options: EdgeManagerOptions): EdgeManager {
     return { ...edge };
   };
 
+  const replaceEdge = (
+    edgeId: string,
+    nextEdge: ConnectionEdge,
+  ): ConnectionEdge | null => {
+    const current = registry.getEdges();
+    const index = current.findIndex((edge) => edge.id === edgeId);
+    if (index < 0) {
+      return null;
+    }
+    const next = [...current];
+    next[index] = nextEdge;
+    registry.setEdges(next);
+    return { ...nextEdge };
+  };
+
   return {
     connect,
+    canConnect,
+    invert(edgeId) {
+      const edge = registry.getEdges().find((e) => e.id === edgeId);
+      if (!edge) {
+        return null;
+      }
+      const swappedFrom = edge.to;
+      const swappedTo = edge.from;
+      if (hasOrderedPair(swappedFrom, swappedTo)) {
+        return null;
+      }
+      return replaceEdge(edgeId, {
+        ...edge,
+        from: swappedFrom,
+        to: swappedTo,
+      });
+    },
+    reconnectEndpoint(edgeId, end, newNodeId) {
+      const edge = registry.getEdges().find((e) => e.id === edgeId);
+      if (!edge || !nodeExists(newNodeId)) {
+        return null;
+      }
+
+      const nextFrom = end === 'from' ? newNodeId : edge.from;
+      const nextTo = end === 'to' ? newNodeId : edge.to;
+
+      if (nextFrom === nextTo) {
+        return null;
+      }
+
+      const wouldDuplicate = registry
+        .getEdges()
+        .some((e) => e.id !== edgeId && e.from === nextFrom && e.to === nextTo);
+      if (wouldDuplicate) {
+        return null;
+      }
+
+      return replaceEdge(edgeId, {
+        ...edge,
+        from: nextFrom,
+        to: nextTo,
+      });
+    },
     getEdge(id) {
       return registry.getEdges().find((edge) => edge.id === id);
     },

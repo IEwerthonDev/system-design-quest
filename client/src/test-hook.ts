@@ -22,6 +22,14 @@ export interface GameState {
   judgeResult: JudgeResult | null;
   judgingStep: JudgingStep | null;
   elapsedMs: number | null;
+  canvasInteraction: {
+    mode: string;
+    hoverComponentId: string | null;
+    linkingFromId: string | null;
+    selectedEdgeId: string | null;
+    previewActive: boolean;
+    reconnectEnd: 'from' | 'to' | null;
+  } | null;
 }
 
 declare global {
@@ -46,6 +54,7 @@ const initialState: GameState = {
   judgeResult: null,
   judgingStep: null,
   elapsedMs: null,
+  canvasInteraction: null,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -59,6 +68,7 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     judgeResult: null,
     judgingStep: null,
     elapsedMs: null,
+    canvasInteraction: null,
     ...overrides,
   };
   return window.__GAME_STATE__;
@@ -99,4 +109,19 @@ export function setGuidedStep(step: string | null): void {
 
 export function setJudgingStep(step: JudgingStep | null): void {
   getGameState().judgingStep = step;
+}
+
+export function setCanvasInteraction(
+  state: GameState['canvasInteraction'],
+): void {
+  getGameState().canvasInteraction = state
+    ? {
+        mode: state.mode,
+        hoverComponentId: state.hoverComponentId,
+        linkingFromId: state.linkingFromId,
+        selectedEdgeId: state.selectedEdgeId,
+        previewActive: state.previewActive,
+        reconnectEnd: state.reconnectEnd,
+      }
+    : null;
 }

@@ -22,26 +22,33 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 5 `polish` merged em `main`** ✅ |
-| **Próximo passo** | Produto Fases 0–5 completo; backlog / polish deferred (PNG, 2D fallback, 36 tipos) |
-| **Feature ativa** | nenhuma |
+| **Fase atual** | `canvas-graph-dnd` — **Verify PASS** ✅ |
+| **Próximo passo** | Merge `feature/canvas-graph-dnd` → `main` (push/PR se desejado) |
+| **Feature ativa** | `canvas-graph-dnd` (pronta) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | polish validation PASS em `main` |
+| **Artefatos** | T1–T11 + fix `d7aa155`; validation PASS; gate 369 |
 
-### Context Checkpoint (2026-07-27)
+### Context Checkpoint (2026-07-27 — verify PASS)
 
 | Sinal | Status |
 | ----- | ------ |
-| Verifier | ✅ PASS |
-| Merge → `main` | ✅ `cb5ffba` via SSH |
+| Execute | T1–T11 + CGD-04 fix done |
+| Verifier | ✅ PASS (re-verify após `d7aa155`) |
+| Gate | 369 passed |
+| Sensor | 3/3 killed |
 
-**Veredito:** **GREEN**
+**Veredito:** **GREEN** (feature complete)
 
-**Prompt para nova sessão:**
+**Branch:** `feature/canvas-graph-dnd`  
+**HEAD tip:** `d7aa155` (+ docs commit after)  
+**Report:** `.specs/features/canvas-graph-dnd/validation.md`  
+**Stash:** `stash@{0}` wip-pre-canvas-graph-dnd — pode dropar se obsoleto
+
+**Prompt pós-merge / PR:**
 ```
-Branch main. Fases 0–5 merged (foundation → polish).
-Deferred: Export PNG, 2D WebGL fallback, catalog 36 types.
-Gate: npx nx run-many -t lint test && npx playwright test
+Branch feature/canvas-graph-dnd. Verify PASS. Ready to push SSH + gh pr create → main.
+Read .specs/STATE.md Handoff + validation.md.
+Gate already green: npx nx run-many -t lint test
 ```
 
 ---
@@ -80,5 +87,6 @@ Gate: npx nx run-many -t lint test && npx playwright test
 | 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
 | 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
+| — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
 
 Detalhes em `docs/ROADMAP.md`.

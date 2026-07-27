@@ -16,10 +16,13 @@ export const FLOW_EDGE_TUBE_RADIUS = 0.06;
 export const FLOW_EDGE_TUBE_SEGMENTS = 32;
 export const FLOW_EDGE_RADIAL_SEGMENTS = 8;
 export const FLOW_EDGE_LIFT_Y = 0.55;
+export const FLOW_EDGE_CURVE_MID_OFFSET = 0.35;
 
 export interface FlowEdgeObject {
   mesh: THREE.Mesh;
   direction: EdgeDirection;
+  rebuildGeometry(from: THREE.Vector3, to: THREE.Vector3): void;
+  setDirection(direction: EdgeDirection): void;
   update(dt: number): void;
   dispose(): void;
 }
@@ -29,10 +32,25 @@ export interface FlowEdgeUniforms {
   uBidirectional: THREE.IUniform<number>;
 }
 
-function createCurve(from: THREE.Vector3, to: THREE.Vector3): THREE.Curve<THREE.Vector3> {
+export function createFlowCurve(
+  from: THREE.Vector3,
+  to: THREE.Vector3,
+): THREE.QuadraticBezierCurve3 {
   const start = from.clone().setY(from.y + FLOW_EDGE_LIFT_Y);
   const end = to.clone().setY(to.y + FLOW_EDGE_LIFT_Y);
-  return new THREE.LineCurve3(start, end);
+  const mid = start.clone().lerp(end, 0.5);
+  mid.y += FLOW_EDGE_CURVE_MID_OFFSET;
+  return new THREE.QuadraticBezierCurve3(start, mid, end);
+}
+
+function createTubeGeometry(from: THREE.Vector3, to: THREE.Vector3): THREE.TubeGeometry {
+  return new THREE.TubeGeometry(
+    createFlowCurve(from, to),
+    FLOW_EDGE_TUBE_SEGMENTS,
+    FLOW_EDGE_TUBE_RADIUS,
+    FLOW_EDGE_RADIAL_SEGMENTS,
+    false,
+  );
 }
 
 export function createFlowEdge(
@@ -40,14 +58,7 @@ export function createFlowEdge(
   to: THREE.Vector3,
   direction: EdgeDirection,
 ): FlowEdgeObject {
-  const curve = createCurve(from, to);
-  const geometry = new THREE.TubeGeometry(
-    curve,
-    FLOW_EDGE_TUBE_SEGMENTS,
-    FLOW_EDGE_TUBE_RADIUS,
-    FLOW_EDGE_RADIAL_SEGMENTS,
-    false,
-  );
+  let geometry = createTubeGeometry(from, to);
 
   const uniforms: FlowEdgeUniforms = {
     uTime: { value: 0 },
@@ -66,9 +77,19 @@ export function createFlowEdge(
   mesh.userData.isFlowEdge = true;
   mesh.renderOrder = 5;
 
-  return {
+  const edge: FlowEdgeObject = {
     mesh,
     direction,
+    rebuildGeometry(nextFrom, nextTo) {
+      const nextGeometry = createTubeGeometry(nextFrom, nextTo);
+      geometry.dispose();
+      mesh.geometry = nextGeometry;
+      geometry = nextGeometry;
+    },
+    setDirection(nextDirection) {
+      edge.direction = nextDirection;
+      uniforms.uBidirectional.value = nextDirection === 'bidirectional' ? 1 : 0;
+    },
     update(dt: number) {
       uniforms.uTime.value += dt * FLOW_EDGE_ANIMATION_SPEED;
     },
@@ -77,6 +98,8 @@ export function createFlowEdge(
       material.dispose();
     },
   };
+
+  return edge;
 }
 
 export function updateFlowAnimation(edges: Iterable<FlowEdgeObject>, dt: number): void {

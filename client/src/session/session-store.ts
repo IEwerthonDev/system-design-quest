@@ -1,7 +1,7 @@
 import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
 import type { ExperienceLevel } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
-import { getGameState, initGameState } from '../test-hook';
+import { initGameState } from '../test-hook';
 import { advancePhase as computeNextPhase, retreatPhase as computePreviousPhase } from './phase-machine';
 
 type GraphChangeListener = (graph: ArchitectureGraph) => void;
@@ -57,6 +57,7 @@ function cloneJudgeResult(result: JudgeResult): JudgeResult {
 }
 
 function syncToGameState(session: Session, now: () => number = Date.now): void {
+  const previous = typeof window !== 'undefined' ? window.__GAME_STATE__ : undefined;
   initGameState({
     problemId: session.problemId,
     mode: session.mode,
@@ -66,8 +67,9 @@ function syncToGameState(session: Session, now: () => number = Date.now): void {
     guidedMode: session.guidedMode,
     experienceLevel: session.experienceLevel,
     judgeResult: session.judgeResult ? cloneJudgeResult(session.judgeResult) : null,
-    judgingStep: getGameState().judgingStep,
+    judgingStep: previous?.judgingStep ?? null,
     elapsedMs: session.mode === 'speedrun' ? getElapsedMs(session, now) : null,
+    canvasInteraction: previous?.canvasInteraction ?? null,
   });
 }
 
