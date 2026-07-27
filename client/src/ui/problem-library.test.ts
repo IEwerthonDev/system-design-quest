@@ -112,6 +112,25 @@ describe('problem library UI', () => {
     });
   });
 
+  it('opens ranking panel when ranking button clicked', async () => {
+    const fetchLeaderboard = vi.fn().mockResolvedValue({
+      problemId: 'url-shortener',
+      entries: [],
+    });
+
+    mountProblemLibrary(container, { onSelect: () => undefined, fetchLeaderboard }, storage);
+
+    container
+      .querySelector<HTMLButtonElement>('[data-testid="problem-ranking-url-shortener"]')
+      ?.click();
+
+    await vi.waitFor(() => {
+      expect(fetchLeaderboard).toHaveBeenCalledWith('url-shortener');
+    });
+
+    expect(container.querySelector('[data-testid="leaderboard-panel"]')?.hidden).toBe(false);
+  });
+
   it('shows warning banner for hard selection without easy progress', () => {
     mountProblemLibrary(container, { onSelect: () => undefined }, storage);
     librarySetHardAndClick(container);

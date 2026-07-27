@@ -5,6 +5,7 @@ import {
   type Difficulty,
   type Problem,
 } from '@sdq/shared';
+import type { LeaderboardEntry } from '@sdq/shared';
 import type { GameMode } from '../test-hook';
 import { DIFFICULTY_LABELS } from './briefing-panel';
 import {
@@ -12,6 +13,7 @@ import {
   isProblemCompleted,
   loadProgress,
 } from '../storage/progress';
+import { mountLeaderboardPanel } from './leaderboard-panel';
 
 export type LibraryFilter = Difficulty | 'all';
 
@@ -22,6 +24,9 @@ export interface LibrarySelection {
 
 export interface ProblemLibraryCallbacks {
   onSelect: (selection: LibrarySelection) => void;
+  fetchLeaderboard?: (
+    problemId: string,
+  ) => Promise<{ problemId: string; entries: LeaderboardEntry[] }>;
 }
 
 export interface ProblemLibraryPanel {
@@ -281,6 +286,10 @@ export function mountProblemLibrary(
   panel.append(card);
   container.append(panel);
 
+  const leaderboardPanel = mountLeaderboardPanel(container, {
+    fetchLeaderboard: callbacks.fetchLeaderboard,
+  });
+
   const filterOptions: Array<{ id: LibraryFilter; label: string }> = [
     { id: 'all', label: 'Todos' },
     { id: 'easy', label: '🟢 Fácil' },
@@ -432,7 +441,16 @@ export function mountProblemLibrary(
     speedrunButton.textContent = 'Speedrun';
     speedrunButton.addEventListener('click', () => handleSelect(problem, 'speedrun'));
 
-    actions.append(studyButton, speedrunButton);
+    const rankingButton = document.createElement('button');
+    rankingButton.type = 'button';
+    rankingButton.className = 'sdq-library__action';
+    rankingButton.setAttribute('data-testid', `problem-ranking-${problem.id}`);
+    rankingButton.textContent = 'Ranking';
+    rankingButton.addEventListener('click', () => {
+      void leaderboardPanel.show(problem.id, problem.title);
+    });
+
+    actions.append(studyButton, speedrunButton, rankingButton);
     cardEl.append(header, badges, tags, meta, actions);
 
     return cardEl;

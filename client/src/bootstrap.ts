@@ -9,6 +9,7 @@ import {
   shouldShowOnboarding,
   type UserPreferences,
 } from './storage/preferences';
+import { fetchLeaderboard } from './leaderboard/leaderboard-api';
 import { mountOnboarding, type OnboardingResult } from './ui/onboarding';
 import { mountProblemLibrary, type LibrarySelection } from './ui/problem-library';
 
@@ -48,6 +49,7 @@ function showLibrary(
       container.replaceChildren();
       startGame(container, canvas, preferences, selection);
     },
+    fetchLeaderboard,
   });
 }
 
