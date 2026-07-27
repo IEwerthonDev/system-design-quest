@@ -6,6 +6,7 @@ import { unlockProblemLibrary } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
+import { bindGlossaryShortcut, openGlossaryPanel } from '../ui/glossary';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
@@ -146,6 +147,9 @@ export function mountPhaseNavigation(
     dropTarget: options.canvas ?? undefined,
   });
 
+  const glossaryPanel = openGlossaryPanel(problemId, shell);
+  const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
+
   const submitPanel = mountSubmitPanel(shell, {
     getGraph,
     onSubmitSuccess: (graph) => {
@@ -211,6 +215,8 @@ export function mountPhaseNavigation(
     root: shell,
     sync,
     destroy: () => {
+      unbindGlossaryShortcut();
+      glossaryPanel.destroy();
       unsubscribeGraphChanges?.();
       guidedOverlay?.destroy();
     },

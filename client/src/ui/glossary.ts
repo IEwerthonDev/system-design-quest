@@ -1,10 +1,67 @@
-import { getComponentMeta, type ComponentType } from '@sdq/shared';
+import { getComponentMeta, getProblem, type ComponentType } from '@sdq/shared';
 
 export interface TooltipContent {
   name: string;
   description: string;
   whenToUse: string;
 }
+
+export interface GlossaryTerm {
+  term: string;
+  explanation: string;
+}
+
+const PROBLEM_GLOSSARY: Record<string, readonly GlossaryTerm[]> = {
+  'url-shortener': [
+    {
+      term: 'Read-heavy',
+      explanation:
+        'Sistema com muito mais leituras que escritas. Cada link criado gera muitos redirects — otimize o caminho de leitura.',
+    },
+    {
+      term: 'Hashing / Base62',
+      explanation:
+        'Técnica para gerar códigos curtos únicos a partir de URLs longas. Base62 usa letras e números para URLs compactas.',
+    },
+    {
+      term: 'Cache',
+      explanation:
+        'Armazenamento temporário em memória que acelera redirects frequentes sem consultar o banco a cada clique.',
+    },
+    {
+      term: 'Key-Value (KV)',
+      explanation:
+        'Banco simples que mapeia uma chave (código curto) para um valor (URL longa). Ideal para lookups rápidos.',
+    },
+    {
+      term: 'HTTP 302 Redirect',
+      explanation:
+        'Resposta temporária que envia o navegador para a URL original. É o coração do fluxo de leitura do encurtador.',
+    },
+  ],
+};
+
+const TAG_GLOSSARY: Record<string, GlossaryTerm> = {
+  hashing: {
+    term: 'Hashing',
+    explanation:
+      'Transforma dados em um identificador fixo. No encurtador, gera códigos curtos únicos para cada URL.',
+  },
+  cache: {
+    term: 'Cache',
+    explanation:
+      'Camada rápida que guarda resultados recentes para evitar consultas repetidas ao banco de dados.',
+  },
+  kv: {
+    term: 'Key-Value Store',
+    explanation: 'Banco que busca por chave — perfeito para mapear código curto → URL longa.',
+  },
+  'read-heavy': {
+    term: 'Read-heavy',
+    explanation:
+      'Proporção de leituras muito maior que escritas. Exige otimizar redirects e cache.',
+  },
+};
 
 const METRIC_EXPLANATIONS: Record<string, string> = {
   DAU: 'DAU (Daily Active Users) — quantos usuários únicos usam o sistema por dia.',
@@ -37,6 +94,257 @@ export function getComponentTooltip(type: ComponentType): TooltipContent {
 
 export function getMetricExplanation(metric: string): string | null {
   return METRIC_EXPLANATIONS[metric] ?? null;
+}
+
+export function getProblemGlossaryTerms(problemId: string): GlossaryTerm[] {
+  const explicit = PROBLEM_GLOSSARY[problemId];
+  if (explicit) {
+    return [...explicit];
+  }
+
+  const problem = getProblem(problemId);
+  if (!problem) {
+    return [];
+  }
+
+  const seen = new Set<string>();
+  const terms: GlossaryTerm[] = [];
+
+  for (const tag of problem.tags) {
+    const entry = TAG_GLOSSARY[tag];
+    if (entry && !seen.has(entry.term)) {
+      seen.add(entry.term);
+      terms.push(entry);
+    }
+  }
+
+  return terms;
+}
+
+export interface GlossaryPanel {
+  root: HTMLElement;
+  open(): void;
+  close(): void;
+  toggle(): void;
+  isOpen(): boolean;
+  destroy(): void;
+}
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  const candidate =
+    target instanceof HTMLElement ? target : document.activeElement;
+  if (!(candidate instanceof HTMLElement)) {
+    return false;
+  }
+
+  const tag = candidate.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || candidate.isContentEditable;
+}
+
+function injectGlossaryPanelStyles(root: HTMLElement): void {
+  if (document.getElementById('sdq-glossary-panel-styles')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'sdq-glossary-panel-styles';
+  style.textContent = `
+    .sdq-glossary-panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 40;
+      width: min(360px, calc(100vw - 32px));
+      max-height: calc(100vh - 32px);
+      display: flex;
+      flex-direction: column;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      background: rgba(15, 23, 42, 0.98);
+      color: #e2e8f0;
+      font-family: system-ui, sans-serif;
+      box-shadow: 0 16px 40px rgba(2, 6, 23, 0.55);
+    }
+    .sdq-glossary-panel[hidden] {
+      display: none;
+    }
+    .sdq-glossary-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+    .sdq-glossary-panel__title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #7dd3fc;
+    }
+    .sdq-glossary-panel__shortcut {
+      font-size: 11px;
+      color: #94a3b8;
+    }
+    .sdq-glossary-panel__close {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 20px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .sdq-glossary-panel__close:hover {
+      color: #e2e8f0;
+      background: rgba(51, 65, 85, 0.6);
+    }
+    .sdq-glossary-panel__body {
+      overflow-y: auto;
+      padding: 12px 16px 16px;
+    }
+    .sdq-glossary-panel__term {
+      margin-bottom: 14px;
+    }
+    .sdq-glossary-panel__term:last-child {
+      margin-bottom: 0;
+    }
+    .sdq-glossary-panel__term-name {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #bae6fd;
+    }
+    .sdq-glossary-panel__term-text {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #cbd5e1;
+    }
+    .sdq-glossary-panel__empty {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  `;
+  root.append(style);
+}
+
+export function openGlossaryPanel(problemId: string, container: HTMLElement = document.body): GlossaryPanel {
+  injectGlossaryPanelStyles(document.head);
+  injectGlossaryStyles(document.head);
+
+  const terms = getProblemGlossaryTerms(problemId);
+  const problem = getProblem(problemId);
+
+  const panel = document.createElement('aside');
+  panel.className = 'sdq-glossary-panel';
+  panel.setAttribute('data-testid', 'glossary-panel');
+  panel.setAttribute('role', 'dialog');
+  panel.setAttribute('aria-label', 'Glossário');
+  panel.hidden = true;
+
+  const header = document.createElement('header');
+  header.className = 'sdq-glossary-panel__header';
+
+  const titleWrap = document.createElement('div');
+  const title = document.createElement('h2');
+  title.className = 'sdq-glossary-panel__title';
+  title.textContent = 'Glossário';
+  const shortcut = document.createElement('p');
+  shortcut.className = 'sdq-glossary-panel__shortcut';
+  shortcut.textContent = problem ? `${problem.title} · atalho G` : 'Atalho G';
+  titleWrap.append(title, shortcut);
+
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.className = 'sdq-glossary-panel__close';
+  closeButton.setAttribute('data-testid', 'glossary-panel-close');
+  closeButton.setAttribute('aria-label', 'Fechar glossário');
+  closeButton.textContent = '×';
+
+  header.append(titleWrap, closeButton);
+
+  const body = document.createElement('div');
+  body.className = 'sdq-glossary-panel__body';
+
+  if (terms.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'sdq-glossary-panel__empty';
+    empty.textContent = 'Nenhum termo disponível para este problema.';
+    body.append(empty);
+  } else {
+    for (const entry of terms) {
+      const termBlock = document.createElement('article');
+      termBlock.className = 'sdq-glossary-panel__term';
+      termBlock.setAttribute('data-testid', `glossary-term-${entry.term.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`);
+
+      const termName = document.createElement('h3');
+      termName.className = 'sdq-glossary-panel__term-name';
+      termName.textContent = entry.term;
+
+      const termText = document.createElement('p');
+      termText.className = 'sdq-glossary-panel__term-text';
+      termText.textContent = entry.explanation;
+
+      termBlock.append(termName, termText);
+      body.append(termBlock);
+    }
+  }
+
+  panel.append(header, body);
+  container.append(panel);
+
+  const open = (): void => {
+    panel.hidden = false;
+  };
+
+  const close = (): void => {
+    panel.hidden = true;
+  };
+
+  const toggle = (): void => {
+    panel.hidden = !panel.hidden;
+  };
+
+  closeButton.addEventListener('click', close);
+
+  return {
+    root: panel,
+    open,
+    close,
+    toggle,
+    isOpen: () => !panel.hidden,
+    destroy: () => {
+      panel.remove();
+    },
+  };
+}
+
+export function bindGlossaryShortcut(panel: Pick<GlossaryPanel, 'toggle' | 'close' | 'isOpen'>): () => void {
+  const onKeyDown = (event: KeyboardEvent): void => {
+    if (isEditableTarget(event.target)) {
+      return;
+    }
+
+    if (event.key === 'g' || event.key === 'G') {
+      event.preventDefault();
+      panel.toggle();
+      return;
+    }
+
+    if (event.key === 'Escape' && panel.isOpen()) {
+      event.preventDefault();
+      panel.close();
+    }
+  };
+
+  window.addEventListener('keydown', onKeyDown);
+
+  return () => {
+    window.removeEventListener('keydown', onKeyDown);
+  };
 }
 
 function injectGlossaryStyles(root: HTMLElement): void {

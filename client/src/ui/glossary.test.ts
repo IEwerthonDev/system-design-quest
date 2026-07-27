@@ -1,10 +1,13 @@
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import { TIER_1_TYPES } from '@sdq/shared';
+import { TIER_1_TYPES, URL_SHORTENER_ID } from '@sdq/shared';
 import {
   bindComponentTooltip,
+  bindGlossaryShortcut,
   countSentences,
   getComponentTooltip,
   getMetricExplanation,
+  getProblemGlossaryTerms,
+  openGlossaryPanel,
   resetComponentTooltip,
 } from './glossary';
 import { mountPalette } from './palette';
@@ -31,6 +34,14 @@ describe('glossary helpers', () => {
     expect(getMetricExplanation('DAU')).toMatch(/usuários únicos/i);
     expect(getMetricExplanation('Read RPS (pico)')).toMatch(/RPS/i);
     expect(getMetricExplanation('unknown')).toBeNull();
+  });
+
+  it('returns glossary terms for the current problem', () => {
+    const terms = getProblemGlossaryTerms(URL_SHORTENER_ID);
+    expect(terms.length).toBeGreaterThanOrEqual(4);
+    expect(terms.map((t) => t.term)).toEqual(
+      expect.arrayContaining(['Read-heavy', 'Cache', 'Key-Value (KV)']),
+    );
   });
 });
 
@@ -96,5 +107,56 @@ describe('palette component tooltips', () => {
     expect(document.querySelector('[data-testid="component-tooltip"]')?.hasAttribute('hidden')).toBe(
       true,
     );
+  });
+});
+
+describe('glossary panel', () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.append(container);
+  });
+
+  afterEach(() => {
+    container.remove();
+    document.getElementById('sdq-glossary-panel-styles')?.remove();
+  });
+
+  it('opens panel with problem-specific terms', () => {
+    const panel = openGlossaryPanel(URL_SHORTENER_ID, container);
+    panel.open();
+
+    expect(panel.isOpen()).toBe(true);
+    expect(container.querySelector('[data-testid="glossary-panel"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="glossary-term-read-heavy"]')).toBeTruthy();
+    expect(container.querySelector('[data-testid="glossary-term-cache"]')?.textContent).toMatch(
+      /cache/i,
+    );
+
+    panel.destroy();
+  });
+
+  it('toggles with G shortcut and ignores inputs', () => {
+    const panel = openGlossaryPanel(URL_SHORTENER_ID, container);
+    const cleanup = bindGlossaryShortcut(panel);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }));
+    expect(panel.isOpen()).toBe(true);
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'g' }));
+    expect(panel.isOpen()).toBe(false);
+
+    const input = document.createElement('input');
+    document.body.append(input);
+    input.focus();
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'g', bubbles: true, cancelable: true }),
+    );
+    expect(panel.isOpen()).toBe(false);
+
+    cleanup();
+    panel.destroy();
+    input.remove();
   });
 });
