@@ -133,3 +133,132 @@ describe('svg-edges packet animation along Bezier (PP-04 AC3)', () => {
     world.remove();
   });
 });
+
+describe('svg-edges pill labels + edge activation (CI-01 / CI-02)', () => {
+  const endpoints = {
+    e1: { from: { x: 10, y: 20 }, to: { x: 210, y: 40 } },
+  };
+
+  function firePointerDown(el: Element): void {
+    el.dispatchEvent(new Event('pointerdown', { bubbles: true, cancelable: true }));
+  }
+
+  afterEach(() => {
+    document.body.replaceChildren();
+  });
+
+  it('renders a pill with label text when label is non-empty', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'DB' }],
+      endpoints,
+      false,
+      1,
+    );
+    const pill = world.querySelector('[data-testid="edge-label"]');
+    expect(pill).toBeTruthy();
+    expect(pill!.textContent).toContain('DB');
+    layer.destroy();
+  });
+
+  it('does not render a pill when label is absent or empty', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward' }],
+      endpoints,
+      false,
+      1,
+    );
+    expect(world.querySelector('[data-testid="edge-label"]')).toBeNull();
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: '' }],
+      endpoints,
+      false,
+      1,
+    );
+    expect(world.querySelector('[data-testid="edge-label"]')).toBeNull();
+    layer.destroy();
+  });
+
+  it('updates pill text on re-sync without remounting the host svg', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    const host = layer.svg;
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'REQ' }],
+      endpoints,
+      false,
+      1,
+    );
+    expect(world.querySelector('[data-testid="edge-label"]')!.textContent).toContain('REQ');
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'CACHE' }],
+      endpoints,
+      false,
+      1,
+    );
+    expect(layer.svg).toBe(host);
+    expect(world.contains(host)).toBe(true);
+    expect(world.querySelector('[data-testid="edge-label"]')!.textContent).toContain('CACHE');
+    layer.destroy();
+  });
+
+  it('reflects selected edge styling after setSelected + sync', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    layer.setSelected('e1');
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'REQ' }],
+      endpoints,
+      false,
+      1,
+    );
+    const path = world.querySelector('path');
+    const pill = world.querySelector('[data-testid="edge-label"]');
+    expect(path!.getAttribute('stroke')).toBe('#38bdf8');
+    expect(path!.getAttribute('stroke-width')).toBe('2.5');
+    expect(pill!.classList.contains('is-selected') || pill!.getAttribute('data-selected') === 'true').toBe(
+      true,
+    );
+    layer.destroy();
+  });
+
+  it('delegates pointerdown on path and pill to onEdgeActivate after innerHTML clear', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const activated: string[] = [];
+    const layer = createSvgEdgeLayer(world, {
+      onEdgeActivate: (edgeId) => {
+        activated.push(edgeId);
+      },
+    });
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'REQ' }],
+      endpoints,
+      false,
+      1,
+    );
+    const path = world.querySelector('g[data-edge-id="e1"] > path');
+    expect(path).toBeTruthy();
+    firePointerDown(path!);
+    expect(activated).toEqual(['e1']);
+
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'DB' }],
+      endpoints,
+      false,
+      1,
+    );
+    const pill = world.querySelector('[data-testid="edge-label"]');
+    expect(pill).toBeTruthy();
+    firePointerDown(pill!);
+    expect(activated).toEqual(['e1', 'e1']);
+    layer.destroy();
+  });
+});

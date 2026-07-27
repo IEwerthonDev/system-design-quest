@@ -58,7 +58,14 @@ export function curvePath(from: { x: number; y: number }, to: { x: number; y: nu
   return `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y}, ${p2.x} ${p2.y}, ${p3.x} ${p3.y}`;
 }
 
-export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
+export interface SvgEdgeLayerOptions {
+  onEdgeActivate?: (edgeId: string) => void;
+}
+
+export function createSvgEdgeLayer(
+  world: HTMLElement,
+  options: SvgEdgeLayerOptions = {},
+): SvgEdgeLayer {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   svg.classList.add('sdq-blueprint-edges');
   svg.setAttribute('data-testid', 'blueprint-edges');
@@ -77,6 +84,18 @@ export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
   let animFrame = 0;
   const packetEls: SVGCircleElement[] = [];
   let previewEl: SVGPathElement | null = null;
+
+  // Delegation survives sync's innerHTML clear (listeners on the SVG root).
+  svg.addEventListener('pointerdown', (ev) => {
+    if (!options.onEdgeActivate) return;
+    const target = ev.target;
+    if (!(target instanceof Element)) return;
+    const edgeHost = target.closest('[data-edge-id]');
+    const edgeId = edgeHost?.getAttribute('data-edge-id');
+    if (!edgeId) return;
+    ev.stopPropagation();
+    options.onEdgeActivate(edgeId);
+  });
 
   const clearPreview = (): void => {
     previewEl?.remove();
@@ -130,17 +149,47 @@ export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
       g.append(path);
 
       if (edge.label) {
-        const midX = (ep.from.x + ep.to.x) / 2;
-        const midY = (ep.from.y + ep.to.y) / 2 - 8;
-        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        label.setAttribute('x', String(midX));
-        label.setAttribute('y', String(midY));
-        label.setAttribute('text-anchor', 'middle');
-        label.setAttribute('fill', '#f8fafc');
-        label.setAttribute('font-size', '10');
-        label.setAttribute('font-family', 'ui-monospace, monospace');
-        label.textContent = edge.label;
-        g.append(label);
+        const mid = pointOnEdgeCurve(ep.from, ep.to, 0.5);
+        const midX = mid.x;
+        const midY = mid.y - 10;
+        const selected = selectedId === edge.id;
+        const pill = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        pill.setAttribute('data-testid', 'edge-label');
+        pill.setAttribute('data-edge-id', edge.id);
+        if (selected) {
+          pill.classList.add('is-selected');
+          pill.setAttribute('data-selected', 'true');
+        }
+        pill.style.pointerEvents = 'all';
+        pill.style.cursor = 'pointer';
+
+        const labelText = edge.label;
+        const padX = 6;
+        const approxW = Math.max(28, labelText.length * 7 + padX * 2);
+        const h = 16;
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', String(midX - approxW / 2));
+        rect.setAttribute('y', String(midY - h / 2));
+        rect.setAttribute('width', String(approxW));
+        rect.setAttribute('height', String(h));
+        rect.setAttribute('rx', '8');
+        rect.setAttribute('ry', '8');
+        rect.setAttribute('fill', selected ? '#0ea5e9' : '#1e293b');
+        rect.setAttribute('stroke', selected ? '#38bdf8' : '#64748b');
+        rect.setAttribute('stroke-width', '1');
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        text.setAttribute('x', String(midX));
+        text.setAttribute('y', String(midY + 3.5));
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#f8fafc');
+        text.setAttribute('font-size', '10');
+        text.setAttribute('font-family', 'ui-monospace, monospace');
+        text.style.pointerEvents = 'none';
+        text.textContent = labelText;
+
+        pill.append(rect, text);
+        g.append(pill);
       }
 
       if (running) {

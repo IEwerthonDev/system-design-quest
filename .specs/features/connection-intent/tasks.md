@@ -102,13 +102,13 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] Non-empty label → pill at mid-curve with label text; empty/absent → no pill
-- [ ] `setSelected` / sync reflects selected edge visually
-- [ ] Label update on re-sync updates pill text without remounting canvas host
-- [ ] Delegation survives `innerHTML` clear; activates for path and pill
-- [ ] Existing PP-04 curve/packet tests still green
-- [ ] Gate: `npx nx test client` PASS
-- [ ] Commit: `feat(client): pill edge labels and SVG edge activation`
+- [x] Non-empty label → pill at mid-curve with label text; empty/absent → no pill
+- [x] `setSelected` / sync reflects selected edge visually
+- [x] Label update on re-sync updates pill text without remounting canvas host
+- [x] Delegation survives `innerHTML` clear; activates for path and pill
+- [x] Existing PP-04 curve/packet tests still green
+- [x] Gate: `npx nx test client` PASS
+- [x] Commit: `feat(client): pill edge labels and SVG edge activation`
 
 **Tests:** unit  
 **Gate:** quick
