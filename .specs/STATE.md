@@ -28,8 +28,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Branch** | `main` |
 | **Bloqueios** | Sessions/leaderboard still need external API / durable store |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_61at3GNQL6GvXyyEndS8dsMAu7tZ` (Spiral Out / Hobby) — READY |
-| **UI fix** | Voltar on canvas lives in session-header leading slot (not over palette) |
+| **Deployment** | `dpl_27R4sYKCm5uwo6Qof71qTsCw3TUs` (Spiral Out / Hobby) — READY |
+| **UI fix** | Voltar in session-header leading; Componentes palette minimizable («/») |
 
 ### Deploy note (Hobby)
 
