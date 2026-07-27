@@ -19,6 +19,7 @@ export interface ComponentInstanceObject {
   id: string;
   type: ComponentType;
   label: string;
+  note?: string;
   category: ComponentCategory;
   group: THREE.Group;
   mesh: THREE.Mesh;
@@ -95,7 +96,14 @@ function createLabelSprite(text: string): THREE.Sprite {
   sprite.scale.set(1.6 * aspect, 1.6, 1);
   sprite.position.y = LABEL_OFFSET_Y;
   sprite.renderOrder = 10;
+  sprite.userData.labelText = text;
   return sprite;
+}
+
+function disposeLabelSprite(sprite: THREE.Sprite): void {
+  const material = sprite.material as THREE.SpriteMaterial;
+  material.map?.dispose();
+  material.dispose();
 }
 
 export function createComponentInstance(
@@ -144,4 +152,31 @@ export function setInstanceXZPosition(
 ): void {
   instance.group.position.x = x;
   instance.group.position.z = z;
+}
+
+export function updateInstanceLabel(instance: ComponentInstanceObject, label: string): void {
+  instance.label = label;
+  const nextSprite = createLabelSprite(label);
+  instance.group.remove(instance.labelSprite);
+  disposeLabelSprite(instance.labelSprite);
+  instance.labelSprite = nextSprite;
+  instance.group.add(nextSprite);
+}
+
+export function setInstanceNote(instance: ComponentInstanceObject, note: string): void {
+  instance.note = note;
+}
+
+export function setInstanceSelected(
+  instance: ComponentInstanceObject,
+  selected: boolean,
+): void {
+  const material = instance.mesh.material as THREE.MeshStandardMaterial;
+  if (selected) {
+    material.emissive.setHex(0xffffff);
+    material.emissiveIntensity = 0.35;
+  } else {
+    material.emissive.setHex(0x000000);
+    material.emissiveIntensity = 0;
+  }
 }

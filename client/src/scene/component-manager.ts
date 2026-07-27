@@ -2,7 +2,10 @@ import * as THREE from 'three';
 import type { ComponentType } from '@sdq/shared';
 import {
   createComponentInstance,
+  setInstanceNote,
+  setInstanceSelected,
   setInstanceXZPosition,
+  updateInstanceLabel,
   type ComponentInstanceObject,
 } from './component-instance';
 
@@ -22,6 +25,8 @@ export interface ComponentManagerOptions {
   canvas: HTMLCanvasElement;
   controls?: { enabled: boolean };
   raycaster?: THREE.Raycaster;
+  /** When false, pointer handlers are not auto-attached (use selection controller). */
+  attachPointerHandlers?: boolean;
 }
 
 export interface ComponentManager {
@@ -31,6 +36,11 @@ export interface ComponentManager {
   ): ComponentInstanceObject;
   getInstance(id: string): ComponentInstanceObject | undefined;
   getAllInstances(): ComponentInstanceObject[];
+  getPickedInstanceId(): string | null;
+  setSelected(id: string | null, selected: boolean): void;
+  setLabel(id: string, label: string): void;
+  setNote(id: string, note: string): void;
+  removeComponent(id: string): boolean;
   handlePointerDown(event: PointerEvent): boolean;
   handlePointerMove(event: PointerEvent): void;
   handlePointerUp(): void;
@@ -73,9 +83,11 @@ function collectPickTargets(instances: ComponentInstanceObject[]): THREE.Object3
 
 export function createComponentManager(options: ComponentManagerOptions): ComponentManager {
   const { scene, camera, canvas, controls } = options;
+  const attachPointerHandlers = options.attachPointerHandlers ?? true;
   const raycaster = options.raycaster ?? new THREE.Raycaster();
   const instances = new Map<string, ComponentInstanceObject>();
   let draggingId: string | null = null;
+  let pickedInstanceId: string | null = null;
 
   const getCanvasRect = (): DOMRect => canvas.getBoundingClientRect();
 
@@ -101,9 +113,11 @@ export function createComponentManager(options: ComponentManagerOptions): Compon
     manager.handlePointerUp();
   };
 
-  canvas.addEventListener('pointerdown', onPointerDown);
-  canvas.addEventListener('pointermove', onPointerMove);
-  window.addEventListener('pointerup', onPointerUp);
+  if (attachPointerHandlers) {
+    canvas.addEventListener('pointerdown', onPointerDown);
+    canvas.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }
 
   const manager: ComponentManager = {
     addComponent(type, position) {
@@ -121,9 +135,58 @@ export function createComponentManager(options: ComponentManagerOptions): Compon
       return [...instances.values()];
     },
 
+    getPickedInstanceId() {
+      return pickedInstanceId;
+    },
+
+    setSelected(id, selected) {
+      if (!id) {
+        return;
+      }
+      const instance = instances.get(id);
+      if (instance) {
+        setInstanceSelected(instance, selected);
+      }
+    },
+
+    setLabel(id, label) {
+      const instance = instances.get(id);
+      if (!instance || !label) {
+        return;
+      }
+      updateInstanceLabel(instance, label);
+    },
+
+    setNote(id, note) {
+      const instance = instances.get(id);
+      if (!instance) {
+        return;
+      }
+      setInstanceNote(instance, note);
+    },
+
+    removeComponent(id) {
+      const instance = instances.get(id);
+      if (!instance) {
+        return false;
+      }
+
+      setInstanceSelected(instance, false);
+      scene.remove(instance.group);
+      instances.delete(id);
+      if (draggingId === id) {
+        draggingId = null;
+      }
+      if (pickedInstanceId === id) {
+        pickedInstanceId = null;
+      }
+      return true;
+    },
+
     handlePointerDown(event) {
       const ndc = pointerToNdc(event.clientX, event.clientY, getCanvasRect());
       const picked = pickInstance(ndc);
+      pickedInstanceId = picked?.id ?? null;
       if (!picked) {
         return false;
       }
@@ -157,15 +220,18 @@ export function createComponentManager(options: ComponentManagerOptions): Compon
 
     handlePointerUp() {
       draggingId = null;
+      pickedInstanceId = null;
       if (controls) {
         controls.enabled = true;
       }
     },
 
     dispose() {
-      canvas.removeEventListener('pointerdown', onPointerDown);
-      canvas.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
+      if (attachPointerHandlers) {
+        canvas.removeEventListener('pointerdown', onPointerDown);
+        canvas.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', onPointerUp);
+      }
 
       for (const instance of instances.values()) {
         scene.remove(instance.group);
