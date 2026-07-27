@@ -79,16 +79,16 @@ describe('bootstrapApp', () => {
     container.remove();
   });
 
-  it('preserves the WebGL canvas when clearing UI chrome', () => {
-    const canvas = document.createElement('canvas');
-    canvas.id = 'canvas';
+  it('preserves the blueprint host when clearing UI chrome', () => {
+    const host = document.createElement('div');
+    host.id = 'blueprint-root';
     const chrome = document.createElement('div');
     chrome.setAttribute('data-testid', 'chrome');
-    container.append(canvas, chrome);
+    container.append(host, chrome);
 
-    clearAppUi(container, canvas);
+    clearAppUi(container, host);
 
-    expect(container.contains(canvas)).toBe(true);
+    expect(container.contains(host)).toBe(true);
     expect(container.querySelector('[data-testid="chrome"]')).toBeNull();
   });
 

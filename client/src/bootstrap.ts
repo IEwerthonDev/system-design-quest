@@ -20,24 +20,24 @@ export interface BootstrapOptions {
 
 let optionsStorage: Storage | undefined;
 
-/** Clear UI chrome without destroying the WebGL canvas. */
+/** Clear UI chrome without destroying the blueprint host. */
 export function clearAppUi(
   container: HTMLElement,
-  canvas: HTMLCanvasElement | null,
+  blueprintHost: HTMLElement | null,
 ): void {
   for (const child of [...container.children]) {
-    if (child !== canvas) {
+    if (child !== blueprintHost) {
       child.remove();
     }
   }
-  if (canvas && !container.contains(canvas)) {
-    container.prepend(canvas);
+  if (blueprintHost && !container.contains(blueprintHost)) {
+    container.prepend(blueprintHost);
   }
 }
 
 function startGame(
   container: HTMLElement,
-  canvas: HTMLCanvasElement | null,
+  blueprintHost: HTMLElement | null,
   preferences: UserPreferences,
   selection?: LibrarySelection,
 ): void {
@@ -49,7 +49,7 @@ function startGame(
     problemId === URL_SHORTENER_ID;
 
   mountPhaseNavigation(container, {
-    canvas,
+    canvas: blueprintHost,
     problemId,
     mode,
     guidedMode,
@@ -59,32 +59,32 @@ function startGame(
 
 function mountAppSettings(
   container: HTMLElement,
-  canvas: HTMLCanvasElement | null,
+  blueprintHost: HTMLElement | null,
   storage?: Storage,
 ): void {
   mountSettingsPanel(container, {
     storage,
     onRedoTutorial: () => {
-      clearAppUi(container, canvas);
-      bootstrapApp(container, canvas, { storage });
+      clearAppUi(container, blueprintHost);
+      bootstrapApp(container, blueprintHost, { storage });
     },
     onReplayOnboarding: () => {
-      clearAppUi(container, canvas);
-      bootstrapApp(container, canvas, { storage });
+      clearAppUi(container, blueprintHost);
+      bootstrapApp(container, blueprintHost, { storage });
     },
   });
 }
 
 function showLibrary(
   container: HTMLElement,
-  canvas: HTMLCanvasElement | null,
+  blueprintHost: HTMLElement | null,
   preferences: UserPreferences,
 ): void {
   mountProblemLibrary(container, {
     onSelect: (selection) => {
-      clearAppUi(container, canvas);
-      startGame(container, canvas, preferences, selection);
-      mountAppSettings(container, canvas, optionsStorage);
+      clearAppUi(container, blueprintHost);
+      startGame(container, blueprintHost, preferences, selection);
+      mountAppSettings(container, blueprintHost, optionsStorage);
     },
     fetchLeaderboard,
   });
@@ -109,7 +109,7 @@ function persistOnboardingResult(
 
 export function bootstrapApp(
   container: HTMLElement,
-  canvas: HTMLCanvasElement | null,
+  blueprintHost: HTMLElement | null,
   options: BootstrapOptions = {},
 ): void {
   const { storage } = options;
@@ -119,38 +119,38 @@ export function bootstrapApp(
     mountOnboarding(container, {
       onSkip: () => {
         const preferences = completeOnboardingSkip(storage);
-        clearAppUi(container, canvas);
+        clearAppUi(container, blueprintHost);
         if (shouldShowLibrary(preferences)) {
-          showLibrary(container, canvas, preferences);
+          showLibrary(container, blueprintHost, preferences);
         } else {
-          startGame(container, canvas, preferences);
+          startGame(container, blueprintHost, preferences);
         }
-        mountAppSettings(container, canvas, storage);
+        mountAppSettings(container, blueprintHost, storage);
       },
       onComplete: (result) => {
         const preferences = persistOnboardingResult(result, storage);
-        clearAppUi(container, canvas);
+        clearAppUi(container, blueprintHost);
         if (shouldShowLibrary(preferences)) {
-          showLibrary(container, canvas, preferences);
+          showLibrary(container, blueprintHost, preferences);
         } else {
-          startGame(container, canvas, preferences);
+          startGame(container, blueprintHost, preferences);
         }
-        mountAppSettings(container, canvas, storage);
+        mountAppSettings(container, blueprintHost, storage);
       },
     });
-    mountAppSettings(container, canvas, storage);
+    mountAppSettings(container, blueprintHost, storage);
     return;
   }
 
   const preferences = loadPreferences(storage);
   if (shouldShowLibrary(preferences)) {
-    showLibrary(container, canvas, preferences);
-    mountAppSettings(container, canvas, storage);
+    showLibrary(container, blueprintHost, preferences);
+    mountAppSettings(container, blueprintHost, storage);
     return;
   }
 
-  startGame(container, canvas, preferences);
-  mountAppSettings(container, canvas, storage);
+  startGame(container, blueprintHost, preferences);
+  mountAppSettings(container, blueprintHost, storage);
 }
 
 export { isProblemLibraryUnlocked, shouldShowLibrary };
