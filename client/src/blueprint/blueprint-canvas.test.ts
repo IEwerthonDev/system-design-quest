@@ -1,0 +1,244 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { createSession, resetSessionStore } from '../session/session-store';
+import { initGameState } from '../test-hook';
+import {
+  connectForTest,
+  mountBlueprintCanvas,
+  placeComponentForTest,
+  setNodeConfigForTest,
+} from './blueprint-canvas';
+import { mountConfigPopover } from './config-popover';
+import { PALETTE_DROP_EVENT, type PaletteDropDetail } from '../ui/palette';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+function createPointerEvent(
+  type: string,
+  init: { clientX?: number; clientY?: number; pointerId?: number; button?: number } = {},
+): Event {
+  const event = new Event(type, { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'clientX', { value: init.clientX ?? 0 });
+  Object.defineProperty(event, 'clientY', { value: init.clientY ?? 0 });
+  Object.defineProperty(event, 'pointerId', { value: init.pointerId ?? 1 });
+  Object.defineProperty(event, 'button', { value: init.button ?? 0 });
+  return event;
+}
+
+describe('blueprint canvas', () => {
+  beforeEach(() => {
+    resetSessionStore();
+    initGameState();
+    createSession('url-shortener', 'study');
+    document.body.innerHTML = '';
+  });
+
+  it('places nodes from palette drop and syncs graph', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+
+    host.dispatchEvent(
+      new CustomEvent<PaletteDropDetail>(PALETTE_DROP_EVENT, {
+        detail: { type: 'app_server', clientX: 200, clientY: 150 },
+      }),
+    );
+
+    expect(canvas.getGraph().nodes).toHaveLength(1);
+    expect(canvas.getGraph().nodes[0]?.type).toBe('app_server');
+    expect(canvas.getGraph().nodes[0]?.replicas).toBe(1);
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(1);
+    canvas.destroy();
+  });
+
+  it('increments and floors replicas via card +/- buttons', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const id = placeComponentForTest(canvas, 'app_server', { x: 10, y: 10 });
+    const card = host.querySelector(`[data-testid="blueprint-node-${id}"]`) as HTMLElement;
+    const buttons = card.querySelectorAll('.sdq-node__rep-btn');
+    const minus = buttons[0] as HTMLButtonElement;
+    const plus = buttons[1] as HTMLButtonElement;
+
+    plus.click();
+    plus.click();
+    plus.click();
+    expect(canvas.getGraph().nodes[0]?.replicas).toBe(4);
+    expect(card.textContent).toMatch(/x4/);
+
+    minus.click();
+    minus.click();
+    minus.click();
+    minus.click();
+    expect(canvas.getGraph().nodes[0]?.replicas).toBe(1);
+    canvas.destroy();
+  });
+
+  it('updates node position when dragging the card body', () => {
+    const host = document.createElement('div');
+    Object.defineProperty(host, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 800, bottom: 600, width: 800, height: 600 }),
+    });
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const id = placeComponentForTest(canvas, 'cdn', { x: 40, y: 50 });
+    const card = host.querySelector(`[data-testid="blueprint-node-${id}"]`) as HTMLElement;
+    card.setPointerCapture = () => undefined;
+
+    card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 120, clientY: 100 }));
+    window.dispatchEvent(createPointerEvent('pointermove', { clientX: 220, clientY: 180 }));
+    window.dispatchEvent(createPointerEvent('pointerup', { clientX: 220, clientY: 180 }));
+
+    const pos = canvas.getGraph().nodes[0]?.position;
+    expect(pos?.x).not.toBe(40);
+    expect(pos?.y).not.toBe(50);
+    canvas.destroy();
+  });
+
+  it('applies pan/zoom transform on the world container', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const world = host.querySelector('[data-testid="blueprint-world"]') as HTMLElement;
+    expect(world.style.transform).toContain('translate');
+    expect(world.style.transform).toContain('scale(1)');
+
+    const zoomIn = host.querySelector('.sdq-blueprint-zoom button') as HTMLButtonElement;
+    zoomIn.click();
+    expect(world.style.transform).toMatch(/scale\(1\.1\)/);
+
+    host.dispatchEvent(createPointerEvent('pointerdown', { clientX: 100, clientY: 100 }));
+    window.dispatchEvent(createPointerEvent('pointermove', { clientX: 160, clientY: 140 }));
+    window.dispatchEvent(createPointerEvent('pointerup', {}));
+    expect(world.style.transform).toMatch(/translate\(/);
+    canvas.destroy();
+  });
+
+  it('connects nodes and stores edge labels', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'load_balancer', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'app_server', { x: 200, y: 0 });
+    connectForTest(canvas, a, b, 'REQ');
+    expect(canvas.getGraph().edges).toHaveLength(1);
+    expect(canvas.getGraph().edges[0]?.label).toBe('REQ');
+    expect(host.querySelector('[data-testid="blueprint-edges"]')).toBeTruthy();
+    canvas.destroy();
+  });
+
+  it('opens config popover with hit rate, notes, and judge footer', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const id = placeComponentForTest(canvas, 'cache_redis', { x: 0, y: 0 });
+    const card = host.querySelector(`[data-testid="blueprint-node-${id}"]`) as HTMLElement;
+    card.setPointerCapture = () => undefined;
+    card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
+
+    const popover = document.querySelector('[data-testid="config-popover"]') as HTMLElement;
+    expect(popover.hidden).toBe(false);
+    expect(popover.textContent).toMatch(/HIT RATE/i);
+    expect(popover.textContent).toMatch(/AI judges read these notes/i);
+    expect(popover.querySelector('[data-testid="config-hit-rate"]')).toBeTruthy();
+    expect(popover.querySelector('[data-testid="config-notes"]')).toBeTruthy();
+
+    const slider = popover.querySelector('[data-testid="config-hit-rate"]') as HTMLInputElement;
+    slider.value = '95';
+    slider.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(canvas.getGraph().nodes[0]?.config).toEqual({ kind: 'cache', hitRate: 95 });
+
+    const notes = popover.querySelector('[data-testid="config-notes"]') as HTMLTextAreaElement;
+    notes.value = 'cache-aside';
+    notes.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(canvas.getGraph().nodes[0]?.implementationNotes).toBe('cache-aside');
+    canvas.destroy();
+  });
+
+  it('opens sql_db popover with shard, partitioning, and skew controls', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const id = placeComponentForTest(canvas, 'sql_db', { x: 0, y: 0 });
+    const card = host.querySelector(`[data-testid="blueprint-node-${id}"]`) as HTMLElement;
+    card.setPointerCapture = () => undefined;
+    card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
+
+    const popover = document.querySelector('[data-testid="config-popover"]') as HTMLElement;
+    expect(popover.querySelector('[data-testid="config-shard-count"]')).toBeTruthy();
+    expect(popover.querySelector('[data-testid="config-partitioning"]')).toBeTruthy();
+    expect(popover.querySelector('[data-testid="config-key-skew"]')).toBeTruthy();
+
+    const shards = popover.querySelector('[data-testid="config-shard-count"]') as HTMLInputElement;
+    shards.value = '64';
+    shards.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(canvas.getGraph().nodes[0]?.config).toMatchObject({ kind: 'sql_db', shardCount: 64 });
+    canvas.destroy();
+  });
+
+  it('marks sql pressure hot under low hitRate and high traffic when running', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const client = placeComponentForTest(canvas, 'client_web', { x: 0, y: 0 });
+    const app = placeComponentForTest(canvas, 'app_server', { x: 100, y: 0 });
+    const cache = placeComponentForTest(canvas, 'cache_redis', { x: 200, y: 0 });
+    const db = placeComponentForTest(canvas, 'sql_db', { x: 300, y: 0 });
+    connectForTest(canvas, client, app);
+    connectForTest(canvas, app, cache, 'CACHE');
+    connectForTest(canvas, cache, db, 'DB');
+    connectForTest(canvas, app, db, 'DB');
+    setNodeConfigForTest(canvas, cache, { kind: 'cache', hitRate: 10 });
+    canvas.updateSimulation({ running: true, traffic: 10, readRatio: 90, speed: 2 });
+    expect(canvas.getGraph().simulation?.running).toBe(true);
+    const pressures = (window.__GAME_STATE__ as { pressures?: Record<string, string> }).pressures;
+    expect(pressures?.[db]).toBe('hot');
+    canvas.updateSimulation({ running: false });
+    expect(canvas.getGraph().simulation?.running).toBe(false);
+    canvas.destroy();
+  });
+});
+
+describe('session boot path', () => {
+  it('does not import Three.js in main session entry', () => {
+    const main = readFileSync(resolve(process.cwd(), 'client/src/main.ts'), 'utf8');
+    expect(main).toMatch(/mountBlueprintCanvas/);
+    expect(main).not.toMatch(/three|createCanvasRenderer|canvas-renderer/i);
+  });
+});
+
+describe('config popover mount', () => {
+  it('shows judge footer copy when opened', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const popover = mountConfigPopover(host, {
+      onClose: () => undefined,
+      onNotesChange: () => undefined,
+      onConfigChange: () => undefined,
+    });
+    popover.open(
+      {
+        id: 'n1',
+        type: 'cdn',
+        label: 'CDN',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+        config: { kind: 'cdn', hitRate: 99 },
+      },
+      {
+        bottom: 100,
+        left: 20,
+        top: 0,
+        right: 100,
+        width: 80,
+        height: 40,
+        x: 20,
+        y: 0,
+        toJSON: () => ({}),
+      },
+    );
+    expect(popover.root.hidden).toBe(false);
+    expect(popover.root.textContent).toMatch(/AI judges read these notes/i);
+    popover.destroy();
+  });
+});

@@ -83,8 +83,13 @@ export function getGameState(): GameState {
 
 export function setGraph(graph: ArchitectureGraph): void {
   getGameState().graph = {
-    nodes: graph.nodes.map((n) => ({ ...n, position: { ...n.position } })),
+    nodes: graph.nodes.map((n) => ({
+      ...n,
+      position: { ...n.position },
+      ...(n.config ? { config: { ...n.config } } : {}),
+    })),
     edges: graph.edges.map((e) => ({ ...e })),
+    ...(graph.simulation ? { simulation: { ...graph.simulation } } : {}),
   };
 }
 

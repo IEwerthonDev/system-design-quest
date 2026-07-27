@@ -1,4 +1,4 @@
-import { getProblem, URL_SHORTENER_ID } from '@sdq/shared';
+import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
@@ -18,6 +18,9 @@ import { mountSuggestionCards } from '../ui/requirement-suggestions';
 import { mountResultPanel, type ResultPanel } from '../ui/result-panel';
 import { mountSubmitPanel } from '../ui/submit-panel';
 import { mountTimerPanel } from '../ui/timer-panel';
+import { mountSessionHeader } from '../ui/session-header';
+import { mountSimControls } from '../ui/sim-controls';
+import { mountProblemDrawer } from '../ui/problem-drawer';
 import { canGoBackPhase } from './phase-machine';
 import {
   advancePhase,
@@ -95,7 +98,6 @@ function injectPhaseNavigationStyles(root: HTMLElement): void {
       font: 600 13px system-ui, sans-serif;
       cursor: pointer;
     }
-    /* Sit beside the 220px palette instead of covering Componentes. */
     .sdq-phase-back--with-palette {
       left: 236px;
     }
@@ -181,6 +183,31 @@ export function mountPhaseNavigation(
     dropTarget: options.canvas ?? undefined,
   });
 
+  const sessionHeader = mountSessionHeader(shell, problem.title);
+  const blueprint = (
+    window as Window & { __BLUEPRINT__?: import('../blueprint/blueprint-canvas').BlueprintCanvas }
+  ).__BLUEPRINT__;
+
+  const simControlsRef: { current: ReturnType<typeof mountSimControls> | null } = { current: null };
+  const simControls = mountSimControls(sessionHeader.controlsSlot, {
+    getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
+    onChange: (partial) => {
+      if (blueprint) {
+        blueprint.updateSimulation(partial);
+      } else {
+        const g = getGraph();
+        setGraph({
+          ...g,
+          simulation: { ...(g.simulation ?? DEFAULT_SIMULATION), ...partial },
+        });
+      }
+      simControlsRef.current?.sync(getGraph().simulation ?? DEFAULT_SIMULATION);
+    },
+  });
+  simControlsRef.current = simControls;
+
+  const problemDrawer = mountProblemDrawer(shell, problem);
+
   const glossaryPanel = openGlossaryPanel(problemId, shell);
   const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
 
@@ -201,7 +228,7 @@ export function mountPhaseNavigation(
     buildJudgeInput: (graph) => ({
       problemId,
       requirements: getRequirements(),
-      graph,
+      graph: normalizeGraph(graph),
       mode,
     }),
     onSubmitStart: () => {
@@ -249,6 +276,10 @@ export function mountPhaseNavigation(
     backButton.hidden = !visibility.showBack;
     backButton.classList.toggle('sdq-phase-back--with-palette', visibility.palette);
     hintsPanel.root.hidden = phase !== 'canvas' || mode !== 'study';
+    sessionHeader.setVisible(phase === 'canvas');
+    if (phase !== 'canvas') {
+      problemDrawer.close();
+    }
 
     if (phase === 'canvas' && mode === 'study') {
       hintsPanel.sync();
@@ -264,12 +295,12 @@ export function mountPhaseNavigation(
         recordCompletion(problemId, judgeResult.verdict, judgeResult.score);
       }
       if (mode === 'speedrun' && isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
-        const session = getSession();
-        if (session) {
+        const active = getSession();
+        if (active) {
           void submitScore({
             problemId,
             playerNickname: getNickname(),
-            elapsedMs: getElapsedMs(session, now),
+            elapsedMs: getElapsedMs(active, now),
             score: judgeResult.score,
             verdict: judgeResult.verdict,
           });
@@ -314,6 +345,9 @@ export function mountPhaseNavigation(
       glossaryPanel.destroy();
       unsubscribeGraphChanges?.();
       guidedOverlay?.destroy();
+      simControls.destroy();
+      sessionHeader.destroy();
+      problemDrawer.destroy();
     },
   };
 }

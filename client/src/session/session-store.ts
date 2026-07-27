@@ -40,8 +40,10 @@ function cloneGraph(graph: ArchitectureGraph): ArchitectureGraph {
     nodes: graph.nodes.map((node) => ({
       ...node,
       position: { ...node.position },
+      ...(node.config ? { config: { ...node.config } } : {}),
     })),
     edges: graph.edges.map((edge) => ({ ...edge })),
+    ...(graph.simulation ? { simulation: { ...graph.simulation } } : {}),
   };
 }
 

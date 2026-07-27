@@ -1,26 +1,34 @@
-import { createCanvasRenderer, startRenderLoop } from './scene/canvas-renderer';
-import { mountCanvasInteraction } from './scene/canvas-interaction';
+import { mountBlueprintCanvas, type BlueprintCanvas } from './blueprint/blueprint-canvas';
 import { bootstrapApp } from './bootstrap';
 import { startResponsiveLayout } from './ui/responsive';
 import { installE2eHooks } from './e2e-hooks';
 
 const app = document.getElementById('app');
-const canvas = document.getElementById('canvas') as HTMLCanvasElement | null;
+const blueprintHost =
+  (document.getElementById('blueprint-root') as HTMLElement | null) ??
+  (() => {
+    const el = document.createElement('div');
+    el.id = 'blueprint-root';
+    app?.prepend(el);
+    return el;
+  })();
+
+let blueprint: BlueprintCanvas | null = null;
 
 try {
-  if (canvas) {
-    const renderer = createCanvasRenderer(canvas);
-    const uiHost = app ?? document.body;
-    const interaction = mountCanvasInteraction(renderer, canvas, uiHost);
-    startRenderLoop(renderer, (dt) => interaction.update(dt));
+  if (blueprintHost) {
+    blueprint = mountBlueprintCanvas(blueprintHost);
+    (window as Window & { __BLUEPRINT__?: BlueprintCanvas }).__BLUEPRINT__ = blueprint;
   }
 } catch {
-  // Headless / missing WebGL — UI still boots for e2e and non-WebGL environments
+  // UI still boots for tests / headless
 }
 
 startResponsiveLayout();
 installE2eHooks();
 
 if (app) {
-  bootstrapApp(app, canvas);
+  bootstrapApp(app, blueprintHost);
 }
+
+export { blueprint };
