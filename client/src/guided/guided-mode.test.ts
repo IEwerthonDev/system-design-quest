@@ -1,6 +1,6 @@
 import type { ArchitectureGraph } from '@sdq/shared';
 import { URL_SHORTENER_ID } from '@sdq/shared';
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import {
   GUIDED_COMPONENT_ORDER,
   GUIDED_CONNECTION_ORDER,
@@ -219,8 +219,25 @@ describe('guided overlay integration', () => {
     expect(getCurrentStep(overlay.getState())?.id).toBe('complete');
   });
 
-  it('advances to submit hint on canvas and completes after result phase', () => {
-    mountPhaseNavigation(container, { guidedMode: true });
+  it('advances to submit hint on canvas and completes after result phase', async () => {
+    mountPhaseNavigation(container, {
+      guidedMode: true,
+      submitForJudging: vi.fn().mockResolvedValue({
+        verdict: 'PASS',
+        score: 90,
+        summary: 'Tutorial completo.',
+        nextStep: 'Explore a biblioteca.',
+        strengths: [],
+        criticalIssues: [],
+        improvements: [],
+        requirementCoverage: [],
+        judgeDebate: {
+          rigorous: 'Ok.',
+          pragmatic: 'Ok.',
+          consensus: 'PASS.',
+        },
+      }),
+    });
 
     container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
     container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
@@ -240,7 +257,7 @@ describe('guided overlay integration', () => {
     });
     container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
 
-    expect(getSession()?.phase).toBe('result');
+    await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
     expect(window.__GAME_STATE__.guidedStep).toBe('complete');
   });
 });

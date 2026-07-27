@@ -1,5 +1,5 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import type { ArchitectureGraph } from '@sdq/shared';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
 import {
   canGoBackPhase,
   getPreviousPhase,
@@ -14,6 +14,7 @@ import {
   advancePhase,
   createSession,
   getGraph,
+  getJudgeResult,
   getRequirements,
   getSession,
   goBackPhase,
@@ -21,6 +22,29 @@ import {
   setGraph,
   setRequirements,
 } from './session-store';
+
+const sampleJudgeResult: JudgeResult = {
+  verdict: 'PARTIAL',
+  score: 75,
+  summary: 'Design promissor com lacunas.',
+  nextStep: 'Adicione Redis para redirects.',
+  strengths: [
+    {
+      title: 'Camadas claras',
+      explanation: 'Tráfego passa pelo app server.',
+      howToImprove: 'Documente leitura vs escrita.',
+      whyItMatters: 'Facilita escalar.',
+    },
+  ],
+  criticalIssues: [],
+  improvements: [],
+  requirementCoverage: [],
+  judgeDebate: {
+    rigorous: 'Falta cache.',
+    pragmatic: 'Protótipo ok.',
+    consensus: 'Score 75/100.',
+  },
+};
 
 const sampleGraph: ArchitectureGraph = {
   nodes: [
@@ -115,19 +139,22 @@ describe('phase navigation', () => {
         requirements: false,
         palette: false,
         submit: false,
+        result: false,
         showBack: false,
       });
     });
 
-    it('shows palette and submit on canvas, submit only on result', () => {
+    it('shows palette and submit on canvas, result panel on result', () => {
       expect(getPhaseLayerVisibility('canvas')).toMatchObject({
         palette: true,
         submit: true,
+        result: false,
         showBack: true,
       });
       expect(getPhaseLayerVisibility('result')).toMatchObject({
         palette: false,
-        submit: true,
+        submit: false,
+        result: true,
         showBack: true,
       });
     });
@@ -147,7 +174,9 @@ describe('phase navigation', () => {
     });
 
     it('starts at briefing and advances through requirements to canvas', () => {
-      mountPhaseNavigation(container);
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+      });
 
       expect(getSession()?.phase).toBe('briefing');
       expect(container.querySelector('[data-testid="briefing-panel"]')?.hasAttribute('hidden')).toBe(
@@ -207,8 +236,10 @@ describe('phase navigation', () => {
       ).toBe('Suportar 100M leituras por dia');
     });
 
-    it('advances to result on valid submit and can go back to canvas', () => {
-      mountPhaseNavigation(container);
+    it('advances to result on valid submit, mounts result panel, and preserves judgeResult on back', async () => {
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+      });
 
       container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
       container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
@@ -216,22 +247,42 @@ describe('phase navigation', () => {
       setGraph(sampleGraph);
       container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
 
-      expect(getSession()?.phase).toBe('result');
-      expect(
-        container
-          .querySelector('[data-testid="result-placeholder"]')
-          ?.classList.contains('sdq-result-placeholder--visible'),
-      ).toBe(true);
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      expect(getJudgeResult()?.verdict).toBe('PARTIAL');
+      expect(container.querySelector('[data-testid="result-panel"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="result-verdict-badge"]')?.textContent).toBe(
+        'Parcial',
+      );
 
       container.querySelector<HTMLButtonElement>('[data-testid="phase-back"]')!.click();
 
       expect(getSession()?.phase).toBe('canvas');
       expect(getGraph().nodes).toHaveLength(1);
+      expect(getJudgeResult()?.score).toBe(75);
       expect(
-        container
-          .querySelector('[data-testid="result-placeholder"]')
-          ?.classList.contains('sdq-result-placeholder--visible'),
-      ).toBe(false);
+        container.querySelector('[data-testid="result-panel-host"]')?.hasAttribute('hidden'),
+      ).toBe(true);
+    });
+
+    it('defaults beginner mode from session experienceLevel', async () => {
+      mountPhaseNavigation(container, {
+        experienceLevel: 'beginner',
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      const toggle = container.querySelector<HTMLInputElement>('[data-testid="result-beginner-toggle"]');
+      expect(toggle?.checked).toBe(true);
+      expect(container.querySelector('[data-testid="result-summary"]')?.textContent).toBe(
+        sampleJudgeResult.summary,
+      );
     });
   });
 });

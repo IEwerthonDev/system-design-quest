@@ -1,4 +1,5 @@
 import { getProblem, URL_SHORTENER_ID } from '@sdq/shared';
+import type { submitForJudging } from '../judge/judge-api';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
@@ -11,16 +12,19 @@ import { mountHintsPanel } from '../ui/hints-panel';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
+import { mountResultPanel, type ResultPanel } from '../ui/result-panel';
 import { mountSubmitPanel } from '../ui/submit-panel';
 import { canGoBackPhase } from './phase-machine';
 import {
   advancePhase,
   createSession,
   getGraph,
+  getJudgeResult,
   getRequirements,
   getSession,
   goBackPhase,
   setGraph,
+  setJudgeResult,
   setRequirements,
   subscribeGraphChanges,
 } from './session-store';
@@ -30,6 +34,7 @@ export interface PhaseLayerVisibility {
   requirements: boolean;
   palette: boolean;
   submit: boolean;
+  result: boolean;
   showBack: boolean;
 }
 
@@ -39,6 +44,8 @@ export interface MountPhaseNavigationOptions {
   canvas?: HTMLElement | null;
   guidedMode?: boolean;
   experienceLevel?: ExperienceLevel | null;
+  submitForJudging?: typeof submitForJudging;
+  retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
 }
 
 export interface PhaseNavigation {
@@ -52,7 +59,8 @@ export function getPhaseLayerVisibility(phase: GamePhase): PhaseLayerVisibility 
     briefing: phase === 'briefing',
     requirements: phase === 'requirements',
     palette: phase === 'canvas',
-    submit: phase === 'canvas' || phase === 'result',
+    submit: phase === 'canvas',
+    result: phase === 'result',
     showBack: canGoBackPhase(phase),
   };
 }
@@ -101,6 +109,8 @@ export function mountPhaseNavigation(
   injectPhaseNavigationStyles(document.head);
   createSession(problemId, mode, { guidedMode, experienceLevel });
 
+  let beginnerMode = experienceLevel === 'beginner';
+
   const shell = document.createElement('div');
   shell.className = 'sdq-phase-shell';
   shell.setAttribute('data-testid', 'phase-shell');
@@ -112,6 +122,12 @@ export function mountPhaseNavigation(
   backButton.setAttribute('data-testid', 'phase-back');
   backButton.textContent = 'Voltar';
   shell.append(backButton);
+
+  const resultHost = document.createElement('div');
+  resultHost.setAttribute('data-testid', 'result-panel-host');
+  shell.append(resultHost);
+
+  let resultPanel: ResultPanel | null = null;
 
   const briefingPanel = mountBriefingPanel(shell, {
     onStart: () => {
@@ -160,11 +176,20 @@ export function mountPhaseNavigation(
 
   const submitPanel = mountSubmitPanel(shell, {
     getGraph,
-    onSubmitSuccess: (graph) => {
-      setGraph(graph);
+    buildJudgeInput: (graph) => ({
+      problemId,
+      requirements: getRequirements(),
+      graph,
+      mode,
+    }),
+    onJudgeSuccess: (result) => {
+      setGraph(getGraph());
+      setJudgeResult(result);
       advancePhase();
       sync();
     },
+    submitForJudging: options.submitForJudging,
+    retryLastJudging: options.retryLastJudging,
   });
 
   let guidedOverlay: ReturnType<typeof mountGuidedOverlay> | null = null;
@@ -204,11 +229,22 @@ export function mountPhaseNavigation(
       requirementsPanel.setRequirements(getRequirements());
     }
 
-    const resultPlaceholder = shell.querySelector('[data-testid="result-placeholder"]');
-    if (phase === 'result') {
-      resultPlaceholder?.classList.add('sdq-result-placeholder--visible');
+    const judgeResult = getJudgeResult();
+    if (phase === 'result' && judgeResult) {
+      if (!resultPanel) {
+        resultPanel = mountResultPanel(resultHost, judgeResult, {
+          beginnerMode,
+          onToggleBeginner: (enabled) => {
+            beginnerMode = enabled;
+          },
+        });
+      } else {
+        resultPanel.render(judgeResult);
+        resultPanel.setBeginnerMode(beginnerMode);
+      }
+      resultHost.hidden = false;
     } else {
-      resultPlaceholder?.classList.remove('sdq-result-placeholder--visible');
+      resultHost.hidden = true;
     }
 
     if (guidedOverlay && session) {

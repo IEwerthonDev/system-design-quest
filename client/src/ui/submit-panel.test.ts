@@ -1,5 +1,6 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
-import type { ArchitectureGraph } from '@sdq/shared';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
+import { clearCachedJudgePayload } from '../judge/judge-api';
 import {
   advancePhase,
   createSession,
@@ -26,17 +27,36 @@ const sampleGraph: ArchitectureGraph = {
   edges: [],
 };
 
+const sampleJudgeResult: JudgeResult = {
+  verdict: 'PASS',
+  score: 85,
+  summary: 'Boa arquitetura em camadas.',
+  nextStep: 'Adicione monitoramento.',
+  strengths: [],
+  criticalIssues: [],
+  improvements: [],
+  requirementCoverage: [],
+  judgeDebate: {
+    rigorous: 'Aprovado.',
+    pragmatic: 'Aprovado.',
+    consensus: 'PASS 85/100.',
+  },
+};
+
 describe('submit panel', () => {
   let container: HTMLDivElement;
 
   beforeEach(() => {
     resetSessionStore();
+    clearCachedJudgePayload();
     container = document.createElement('div');
     document.body.append(container);
   });
 
   afterEach(() => {
     container.remove();
+    document.getElementById('sdq-submit-styles')?.remove();
+    document.getElementById('sdq-judging-styles')?.remove();
   });
 
   it('validateLocalSubmit rejects empty graph with PT-BR message', () => {
@@ -53,17 +73,23 @@ describe('submit panel', () => {
     });
   });
 
-  it('shows local FAIL when submitting empty graph', () => {
+  it('shows local FAIL when submitting empty graph', async () => {
     createSession('url-shortener', 'study');
     advancePhase();
     advancePhase();
 
     const panel = mountSubmitPanel(container, {
       getGraph: () => ({ nodes: [], edges: [] }),
-      onSubmitSuccess: () => undefined,
+      buildJudgeInput: (graph) => ({
+        problemId: 'url-shortener',
+        requirements: { functional: [], nonFunctional: [] },
+        graph,
+        mode: 'study',
+      }),
+      onJudgeSuccess: () => undefined,
     });
 
-    const result = panel.submit();
+    const result = await panel.submit();
 
     expect(result.success).toBe(false);
     expect(result.error).toBe(EMPTY_GRAPH_MESSAGE);
@@ -73,31 +99,76 @@ describe('submit panel', () => {
     expect(getSession()?.phase).toBe('canvas');
   });
 
-  it('advances to result phase and stores graph on valid submit', () => {
+  it('shows progress, calls judge API, and invokes onJudgeSuccess on valid submit', async () => {
     createSession('url-shortener', 'study');
     advancePhase();
     advancePhase();
 
+    const submitForJudging = vi.fn().mockResolvedValue(sampleJudgeResult);
+    const onJudgeSuccess = vi.fn();
+
     const panel = mountSubmitPanel(container, {
       getGraph: () => sampleGraph,
-      onSubmitSuccess: (graph) => {
-        setGraph(graph);
-        while (getSession()?.phase !== 'result') {
-          advancePhase();
-        }
-      },
+      buildJudgeInput: (graph) => ({
+        problemId: 'url-shortener',
+        requirements: { functional: ['Redirect HTTP 302'], nonFunctional: [] },
+        graph,
+        mode: 'study',
+      }),
+      onJudgeSuccess,
+      submitForJudging,
     });
 
-    const result = panel.submit();
+    const result = await panel.submit();
 
     expect(result.success).toBe(true);
-    expect(getSession()?.phase).toBe('result');
-    expect(getGraph().nodes).toHaveLength(1);
+    expect(submitForJudging).toHaveBeenCalledTimes(1);
+    expect(onJudgeSuccess).toHaveBeenCalledWith(sampleJudgeResult);
     expect(
-      container
-        .querySelector('[data-testid="result-placeholder"]')
-        ?.classList.contains('sdq-result-placeholder--visible'),
+      container.querySelector('[data-testid="judging-progress"]')?.classList.contains(
+        'sdq-judging-overlay--visible',
+      ),
+    ).toBe(false);
+  });
+
+  it('shows retry on judge error and stays on canvas', async () => {
+    createSession('url-shortener', 'study');
+    advancePhase();
+    advancePhase();
+
+    const submitForJudging = vi
+      .fn()
+      .mockRejectedValue(new Error('Servidor indisponível'));
+    const retryLastJudging = vi.fn().mockResolvedValue(sampleJudgeResult);
+    const onJudgeSuccess = vi.fn();
+
+    const panel = mountSubmitPanel(container, {
+      getGraph: () => sampleGraph,
+      buildJudgeInput: (graph) => ({
+        problemId: 'url-shortener',
+        requirements: { functional: [], nonFunctional: [] },
+        graph,
+        mode: 'study',
+      }),
+      onJudgeSuccess,
+      submitForJudging,
+      retryLastJudging,
+    });
+
+    const result = await panel.submit();
+
+    expect(result.success).toBe(false);
+    expect(getSession()?.phase).toBe('canvas');
+    expect(onJudgeSuccess).not.toHaveBeenCalled();
+    expect(
+      container.querySelector('[data-testid="judging-error"]')?.classList.contains(
+        'sdq-judging-error--visible',
+      ),
     ).toBe(true);
-    expect(window.__GAME_STATE__.phase).toBe('result');
+
+    container.querySelector<HTMLButtonElement>('[data-testid="judging-retry-button"]')?.click();
+    await vi.waitFor(() => expect(onJudgeSuccess).toHaveBeenCalledWith(sampleJudgeResult));
+
+    expect(retryLastJudging).toHaveBeenCalledTimes(1);
   });
 });

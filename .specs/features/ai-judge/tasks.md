@@ -191,11 +191,11 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-01, JUDGE-05, JUDGE-06
 
-- [ ] Remove placeholder overlay; on valid submit → show progress → call judge API
-- [ ] On success: `setJudgeResult`, `advancePhase` to result, mount result panel
-- [ ] On error: show retry button, stay on canvas
-- [ ] Beginner toggle default from `session.experienceLevel === 'beginner'`
-- [ ] Result phase: back to canvas preserves judgeResult
+- [x] Remove placeholder overlay; on valid submit → show progress → call judge API
+- [x] On success: `setJudgeResult`, `advancePhase` to result, mount result panel
+- [x] On error: show retry button, stay on canvas
+- [x] Beginner toggle default from `session.experienceLevel === 'beginner'`
+- [x] Result phase: back to canvas preserves judgeResult
 - [ ] Commit: `feat(client): wire submit to AI judge flow`
 
 ---

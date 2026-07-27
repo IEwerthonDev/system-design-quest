@@ -1,5 +1,11 @@
-import type { ArchitectureGraph } from '@sdq/shared';
+import type { ArchitectureGraph, JudgeInput, JudgeResult } from '@sdq/shared';
 import { validateGraph } from '@sdq/shared';
+import {
+  retryLastJudging as defaultRetryLastJudging,
+  JudgeApiError,
+  submitForJudging as defaultSubmitForJudging,
+} from '../judge/judge-api';
+import { mountJudgingProgress } from '../judge/judging-progress';
 
 export const EMPTY_GRAPH_MESSAGE = 'Adicione pelo menos um componente';
 
@@ -11,12 +17,16 @@ export interface LocalSubmitResult {
 
 export interface SubmitPanelCallbacks {
   getGraph: () => ArchitectureGraph;
-  onSubmitSuccess: (graph: ArchitectureGraph) => void;
+  buildJudgeInput: (graph: ArchitectureGraph) => JudgeInput;
+  onJudgeSuccess: (result: JudgeResult) => void;
+  submitForJudging?: typeof defaultSubmitForJudging;
+  retryLastJudging?: typeof defaultRetryLastJudging;
 }
 
 export interface SubmitPanel {
   root: HTMLElement;
-  submit(): LocalSubmitResult;
+  submit(): Promise<LocalSubmitResult>;
+  isJudging(): boolean;
 }
 
 export function validateLocalSubmit(graph: ArchitectureGraph): LocalSubmitResult {
@@ -65,8 +75,12 @@ function injectSubmitStyles(root: HTMLElement): void {
       font: 600 14px system-ui, sans-serif;
       cursor: pointer;
     }
-    .sdq-submit-bar__button:hover {
+    .sdq-submit-bar__button:hover:not(:disabled) {
       background: rgba(37, 99, 235, 0.95);
+    }
+    .sdq-submit-bar__button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
     .sdq-submit-bar__error {
       max-width: 320px;
@@ -78,32 +92,6 @@ function injectSubmitStyles(root: HTMLElement): void {
       padding: 8px 12px;
       font: 13px system-ui, sans-serif;
     }
-    .sdq-result-placeholder {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(15, 20, 25, 0.88);
-      z-index: 20;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
-      text-align: center;
-      padding: 24px;
-    }
-    .sdq-result-placeholder--visible {
-      display: flex;
-    }
-    .sdq-result-placeholder__title {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-    .sdq-result-placeholder__body {
-      font-size: 14px;
-      color: #94a3b8;
-      max-width: 420px;
-    }
   `;
   root.append(style);
 }
@@ -113,6 +101,10 @@ export function mountSubmitPanel(
   callbacks: SubmitPanelCallbacks,
 ): SubmitPanel {
   injectSubmitStyles(document.head);
+
+  const judgeSubmit = callbacks.submitForJudging ?? defaultSubmitForJudging;
+  const judgeRetry = callbacks.retryLastJudging ?? defaultRetryLastJudging;
+  const progress = mountJudgingProgress(container);
 
   const bar = document.createElement('div');
   bar.className = 'sdq-submit-bar';
@@ -129,20 +121,10 @@ export function mountSubmitPanel(
   button.setAttribute('data-testid', 'submit-button');
   button.textContent = 'Submeter';
 
-  const resultOverlay = document.createElement('div');
-  resultOverlay.className = 'sdq-result-placeholder';
-  resultOverlay.setAttribute('data-testid', 'result-placeholder');
-  resultOverlay.innerHTML = `
-    <div>
-      <div class="sdq-result-placeholder__title">Arquitetura enviada</div>
-      <p class="sdq-result-placeholder__body">
-        Julgamento por IA chegará na Fase 2. Por enquanto, sua solução foi registrada localmente.
-      </p>
-    </div>
-  `;
-
   bar.append(errorEl, button);
-  container.append(bar, resultOverlay);
+  container.append(bar);
+
+  let judging = false;
 
   const showError = (message: string): void => {
     errorEl.textContent = message;
@@ -154,26 +136,66 @@ export function mountSubmitPanel(
     errorEl.textContent = '';
   };
 
-  const showResultPlaceholder = (): void => {
-    resultOverlay.classList.add('sdq-result-placeholder--visible');
+  const setJudgingState = (active: boolean): void => {
+    judging = active;
+    button.disabled = active;
   };
 
-  const submit = (): LocalSubmitResult => {
+  const runJudging = async (
+    submitFn: (
+      graph: ArchitectureGraph,
+      onProgress: (step: Parameters<typeof defaultSubmitForJudging>[1]) => void,
+    ) => Promise<JudgeResult>,
+  ): Promise<LocalSubmitResult> => {
     const graph = callbacks.getGraph();
-    const result = validateLocalSubmit(graph);
+    const validation = validateLocalSubmit(graph);
 
-    if (!result.success) {
-      showError(result.error ?? EMPTY_GRAPH_MESSAGE);
-      return result;
+    if (!validation.success || !validation.graph) {
+      showError(validation.error ?? EMPTY_GRAPH_MESSAGE);
+      return validation;
     }
 
     clearError();
-    callbacks.onSubmitSuccess(result.graph!);
-    showResultPlaceholder();
-    return result;
+    setJudgingState(true);
+    progress.show();
+    progress.clearError();
+
+    try {
+      const result = await submitFn(validation.graph, (step) => {
+        progress.setStep(step);
+      });
+
+      progress.hide();
+      setJudgingState(false);
+      callbacks.onJudgeSuccess(result);
+      return { success: true, graph: validation.graph };
+    } catch (error) {
+      const message =
+        error instanceof JudgeApiError
+          ? error.message
+          : 'Não foi possível julgar sua arquitetura. Tente novamente.';
+
+      progress.showError(message, () => {
+        progress.clearError();
+        void runJudging((_graph, onProgress) => judgeRetry(onProgress));
+      });
+      setJudgingState(false);
+      return { success: false, error: message };
+    }
   };
 
-  button.addEventListener('click', submit);
+  const submit = async (): Promise<LocalSubmitResult> =>
+    runJudging((graph, onProgress) =>
+      judgeSubmit(callbacks.buildJudgeInput(graph), onProgress),
+    );
 
-  return { root: bar, submit };
+  button.addEventListener('click', () => {
+    void submit();
+  });
+
+  return {
+    root: bar,
+    submit,
+    isJudging: () => judging,
+  };
 }
