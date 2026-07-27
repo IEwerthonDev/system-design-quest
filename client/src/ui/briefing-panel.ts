@@ -1,0 +1,273 @@
+import type { Difficulty, Problem, ProblemMetrics } from '@sdq/shared';
+
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  easy: 'Fácil',
+  medium: 'Médio',
+  hard: 'Difícil',
+};
+
+export interface BriefingPanelCallbacks {
+  onStart: () => void;
+}
+
+export interface BriefingPanel {
+  root: HTMLElement;
+  render(problem: Problem): void;
+}
+
+export function formatCompactNumber(value: number): string {
+  if (value >= 1_000_000_000) {
+    return `${value / 1_000_000_000}B`;
+  }
+  if (value >= 1_000_000) {
+    return `${value / 1_000_000}M`;
+  }
+  if (value >= 1_000) {
+    return `${value / 1_000}k`;
+  }
+  return String(value);
+}
+
+export function buildMetricEntries(metrics: ProblemMetrics): Array<{ label: string; value: string }> {
+  const entries: Array<{ label: string; value: string }> = [];
+
+  if (metrics.dau !== undefined) {
+    entries.push({ label: 'DAU', value: formatCompactNumber(metrics.dau) });
+  }
+  if (metrics.readRps !== undefined) {
+    entries.push({ label: 'Read RPS (pico)', value: formatCompactNumber(metrics.readRps) });
+  }
+  if (metrics.writeRps !== undefined) {
+    entries.push({ label: 'Write RPS (pico)', value: formatCompactNumber(metrics.writeRps) });
+  }
+  if (metrics.rps !== undefined) {
+    entries.push({ label: 'RPS (pico)', value: formatCompactNumber(metrics.rps) });
+  }
+  if (metrics.readWriteRatio) {
+    entries.push({ label: 'Read/Write', value: metrics.readWriteRatio });
+  }
+  if (metrics.storageGb !== undefined) {
+    entries.push({ label: 'Storage', value: `${formatCompactNumber(metrics.storageGb)} GB` });
+  }
+
+  return entries;
+}
+
+function injectBriefingStyles(root: HTMLElement): void {
+  if (document.getElementById('sdq-briefing-styles')) {
+    return;
+  }
+
+  const style = document.createElement('style');
+  style.id = 'sdq-briefing-styles';
+  style.textContent = `
+    .sdq-briefing {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: rgba(15, 20, 25, 0.92);
+      z-index: 15;
+      overflow-y: auto;
+    }
+    .sdq-briefing__card {
+      width: min(560px, 100%);
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      padding: 24px 26px 28px;
+      color: #e2e8f0;
+      font-family: system-ui, sans-serif;
+    }
+    .sdq-briefing__badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 12px;
+    }
+    .sdq-briefing__badge--easy {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.45);
+    }
+    .sdq-briefing__badge--medium {
+      background: rgba(234, 179, 8, 0.2);
+      color: #fde047;
+      border: 1px solid rgba(234, 179, 8, 0.45);
+    }
+    .sdq-briefing__badge--hard {
+      background: rgba(248, 113, 113, 0.2);
+      color: #fecaca;
+      border: 1px solid rgba(248, 113, 113, 0.45);
+    }
+    .sdq-briefing__title {
+      font-size: 26px;
+      font-weight: 700;
+      margin: 0 0 12px;
+      line-height: 1.2;
+    }
+    .sdq-briefing__description {
+      font-size: 14px;
+      line-height: 1.55;
+      color: #cbd5e1;
+      margin: 0 0 18px;
+    }
+    .sdq-briefing__section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #94a3b8;
+      margin-bottom: 10px;
+    }
+    .sdq-briefing__metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .sdq-briefing__metric {
+      background: rgba(15, 20, 25, 0.65);
+      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .sdq-briefing__metric-label {
+      display: block;
+      font-size: 11px;
+      color: #94a3b8;
+      margin-bottom: 4px;
+    }
+    .sdq-briefing__metric-value {
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .sdq-briefing__tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .sdq-briefing__tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(96, 165, 250, 0.15);
+      color: #93c5fd;
+      border: 1px solid rgba(96, 165, 250, 0.35);
+    }
+    .sdq-briefing__start {
+      width: 100%;
+      border: 1px solid rgba(96, 165, 250, 0.5);
+      background: rgba(30, 64, 175, 0.85);
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font: 600 15px system-ui, sans-serif;
+      cursor: pointer;
+    }
+    .sdq-briefing__start:hover {
+      background: rgba(37, 99, 235, 0.95);
+    }
+  `;
+  root.append(style);
+}
+
+export function mountBriefingPanel(
+  container: HTMLElement,
+  callbacks: BriefingPanelCallbacks,
+): BriefingPanel {
+  injectBriefingStyles(document.head);
+
+  const panel = document.createElement('aside');
+  panel.className = 'sdq-briefing';
+  panel.setAttribute('data-testid', 'briefing-panel');
+
+  const card = document.createElement('div');
+  card.className = 'sdq-briefing__card';
+
+  const badge = document.createElement('span');
+  badge.className = 'sdq-briefing__badge';
+  badge.setAttribute('data-testid', 'briefing-badge');
+
+  const title = document.createElement('h1');
+  title.className = 'sdq-briefing__title';
+  title.setAttribute('data-testid', 'briefing-title');
+
+  const description = document.createElement('p');
+  description.className = 'sdq-briefing__description';
+  description.setAttribute('data-testid', 'briefing-description');
+
+  const metricsTitle = document.createElement('div');
+  metricsTitle.className = 'sdq-briefing__section-title';
+  metricsTitle.textContent = 'Métricas de escala';
+
+  const metricsGrid = document.createElement('div');
+  metricsGrid.className = 'sdq-briefing__metrics';
+  metricsGrid.setAttribute('data-testid', 'briefing-metrics');
+
+  const tagsTitle = document.createElement('div');
+  tagsTitle.className = 'sdq-briefing__section-title';
+  tagsTitle.textContent = 'Domínios técnicos';
+
+  const tagsContainer = document.createElement('div');
+  tagsContainer.className = 'sdq-briefing__tags';
+  tagsContainer.setAttribute('data-testid', 'briefing-tags');
+
+  const startButton = document.createElement('button');
+  startButton.type = 'button';
+  startButton.className = 'sdq-briefing__start';
+  startButton.setAttribute('data-testid', 'briefing-start');
+  startButton.textContent = 'Começar';
+
+  card.append(
+    badge,
+    title,
+    description,
+    metricsTitle,
+    metricsGrid,
+    tagsTitle,
+    tagsContainer,
+    startButton,
+  );
+  panel.append(card);
+  container.append(panel);
+
+  startButton.addEventListener('click', () => {
+    callbacks.onStart();
+  });
+
+  const render = (problem: Problem): void => {
+    badge.className = `sdq-briefing__badge sdq-briefing__badge--${problem.difficulty}`;
+    badge.textContent = DIFFICULTY_LABELS[problem.difficulty];
+    title.textContent = problem.title;
+    description.textContent = problem.description;
+
+    metricsGrid.replaceChildren();
+    for (const entry of buildMetricEntries(problem.metrics)) {
+      const metric = document.createElement('div');
+      metric.className = 'sdq-briefing__metric';
+      metric.innerHTML = `
+        <span class="sdq-briefing__metric-label">${entry.label}</span>
+        <span class="sdq-briefing__metric-value">${entry.value}</span>
+      `;
+      metricsGrid.append(metric);
+    }
+
+    tagsContainer.replaceChildren();
+    for (const tag of problem.tags) {
+      const tagEl = document.createElement('span');
+      tagEl.className = 'sdq-briefing__tag';
+      tagEl.textContent = tag;
+      tagsContainer.append(tagEl);
+    }
+  };
+
+  return { root: panel, render };
+}
