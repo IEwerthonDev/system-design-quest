@@ -45,7 +45,7 @@ describe('validateGraph', () => {
     ]);
   });
 
-  it('rejects duplicate node ids', () => {
+  it('rejects duplicate node ids with descriptive error', () => {
     const result = validateGraph({
       nodes: [
         {
@@ -64,10 +64,14 @@ describe('validateGraph', () => {
       edges: [],
     });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e) => e.code === 'DUPLICATE_NODE_ID')).toBe(true);
+    expect(result.errors).toContainEqual({
+      code: 'DUPLICATE_NODE_ID',
+      message: 'Duplicate node id: dup',
+      field: 'dup',
+    });
   });
 
-  it('rejects edges that reference missing nodes', () => {
+  it('rejects edges with missing source node', () => {
     const result = validateGraph({
       nodes: [
         {
@@ -87,6 +91,37 @@ describe('validateGraph', () => {
       ],
     });
     expect(result.valid).toBe(false);
-    expect(result.errors.some((e) => e.code === 'ORPHAN_EDGE')).toBe(true);
+    expect(result.errors).toContainEqual({
+      code: 'ORPHAN_EDGE',
+      message: 'Edge orphan references missing source node: missing',
+      field: 'orphan',
+    });
+  });
+
+  it('rejects edges with missing target node', () => {
+    const result = validateGraph({
+      nodes: [
+        {
+          id: 'source',
+          type: 'app_server',
+          label: 'App',
+          position: { x: 0, y: 0, z: 0 },
+        },
+      ],
+      edges: [
+        {
+          id: 'missing-target',
+          from: 'source',
+          to: 'ghost',
+          direction: 'forward',
+        },
+      ],
+    });
+    expect(result.valid).toBe(false);
+    expect(result.errors).toContainEqual({
+      code: 'ORPHAN_EDGE',
+      message: 'Edge missing-target references missing target node: ghost',
+      field: 'missing-target',
+    });
   });
 });
