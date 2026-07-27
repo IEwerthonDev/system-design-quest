@@ -37,6 +37,7 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 | Paleta com **15 componentes** 3D primitivos (AD-017 Tier 1) | PROD-03 |
 | Drag & drop + seleção + delete + label/nota | PROD-03 |
 | Conexões com setas e animação de fluxo | PROD-04 |
+| Painel de dicas contextuais (Modo Study) | PROD-16 |
 | Serialização `ArchitectureGraph` JSON | PROD-03 |
 | Botão Submeter → validação local (não-vazio) | PROD-03, AD-016 |
 

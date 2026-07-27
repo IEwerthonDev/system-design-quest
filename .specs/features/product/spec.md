@@ -293,27 +293,27 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 | Requirement ID | Story | Phase | Tasks | Status |
 | -------------- | ----- | ----- | ----- | ------ |
-| PROD-01 | P1: Briefing | mvp-canvas 1b | T9, T10, T12 | Pending |
-| PROD-02 | P1: Requisitos | mvp-canvas 1b | T11, T12, T14 | Pending |
-| PROD-03 | P1: Canvas 3D | foundation + mvp-canvas | FND-02, T1–T5, T8, T20 | Pending |
-| PROD-04 | P1: Conexões animadas | mvp-canvas 1a | T6, T7 | Pending |
-| PROD-05 | P1: Julgamento | ai-judge | (tasks TBD) | Pending |
-| PROD-06 | P1: Cobertura requisitos | ai-judge | (tasks TBD) | Pending |
+| PROD-01 | P1: Briefing | mvp-canvas 1b | T9, T10, T12 | Done |
+| PROD-02 | P1: Requisitos | mvp-canvas 1b | T11, T12, T14 | Done |
+| PROD-03 | P1: Canvas 3D | foundation + mvp-canvas | FND-02, T1–T5, T8, T20 | Done |
+| PROD-04 | P1: Conexões animadas | mvp-canvas 1a | T6, T7 | Done |
+| PROD-05 | P1: Julgamento | ai-judge | T1–T10 | Done |
+| PROD-06 | P1: Cobertura requisitos | ai-judge | T4, T8 | Done |
 | PROD-07 | P2: Modos Study/Speedrun | speedrun | (tasks TBD) | Pending |
 | PROD-08 | P2: Ranking | speedrun | (tasks TBD) | Pending |
 | PROD-09 | P2: Biblioteca por nível | problem-library | (tasks TBD) | Pending |
 | PROD-10 | P3: Rever tutorial | polish | (tasks TBD) | Pending |
-| PROD-11 | P1: Onboarding | mvp-canvas 1c | T15 | Pending |
-| PROD-12 | P1: Modo Guiado | mvp-canvas 1c | T16 | Pending |
-| PROD-13 | P1: Tooltips/glossário | mvp-canvas 1c | T17, T19 | Pending |
-| PROD-14 | P1: Métricas explicadas | mvp-canvas 1c | T18 | Pending |
-| PROD-15 | P1: Requisitos assistidos | mvp-canvas 1b | T13 | Pending |
-| PROD-16 | P2: Dicas no canvas | mvp-canvas 1c | T22 (stretch) | Pending |
-| PROD-17 | P2: Feedback em camadas | ai-judge | (tasks TBD) | Pending |
+| PROD-11 | P1: Onboarding | mvp-canvas 1c | T15 | Done |
+| PROD-12 | P1: Modo Guiado | mvp-canvas 1c | T16 | Done |
+| PROD-13 | P1: Tooltips/glossário | mvp-canvas 1c | T17, T19 | Done |
+| PROD-14 | P1: Métricas explicadas | mvp-canvas 1c | T18 | Done |
+| PROD-15 | P1: Requisitos assistidos | mvp-canvas 1b | T13 | Done |
+| PROD-16 | P2: Dicas no canvas | mvp-canvas 1c | T22 (stretch) | Done |
+| PROD-17 | P2: Feedback em camadas | ai-judge | T8 | Done |
 | PROD-18 | P2: Trilha de progressão | problem-library | (tasks TBD) | Pending |
 | PROD-19 | P2: Filtros e badges de nível | problem-library | (tasks TBD) | Pending |
 
-**Coverage:** 19 total, 10 mapped to mvp-canvas tasks, 9 awaiting feature tasks
+**Coverage:** 19 total, 13 Done (Fases 0–2), 6 Pending (Fases 3–5)
 
 ---
 
