@@ -1,4 +1,5 @@
 import { getProblem, URL_SHORTENER_ID } from '@sdq/shared';
+import type { ExperienceLevel } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { mountPalette } from '../ui/palette';
@@ -29,6 +30,8 @@ export interface MountPhaseNavigationOptions {
   problemId?: string;
   mode?: GameMode;
   canvas?: HTMLElement | null;
+  guidedMode?: boolean;
+  experienceLevel?: ExperienceLevel | null;
 }
 
 export interface PhaseNavigation {
@@ -80,13 +83,15 @@ export function mountPhaseNavigation(
 ): PhaseNavigation {
   const problemId = options.problemId ?? URL_SHORTENER_ID;
   const mode = options.mode ?? 'study';
+  const guidedMode = options.guidedMode ?? false;
+  const experienceLevel = options.experienceLevel ?? null;
   const problem = getProblem(problemId);
   if (!problem) {
     throw new Error(`Unknown problem: ${problemId}`);
   }
 
   injectPhaseNavigationStyles(document.head);
-  createSession(problemId, mode);
+  createSession(problemId, mode, { guidedMode, experienceLevel });
 
   const shell = document.createElement('div');
   shell.className = 'sdq-phase-shell';

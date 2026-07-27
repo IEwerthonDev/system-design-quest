@@ -15,6 +15,8 @@ describe('__GAME_STATE__ test hook', () => {
       mode: 'study',
       graph: { nodes: [], edges: [] },
       requirements: { functional: [], nonFunctional: [] },
+      guidedMode: false,
+      experienceLevel: null,
     });
   });
 

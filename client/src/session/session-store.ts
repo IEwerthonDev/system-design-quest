@@ -1,4 +1,5 @@
 import type { ArchitectureGraph } from '@sdq/shared';
+import type { ExperienceLevel } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
 import { initGameState } from '../test-hook';
 import { advancePhase as computeNextPhase, retreatPhase as computePreviousPhase } from './phase-machine';
@@ -8,6 +9,11 @@ export interface SessionRequirements {
   nonFunctional: string[];
 }
 
+export interface CreateSessionOptions {
+  guidedMode?: boolean;
+  experienceLevel?: ExperienceLevel | null;
+}
+
 export interface Session {
   id: string;
   problemId: string;
@@ -15,6 +21,8 @@ export interface Session {
   phase: GamePhase;
   requirements: SessionRequirements;
   graph: ArchitectureGraph;
+  guidedMode: boolean;
+  experienceLevel: ExperienceLevel | null;
   startedAt: number;
 }
 
@@ -45,10 +53,16 @@ function syncToGameState(session: Session): void {
     phase: session.phase,
     graph: cloneGraph(session.graph),
     requirements: cloneRequirements(session.requirements),
+    guidedMode: session.guidedMode,
+    experienceLevel: session.experienceLevel,
   });
 }
 
-export function createSession(problemId: string, mode: GameMode): Session {
+export function createSession(
+  problemId: string,
+  mode: GameMode,
+  options: CreateSessionOptions = {},
+): Session {
   sessionIdCounter += 1;
   activeSession = {
     id: `session-${sessionIdCounter}`,
@@ -57,6 +71,8 @@ export function createSession(problemId: string, mode: GameMode): Session {
     phase: 'briefing',
     requirements: { functional: [], nonFunctional: [] },
     graph: { nodes: [], edges: [] },
+    guidedMode: options.guidedMode ?? false,
+    experienceLevel: options.experienceLevel ?? null,
     startedAt: Date.now(),
   };
   syncToGameState(activeSession);

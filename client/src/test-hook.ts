@@ -1,4 +1,5 @@
 import type { ArchitectureGraph } from '@sdq/shared';
+import type { ExperienceLevel } from './storage/preferences';
 
 export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
 export type GameMode = 'study' | 'speedrun';
@@ -14,6 +15,8 @@ export interface GameState {
   phase: GamePhase;
   mode: GameMode;
   requirements: GameRequirements;
+  guidedMode: boolean;
+  experienceLevel: ExperienceLevel | null;
 }
 
 declare global {
@@ -32,6 +35,8 @@ const initialState: GameState = {
   phase: 'canvas',
   mode: 'study',
   requirements: emptyRequirements,
+  guidedMode: false,
+  experienceLevel: null,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -39,6 +44,8 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     ...initialState,
     graph: { ...emptyGraph, nodes: [], edges: [] },
     requirements: { functional: [], nonFunctional: [] },
+    guidedMode: false,
+    experienceLevel: null,
     ...overrides,
   };
   return window.__GAME_STATE__;
