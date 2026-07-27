@@ -22,14 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `vercel-judge` — Execute done; Verify pending formal report |
-| **Próximo passo** | Formal Verify / merge `feature/vercel-judge` when ready |
-| **Feature ativa** | `vercel-judge` |
-| **Branch** | `feature/vercel-judge` |
+| **Fase atual** | `vercel-judge` merged to `main` + production deploy |
+| **Próximo passo** | Formal Verify report (optional); sessions/leaderboard still Hobby-deferred |
+| **Feature ativa** | `vercel-judge` (on `main`) |
+| **Branch** | `main` |
 | **Bloqueios** | Sessions/leaderboard still need external API / durable store |
-| **Preview URL** | https://system-design-quest-4o5und3uf-spiral-out.vercel.app |
-| **Deployment** | `dpl_5xcs42kmn6JoeFiynFa4ZbC2DYAS` (Spiral Out / Hobby) — READY |
-| **Validation** | Smoke: `POST /api/judge` returns `JudgeResult` (mock without key); gates shared/server/client green |
+| **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_61at3GNQL6GvXyyEndS8dsMAu7tZ` (Spiral Out / Hobby) — READY |
+| **UI fix** | Voltar on canvas lives in session-header leading slot (not over palette) |
 
 ### Deploy note (Hobby)
 
@@ -37,7 +37,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 - **Does not serve:** sessions/leaderboard Fastify routes on Hobby (deferred)
 - **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` only for sessions/leaderboard
 - **Build:** esbuild judge bundle then `client:build`; quality gate `nx run-many -t lint test`
-- **Preview:** https://system-design-quest-4o5und3uf-spiral-out.vercel.app
+- **Production:** https://system-design-quest.vercel.app
 
 ### AD-022 (active)
 
