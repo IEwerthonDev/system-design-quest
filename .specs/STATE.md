@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge`** — Execute T1 concluído |
-| **Próximo passo** | Execute T2 (golden graph fixtures) |
+| **Fase atual** | **Fase 2 `ai-judge`** — Execute T2 concluído |
+| **Próximo passo** | Execute T3 (mock LLM client + judge fixtures) |
 | **Feature ativa** | `ai-judge` em `feature/ai-judge` |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
@@ -43,9 +43,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch feature/ai-judge. T1 committed (judge types + AD-016 verdict rules).
-Execute T2: golden graph fixtures in libs/shared/src/judge/golden-graphs.ts.
-Gate: npx nx test shared
+Branch feature/ai-judge. T1–T2 committed.
+Execute T3: mock LLM client in server/src/judge/mock-llm-client.ts.
+Gate: npx nx test shared server
 ```
 
 ---

@@ -16,6 +16,8 @@ export type {
   Verdict,
 } from './schema/judge';
 export { applyVerdictRules, isBlocker } from './judge/apply-verdict';
+export { getGoldenGraph } from './judge/golden-graphs';
+export type { GoldenGraphTier } from './judge/golden-graphs';
 export { getProblem, listProblems, URL_SHORTENER, URL_SHORTENER_ID } from './problems/index';
 export {
   getComponentMeta,

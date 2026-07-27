@@ -72,11 +72,11 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-08
 
-- [ ] `good`: Client → LB → App → Cache → DB (URL Shortener pattern)
-- [ ] `medium`: Client → App → DB (no cache/LB)
-- [ ] `bad`: Client → DB only
-- [ ] All graphs pass `validateGraph`
-- [ ] Commit: `feat(shared): golden judge graph fixtures`
+- [x] `good`: Client → LB → App → Cache → DB (URL Shortener pattern)
+- [x] `medium`: Client → App → DB (no cache/LB)
+- [x] `bad`: Client → DB only
+- [x] All graphs pass `validateGraph`
+- [x] Commit: `feat(shared): golden judge graph fixtures`
 
 ---
 
