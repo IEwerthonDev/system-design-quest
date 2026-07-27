@@ -10,7 +10,8 @@
     "dev": "nx run-many -t serve --projects=client,server --parallel=2",
     "build": "nx run-many -t build",
     "test": "nx run-many -t test",
-    "lint": "nx run-many -t lint"
+    "lint": "nx run-many -t lint",
+    "test_e2e": "playwright test"
   },
   "devDependencies": {
     "@nx/eslint": "^23.0.1",
@@ -19,6 +20,7 @@
     "@nx/node": "^23.0.1",
     "@nx/vite": "^23.0.1",
     "@nx/vitest": "^23.0.1",
+    "@playwright/test": "^1.52.0",
     "@types/node": "^22.0.0",
     "@types/three": "^0.185.0",
     "concurrently": "^9.1.2",
