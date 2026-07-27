@@ -9,10 +9,12 @@ export interface SvgEdgeLayer {
   svg: SVGSVGElement;
   sync(edges: ConnectionEdge[], endpoints: Record<string, EdgeEndpoints>, running: boolean, speed: number): void;
   setSelected(edgeId: string | null): void;
+  setPreview(from: { x: number; y: number } | null, to?: { x: number; y: number } | null): void;
   destroy(): void;
 }
 
-function curvePath(from: { x: number; y: number }, to: { x: number; y: number }): string {
+/** Cubic Bezier path between edge anchors (PP-04 — must not be straight-only L). */
+export function curvePath(from: { x: number; y: number }, to: { x: number; y: number }): string {
   const dx = Math.abs(to.x - from.x) * 0.4;
   const c1x = from.x + dx;
   const c2x = to.x - dx;
@@ -37,6 +39,31 @@ export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
   let selectedId: string | null = null;
   let animFrame = 0;
   const packetEls: SVGCircleElement[] = [];
+  let previewEl: SVGPathElement | null = null;
+
+  const clearPreview = (): void => {
+    previewEl?.remove();
+    previewEl = null;
+  };
+
+  const setPreview = (
+    from: { x: number; y: number } | null,
+    to?: { x: number; y: number } | null,
+  ): void => {
+    clearPreview();
+    if (!from || !to) {
+      return;
+    }
+    previewEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    previewEl.setAttribute('d', curvePath(from, to));
+    previewEl.setAttribute('fill', 'none');
+    previewEl.setAttribute('stroke', '#38bdf8');
+    previewEl.setAttribute('stroke-width', '1.5');
+    previewEl.setAttribute('stroke-dasharray', '6 4');
+    previewEl.setAttribute('data-testid', 'edge-preview');
+    previewEl.style.pointerEvents = 'none';
+    svg.append(previewEl);
+  };
 
   const sync = (
     edges: ConnectionEdge[],
@@ -120,8 +147,10 @@ export function createSvgEdgeLayer(world: HTMLElement): SvgEdgeLayer {
     setSelected(edgeId) {
       selectedId = edgeId;
     },
+    setPreview,
     destroy() {
       cancelAnimationFrame(animFrame);
+      clearPreview();
       svg.remove();
     },
   };
