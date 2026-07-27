@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge`** — Execute T6 concluído |
-| **Próximo passo** | Execute T7 (judge API client + progress overlay) |
+| **Fase atual** | **Fase 2 `ai-judge`** — T1–T13 done, Verifier PASS ✅ |
+| **Próximo passo** | Commit T11–T13 (3 commits atômicos) → merge `feature/ai-judge` → `main` |
 | **Feature ativa** | `ai-judge` em `feature/ai-judge` |
 | **Bloqueios** | Nenhum |
 | **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
@@ -43,9 +43,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Prompt para nova sessão:**
 ```
-Branch feature/ai-judge. T1–T6 committed.
-Execute T7: judge API client in client/src/judge/judge-api.ts.
-Gate: npx nx test shared server client
+Branch feature/ai-judge. T1–T9 implemented (T9 uncommitted).
+Execute T10: golden submission integration tests.
+Gate: npx nx run-many -t lint test
 ```
 
 ---

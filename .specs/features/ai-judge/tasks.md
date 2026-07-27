@@ -211,7 +211,7 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 - [x] Server: 3 golden graphs through full `judgeSubmission` → expected verdict bands
 - [x] Client: mocked `/api/judge` → result panel renders FAIL for bad graph
 - [x] Full gate: `npx nx run-many -t lint test`
-- [ ] Commit: `test(ai-judge): golden submission integration tests`
+- [x] Commit: `test(ai-judge): golden submission integration tests`
 
 ---
 
@@ -234,9 +234,55 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 ---
 
+## Fix Tasks (post-Verifier gaps 1–3)
+
+### T11: Malformed LLM JSON → 502 with one repair attempt
+
+**Files:**
+- Create: `server/src/judge/parse-llm-json.ts`
+- Create: `server/src/judge/parse-llm-json.test.ts`
+- Modify: `server/src/judge/llm-client.ts`
+- Modify: `server/src/routes/judge.ts`
+- Modify: `server/src/routes/judge.test.ts`
+
+**Req:** spec edge case — malformed LLM JSON
+
+- [x] `parseLlmJsonContent`: parse → repair extract `{…}` once → throw `LlmParseError`
+- [x] Route catches `LlmParseError` → 502 PT-BR + retry suggested
+- [x] Test: injected client throws `LlmParseError` → 502
+- [ ] Commit: `fix(server): LLM JSON repair and 502 on parse failure`
+
+---
+
+### T12: Assert requirement coverage partial/missing statuses
+
+**Files:**
+- Modify: `server/src/judge/dual-judge.test.ts`
+
+**Req:** JUDGE-04 — P1 Cobertura AC1–AC2
+
+- [x] Medium-tier coverage includes `partial` and `missing` with non-empty explanations
+- [x] Every item uses valid `covered` \| `partial` \| `missing` status
+- [ ] Commit: `test(server): assert requirement coverage status values`
+
+---
+
+### T13: Test client 5xx server_error path
+
+**Files:**
+- Modify: `client/src/judge/judge-api.test.ts`
+
+**Req:** JUDGE-06 — P1 Loading AC2
+
+- [x] HTTP 500 → `JudgeApiError` code `server_error` + PT-BR message
+- [ ] Commit: `test(client): assert judge API 5xx server_error handling`
+
+---
+
 ## Verifier Checklist (post-T10)
 
-- [ ] Each AC in spec.md has test evidence
-- [ ] Discrimination sensor: weaken verdict logic → tests fail
-- [ ] `validation.md` written with PASS/FAIL
-- [ ] No `LLM_API_KEY` required in CI
+- [x] Each AC in spec.md has test evidence (initial pass — 3 gaps flagged)
+- [x] Discrimination sensor: weaken verdict logic → tests fail
+- [x] `validation.md` written with PASS/FAIL
+- [x] No `LLM_API_KEY` required in CI
+- [x] Re-run Verifier after T11–T13
