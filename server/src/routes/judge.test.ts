@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import { buildApp } from '../main';
 import { resetRateLimitsForTests } from '../judge/rate-limit';
+import { LlmParseError } from '../judge/parse-llm-json';
 import { parseJudgeRequestBody } from './judge';
 
 const TEST_IP = '203.0.113.10';
@@ -94,6 +95,31 @@ describe('POST /api/judge', () => {
 
     expect(response.statusCode).toBe(400);
     expect(response.json().message).toContain('at least one component');
+  });
+
+  it('returns 502 when LLM response cannot be parsed after repair', async () => {
+    const app = await buildApp({
+      env: { NODE_ENV: 'test' },
+      llmClient: {
+        completeJson: async () => {
+          throw new LlmParseError();
+        },
+      },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/judge',
+      payload: validPayload(),
+    });
+
+    expect(response.statusCode).toBe(502);
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        error: 'Bad gateway',
+        message: 'Erro ao processar resposta da IA. Tente novamente.',
+      }),
+    );
   });
 
   it('returns 503 in production when LLM_API_KEY is missing', async () => {

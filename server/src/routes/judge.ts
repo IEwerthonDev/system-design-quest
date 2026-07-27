@@ -10,10 +10,12 @@ import {
 import { judgeSubmission, UnknownProblemError } from '../judge/dual-judge';
 import { createLlmClient } from '../judge/llm-client';
 import { createMockLlmClient, shouldUseMock, type LlmClient } from '../judge/mock-llm-client';
+import { LlmParseError } from '../judge/parse-llm-json';
 import { checkRateLimit } from '../judge/rate-limit';
 
 export interface JudgeRouteOptions {
   env?: NodeJS.ProcessEnv;
+  llmClient?: LlmClient;
 }
 
 type ParseResult =
@@ -91,7 +93,14 @@ export function parseJudgeRequestBody(body: unknown): ParseResult {
   };
 }
 
-export function createJudgeLlmClient(env: NodeJS.ProcessEnv = process.env): LlmClient | null {
+export function createJudgeLlmClient(
+  env: NodeJS.ProcessEnv = process.env,
+  override?: LlmClient,
+): LlmClient | null {
+  if (override) {
+    return override;
+  }
+
   const apiKey = env.LLM_API_KEY?.trim();
 
   if (env.NODE_ENV === 'production' && !apiKey) {
@@ -136,7 +145,7 @@ export async function registerJudgeRoutes(
       });
     }
 
-    const client = createJudgeLlmClient(env);
+    const client = createJudgeLlmClient(env, options.llmClient);
     if (!client) {
       return reply.code(503).send({
         error: 'Service unavailable',
@@ -152,6 +161,12 @@ export async function registerJudgeRoutes(
         return reply.code(400).send({
           error: 'Invalid request',
           message: error.message,
+        });
+      }
+      if (error instanceof LlmParseError) {
+        return reply.code(502).send({
+          error: 'Bad gateway',
+          message: 'Erro ao processar resposta da IA. Tente novamente.',
         });
       }
       throw error;

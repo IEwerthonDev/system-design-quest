@@ -1,4 +1,5 @@
 import type { JudgePrompt, LlmClient } from './mock-llm-client';
+import { parseLlmJsonContent } from './parse-llm-json';
 
 export interface LlmConfig {
   apiKey: string;
@@ -49,7 +50,7 @@ export function createLlmClient(config: LlmConfig): LlmClient {
         throw new Error('LLM response missing message content');
       }
 
-      return JSON.parse(content) as T;
+      return parseLlmJsonContent<T>(content);
     },
   };
 }
