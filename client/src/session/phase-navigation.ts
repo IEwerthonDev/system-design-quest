@@ -1,4 +1,5 @@
-import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID } from '@sdq/shared';
+import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
+import type { DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
@@ -7,6 +8,7 @@ import { unlockProblemLibrary } from '../storage/preferences';
 import { isQualifyingCompletion, recordCompletion } from '../storage/progress';
 import { getOrCreateNickname } from '../storage/nickname';
 import { submitLeaderboardScore } from '../leaderboard/leaderboard-api';
+import { SessionsApiError, upsertSession } from '../sessions/sessions-api';
 import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
@@ -15,6 +17,10 @@ import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
 import { mountResultPanel, type ResultPanel } from '../ui/result-panel';
+import {
+  mountSessionConfirmModal,
+  type SessionConfirmModal,
+} from '../ui/session-confirm-modal';
 import { mountSubmitPanel } from '../ui/submit-panel';
 import { mountTimerPanel } from '../ui/timer-panel';
 import { mountSessionHeader } from '../ui/session-header';
@@ -55,6 +61,7 @@ export interface MountPhaseNavigationOptions {
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
+  upsertSessionFn?: typeof upsertSession;
   getNickname?: () => string;
   now?: () => number;
 }
@@ -126,6 +133,7 @@ export function mountPhaseNavigation(
 
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
   const getNickname = options.getNickname ?? getOrCreateNickname;
+  const upsertSessionFn = options.upsertSessionFn ?? upsertSession;
 
   let beginnerMode = experienceLevel === 'beginner';
 
@@ -146,6 +154,66 @@ export function mountPhaseNavigation(
   shell.append(resultHost);
 
   let resultPanel: ResultPanel | null = null;
+  let confirmModal: SessionConfirmModal | null = null;
+
+  const destroyConfirmModal = (): void => {
+    confirmModal?.destroy();
+    confirmModal = null;
+  };
+
+  const persistDesignSession = async (status: DesignSessionStatus): Promise<boolean> => {
+    const session = getSession();
+    if (!session) {
+      return false;
+    }
+    const input: DesignSessionUpsertInput = {
+      id: session.id,
+      problemId: session.problemId,
+      playerNickname: getNickname(),
+      status,
+      graph: getGraph(),
+      requirements: getRequirements(),
+      judgeResult: getJudgeResult(),
+      mode: session.mode,
+    };
+    try {
+      await upsertSessionFn(input);
+      confirmModal?.setError(null);
+      return true;
+    } catch (err) {
+      const message =
+        err instanceof SessionsApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Falha ao salvar sessão';
+      confirmModal?.setError(message);
+      return false;
+    }
+  };
+
+  const handleResultBack = async (): Promise<void> => {
+    const ok = await persistDesignSession('in_progress');
+    if (!ok) {
+      return;
+    }
+    destroyConfirmModal();
+    goBackPhase();
+    sync();
+  };
+
+  const handleResultConfirm = async (): Promise<void> => {
+    const judgeResult = getJudgeResult();
+    if (!judgeResult) {
+      return;
+    }
+    const status = verdictToSessionStatus(judgeResult.verdict);
+    const ok = await persistDesignSession(status);
+    if (!ok) {
+      return;
+    }
+    destroyConfirmModal();
+  };
 
   const briefingPanel = mountBriefingPanel(shell, {
     onStart: () => {
@@ -305,8 +373,22 @@ export function mountPhaseNavigation(
         resultPanel.setBeginnerMode(beginnerMode);
       }
       resultHost.hidden = false;
+
+      if (!confirmModal) {
+        const status = verdictToSessionStatus(judgeResult.verdict);
+        confirmModal = mountSessionConfirmModal(shell, {
+          status,
+          onConfirm: () => {
+            void handleResultConfirm();
+          },
+          onBack: () => {
+            void handleResultBack();
+          },
+        });
+      }
     } else {
       resultHost.hidden = true;
+      destroyConfirmModal();
     }
 
     if (guidedOverlay && session) {
@@ -318,6 +400,11 @@ export function mountPhaseNavigation(
   };
 
   backButton.addEventListener('click', () => {
+    const phase = getSession()?.phase;
+    if (phase === 'result') {
+      void handleResultBack();
+      return;
+    }
     goBackPhase();
     sync();
   });
@@ -335,6 +422,7 @@ export function mountPhaseNavigation(
       simControls.destroy();
       sessionHeader.destroy();
       problemDrawer.destroy();
+      destroyConfirmModal();
     },
   };
 }

@@ -332,10 +332,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06
 
 **Done when:**
-- [ ] Confirm PASS → PUT approved; PARTIAL → partial; Voltar → in_progress
-- [ ] Failed PUT shows message (no silent success)
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): persist design session on confirm and back`
+- [x] Confirm PASS → PUT approved; PARTIAL → partial; Voltar → in_progress
+- [x] Failed PUT shows message (no silent success)
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): persist design session on confirm and back`
 
 **Tests:** unit  
 **Gate:** quick client

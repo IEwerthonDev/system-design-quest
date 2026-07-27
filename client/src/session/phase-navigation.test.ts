@@ -254,8 +254,13 @@ describe('phase navigation', () => {
     });
 
     it('advances to result on valid submit, mounts result panel, and preserves judgeResult on back', async () => {
+      const upsertSessionFn = vi.fn().mockResolvedValue({
+        id: 'session-1',
+        status: 'in_progress',
+      });
       mountPhaseNavigation(container, {
         submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn,
       });
 
       container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
@@ -268,18 +273,104 @@ describe('phase navigation', () => {
 
       expect(getJudgeResult()?.verdict).toBe('PARTIAL');
       expect(container.querySelector('[data-testid="result-panel"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="judge-sidebar"]')).not.toBeNull();
+      expect(container.querySelector('[data-testid="session-confirm-modal"]')).not.toBeNull();
       expect(container.querySelector('[data-testid="result-verdict-badge"]')?.textContent).toBe(
         'Parcial',
       );
 
-      container.querySelector<HTMLButtonElement>('[data-testid="phase-back"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-back"]')!.click();
 
-      expect(getSession()?.phase).toBe('canvas');
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('canvas'));
+      expect(upsertSessionFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'in_progress',
+          playerNickname: expect.any(String),
+          graph: expect.objectContaining({ nodes: expect.any(Array) }),
+        }),
+      );
       expect(getGraph().nodes).toHaveLength(1);
       expect(getJudgeResult()?.score).toBe(75);
       expect(
         container.querySelector('[data-testid="result-panel-host"]')?.hasAttribute('hidden'),
       ).toBe(true);
+    });
+
+    it('Confirmar PUTs partial for PARTIAL and approved for PASS', async () => {
+      const upsertPartial = vi.fn().mockResolvedValue({ id: 's', status: 'partial' });
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn: upsertPartial,
+        getNickname: () => 'tester',
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-confirm"]')!.click();
+      await vi.waitFor(() =>
+        expect(upsertPartial).toHaveBeenCalledWith(
+          expect.objectContaining({
+            status: 'partial',
+            playerNickname: 'tester',
+            id: getSession()?.id,
+          }),
+        ),
+      );
+
+      container.remove();
+      container = document.createElement('div');
+      document.body.append(container);
+      resetSessionStore();
+
+      const passResult: JudgeResult = { ...sampleJudgeResult, verdict: 'PASS', score: 90 };
+      const upsertPass = vi.fn().mockResolvedValue({ id: 's2', status: 'approved' });
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(passResult),
+        upsertSessionFn: upsertPass,
+        getNickname: () => 'tester',
+      });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+      container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-confirm"]')!.click();
+      await vi.waitFor(() =>
+        expect(upsertPass).toHaveBeenCalledWith(
+          expect.objectContaining({ status: 'approved', playerNickname: 'tester' }),
+        ),
+      );
+    });
+
+    it('shows error and stays on result when Confirmar PUT fails', async () => {
+      const { SessionsApiError } = await import('../sessions/sessions-api');
+      const upsertSessionFn = vi
+        .fn()
+        .mockRejectedValue(new SessionsApiError('save failed', 500));
+
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn,
+        getNickname: () => 'tester',
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-confirm"]')!.click();
+      await vi.waitFor(() =>
+        expect(container.querySelector('[data-testid="session-confirm-error"]')?.textContent).toBe(
+          'save failed',
+        ),
+      );
+      expect(getSession()?.phase).toBe('result');
     });
 
     it('defaults beginner mode from session experienceLevel', async () => {
