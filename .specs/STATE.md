@@ -22,22 +22,29 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Specify+Design+Tasks done — Execute T1 |
-| **Próximo passo** | T1 schema normalize → T2 sim → T3–T11 blueprint |
+| **Fase atual** | `blueprint-2d-canvas` Execute done — gate lint+test PASS |
+| **Próximo passo** | Hard refresh localhost:4200; UAT URL Shortener no blueprint; merge após Verify |
 | **Feature ativa** | `blueprint-2d-canvas` |
 | **Branch** | `feature/blueprint-2d-canvas` |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `.specs/features/blueprint-2d-canvas/{spec,context,design,tasks}.md` |
+| **Artefatos** | `client/src/blueprint/*`, sim controls, AD-018..020 |
 
-### Context Checkpoint (2026-07-27 — blueprint-2d start)
+### Context Checkpoint (2026-07-27 — blueprint execute)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat | Execute plan requested |
-| Spec | Locked 1B/2A/reps |
-| Gate | Pending T1 |
+| Gate | `npx nx run-many -t lint test` PASS |
+| Sim | 1B pressure engine |
+| UI | 2D blueprint + popover + header |
 
 **Veredito:** **GREEN**
+
+**Prompt para nova sessão:**
+```
+Branch feature/blueprint-2d-canvas. Blueprint 2D + sim + configs committed.
+Read .specs/STATE.md Handoff. Run Verifier if needed, then merge to main after UAT.
+Gate: npx nx run-many -t lint test
+```
 
 ---
 

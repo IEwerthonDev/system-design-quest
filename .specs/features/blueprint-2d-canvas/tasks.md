@@ -8,7 +8,7 @@ Implement with `tlc-spec-driven` Execute flow. One atomic commit per task. Gate 
 **Spec:** `.specs/features/blueprint-2d-canvas/spec.md`  
 **Context:** `.specs/features/blueprint-2d-canvas/context.md`  
 **Branch:** `feature/blueprint-2d-canvas`  
-**Status:** In progress
+**Status:** Done — Execute complete 2026-07-27
 
 ---
 
@@ -54,11 +54,11 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-02, BP-03, BP-07 (defaults)
 
 **Done when:**
-- [ ] Types export `ComponentConfig`, `SimulationSettings`, `replicas` on nodes
-- [ ] `normalizeGraph` fills replicas=1, default simulation, maps `note` → notes
-- [ ] Existing shared tests pass (update fixtures)
-- [ ] Gate: `npx nx test shared`
-- [ ] Commit: `feat(shared): extend ArchitectureGraph for blueprint configs`
+- [x] Types export `ComponentConfig`, `SimulationSettings`, `replicas` on nodes
+- [x] `normalizeGraph` fills replicas=1, default simulation, maps `note` → notes
+- [x] Existing shared tests pass (update fixtures)
+- [x] Gate: `npx nx test shared`
+- [x] Commit: `feat(shared): extend ArchitectureGraph for blueprint configs`
 
 **Tests:** unit  
 **Gate:** quick shared
@@ -73,11 +73,11 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-05
 
 **Done when:**
-- [ ] Fixture: low hitRate + high traffic → sql `hot`; high hitRate → improved
-- [ ] Speed not in pressure inputs
-- [ ] Exported from `@sdq/shared`
-- [ ] Gate: `npx nx test shared`
-- [ ] Commit: `feat(shared): educational simulation pressure engine`
+- [x] Fixture: low hitRate + high traffic → sql `hot`; high hitRate → improved
+- [x] Speed not in pressure inputs
+- [x] Exported from `@sdq/shared`
+- [x] Gate: `npx nx test shared`
+- [x] Commit: `feat(shared): educational simulation pressure engine`
 
 **Tests:** unit  
 **Gate:** quick shared
@@ -92,11 +92,11 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-01
 
 **Done when:**
-- [ ] Canvas phase shows blueprint grid (no WebGL required for place)
-- [ ] Drop from palette → node in `__GAME_STATE__.graph`
-- [ ] Pan/zoom transform world
-- [ ] Gate: `npx nx test client --testPathPattern=blueprint`
-- [ ] Commit: `feat(client): mount 2D blueprint canvas shell`
+- [x] Canvas phase shows blueprint grid (no WebGL required for place)
+- [x] Drop from palette → node in `__GAME_STATE__.graph`
+- [x] Pan/zoom transform world
+- [x] Gate: `npx nx test client --testPathPattern=blueprint`
+- [x] Commit: `feat(client): mount 2D blueprint canvas shell`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -111,10 +111,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-02
 
 **Done when:**
-- [ ] +/− updates replicas in graph; floor at 1
-- [ ] Drag card updates position
-- [ ] Gate: client blueprint tests
-- [ ] Commit: `feat(client): blueprint node cards with replicas`
+- [x] +/− updates replicas in graph; floor at 1
+- [x] Drag card updates position
+- [x] Gate: client blueprint tests
+- [x] Commit: `feat(client): blueprint node cards with replicas`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -129,10 +129,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-01
 
 **Done when:**
-- [ ] Connect two nodes → edge in graph; self-loop/dup rejected
-- [ ] Edge label visible when set
-- [ ] Gate: client blueprint tests
-- [ ] Commit: `feat(client): blueprint SVG edges and linking`
+- [x] Connect two nodes → edge in graph; self-loop/dup rejected
+- [x] Edge label visible when set
+- [x] Gate: client blueprint tests
+- [x] Commit: `feat(client): blueprint SVG edges and linking`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -147,10 +147,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-03
 
 **Done when:**
-- [ ] hitRate / shards / skew / notes persist to graph
-- [ ] Judge footer copy visible
-- [ ] Gate: client tests
-- [ ] Commit: `feat(client): blueprint config popover with typed settings`
+- [x] hitRate / shards / skew / notes persist to graph
+- [x] Judge footer copy visible
+- [x] Gate: client tests
+- [x] Commit: `feat(client): blueprint config popover with typed settings`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -165,10 +165,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-04
 
 **Done when:**
-- [ ] Sliders + Start toggle update simulation in `__GAME_STATE__`
-- [ ] readRatio ≥70 shows read-heavy hint
-- [ ] Gate: client tests
-- [ ] Commit: `feat(client): simulation controls capsule in session header`
+- [x] Sliders + Start toggle update simulation in `__GAME_STATE__`
+- [x] readRatio ≥70 shows read-heavy hint
+- [x] Gate: client tests
+- [x] Commit: `feat(client): simulation controls capsule in session header`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -183,10 +183,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-05
 
 **Done when:**
-- [ ] `__GAME_STATE__` exposes node pressures when running
-- [ ] Stop clears running animation state
-- [ ] Gate: client tests
-- [ ] Commit: `feat(client): wire simulation pressure badges on blueprint`
+- [x] `__GAME_STATE__` exposes node pressures when running
+- [x] Stop clears running animation state
+- [x] Gate: client tests
+- [x] Commit: `feat(client): wire simulation pressure badges on blueprint`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -201,10 +201,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-06
 
 **Done when:**
-- [ ] Open/close drawer with problem briefing content
-- [ ] Header shows problem title
-- [ ] Gate: client tests
-- [ ] Commit: `feat(client): PROBLEM drawer and session header title`
+- [x] Open/close drawer with problem briefing content
+- [x] Header shows problem title
+- [x] Gate: client tests
+- [x] Commit: `feat(client): PROBLEM drawer and session header title`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -219,10 +219,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-07
 
 **Done when:**
-- [ ] Prompt string contains replicas/config/notes/simulation
-- [ ] Legacy graph without fields still judges
-- [ ] Gate: `npx nx test server` (+ shared if needed)
-- [ ] Commit: `feat(server): include blueprint fields in judge prompts`
+- [x] Prompt string contains replicas/config/notes/simulation
+- [x] Legacy graph without fields still judges
+- [x] Gate: `npx nx test server` (+ shared if needed)
+- [x] Commit: `feat(server): include blueprint fields in judge prompts`
 
 **Tests:** unit  
 **Gate:** quick server
@@ -237,10 +237,10 @@ Phase 4: T9 → T10 → T11
 **Requirement:** BP-01
 
 **Done when:**
-- [ ] Design session boots blueprint; no WebGL canvas required
-- [ ] `npx nx run-many -t lint test` passes
-- [ ] Commit: `refactor(client): replace 3D session canvas with blueprint 2D`
-- [ ] Update STATE.md Handoff
+- [x] Design session boots blueprint; no WebGL canvas required
+- [x] `npx nx run-many -t lint test` passes
+- [x] Commit: `refactor(client): replace 3D session canvas with blueprint 2D`
+- [x] Update STATE.md Handoff
 
 **Tests:** full suite  
 **Gate:** full
