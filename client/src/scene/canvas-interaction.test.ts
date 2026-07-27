@@ -486,6 +486,10 @@ describe('canvas interaction — preview + highlight (CGD-03/04)', () => {
     expect(interaction.getInteractionState().invalidTarget).toBe(false);
     const mat = b.mesh.material as THREE.MeshStandardMaterial;
     expect(mat.emissiveIntensity).toBeGreaterThan(0);
+    // CGD-04: valid target highlights in-handle (scale bump), not only node emissive
+    expect(bIn.scale.x).toBe(1.45);
+    expect(bIn.scale.y).toBe(1.45);
+    expect(bIn.scale.z).toBe(1.45);
 
     intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
       if (targets.includes(a.mesh)) {
@@ -497,6 +501,7 @@ describe('canvas interaction — preview + highlight (CGD-03/04)', () => {
     expect(preview.isValidTarget).toBe(false);
     expect(interaction.getInteractionState().invalidTarget).toBe(true);
     expect(canvas.style.cursor).toBe('not-allowed');
+    expect(bIn.scale.x).toBe(1);
   });
 
   it('hides preview and keeps permanent flow edge after successful drop', () => {
