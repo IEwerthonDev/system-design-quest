@@ -745,3 +745,209 @@ describe('canvas interaction — select/delete/invert edges (CGD-05/06)', () => 
     expect(interaction.getFlowEdges().has(edge.id)).toBe(false);
   });
 });
+
+describe('canvas interaction — reconnect endpoint (CGD-07)', () => {
+  let scene: THREE.Scene;
+  let camera: THREE.PerspectiveCamera;
+  let canvas: HTMLCanvasElement;
+  let controls: { enabled: boolean };
+  let raycaster: THREE.Raycaster;
+  let intersectObjects: ReturnType<typeof vi.fn>;
+  let componentManager: ReturnType<typeof createComponentManager>;
+  let edgeManager: ReturnType<typeof createEdgeManager>;
+  let handles: ReturnType<typeof createComponentHandles>;
+  let preview: ReturnType<typeof createLinkPreview>;
+  let panelHost: HTMLDivElement;
+  let interaction: CanvasInteraction;
+
+  beforeEach(() => {
+    resetComponentIdCounter();
+    resetEdgeIdCounter();
+
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
+    camera.updateMatrixWorld();
+
+    canvas = document.createElement('canvas');
+    Object.defineProperty(canvas, 'clientWidth', { value: 800, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { value: 600, configurable: true });
+    vi.spyOn(canvas, 'getBoundingClientRect').mockReturnValue({
+      left: 0,
+      top: 0,
+      width: 800,
+      height: 600,
+      right: 800,
+      bottom: 600,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    });
+    canvas.setPointerCapture = vi.fn();
+    document.body.append(canvas);
+    controls = { enabled: true };
+
+    intersectObjects = vi.fn().mockReturnValue([]);
+    raycaster = {
+      setFromCamera: vi.fn(),
+      intersectObjects,
+      ray: {
+        intersectPlane: vi.fn((_plane: THREE.Plane, target: THREE.Vector3) => {
+          target.set(2, 0, 2);
+          return target;
+        }),
+      },
+    } as unknown as THREE.Raycaster;
+
+    componentManager = createComponentManager({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      attachPointerHandlers: false,
+    });
+    edgeManager = createEdgeManager({ componentManager });
+    handles = createComponentHandles();
+    preview = createLinkPreview(scene);
+    panelHost = document.createElement('div');
+    document.body.append(panelHost);
+    interaction = createCanvasInteraction({
+      scene,
+      camera,
+      canvas,
+      controls,
+      raycaster,
+      componentManager,
+      edgeManager,
+      handles,
+      linkPreview: preview,
+      propertiesPanel: mountPropertiesPanel(panelHost, {
+        onLabelChange: () => undefined,
+        onNoteChange: () => undefined,
+        onDelete: () => undefined,
+      }),
+    });
+  });
+
+  afterEach(() => {
+    interaction.dispose();
+    componentManager.dispose();
+    handles.dispose();
+    preview.dispose();
+    panelHost.remove();
+    canvas.remove();
+  });
+
+  function linkViaGesture(
+    a: ReturnType<typeof componentManager.addComponent>,
+    b: ReturnType<typeof componentManager.addComponent>,
+  ) {
+    const aOut = handles.attach(a).out;
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(aOut)) {
+        return [{ object: aOut }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 10, clientY: 10, pointerId: 1 }),
+    );
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(b.mesh)) {
+        return [{ object: b.mesh }];
+      }
+      return [];
+    });
+    window.dispatchEvent(createPointerEvent('pointerup', { pointerId: 1 }));
+    return edgeManager.getEdges()[0];
+  }
+
+  it('dragging tip enters reconnecting with preview; controls disabled', () => {
+    const a = componentManager.addComponent('client_web', { x: 0, y: 0, z: 0 });
+    const b = componentManager.addComponent('cdn', { x: 3, y: 0, z: 0 });
+    handles.attach(a);
+    handles.attach(b);
+    const edge = linkViaGesture(a, b);
+    interaction.selectEdge(edge.id);
+
+    const tipTo = [...scene.children].find(
+      (obj) => obj.userData?.isEdgeTip && obj.userData.end === 'to',
+    ) as THREE.Mesh;
+    expect(tipTo).toBeDefined();
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(tipTo)) {
+        return [{ object: tipTo }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+
+    expect(interaction.getInteractionState().mode).toBe('reconnecting');
+    expect(interaction.getInteractionState().reconnectEnd).toBe('to');
+    expect(interaction.getInteractionState().previewActive).toBe(true);
+    expect(controls.enabled).toBe(false);
+  });
+
+  it('valid reconnect updates endpoint; invalid restores previous', () => {
+    const a = componentManager.addComponent('api_gateway', { x: 0, y: 0, z: 0 });
+    const b = componentManager.addComponent('app_server', { x: 3, y: 0, z: 0 });
+    const c = componentManager.addComponent('sql_db', { x: 6, y: 0, z: 0 });
+    handles.attach(a);
+    handles.attach(b);
+    handles.attach(c);
+    const edge = linkViaGesture(a, b);
+    interaction.selectEdge(edge.id);
+
+    const tipTo = [...scene.children].find(
+      (obj) => obj.userData?.isEdgeTip && obj.userData.end === 'to',
+    ) as THREE.Mesh;
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(tipTo)) {
+        return [{ object: tipTo }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(c.mesh)) {
+        return [{ object: c.mesh }];
+      }
+      return [];
+    });
+    window.dispatchEvent(createPointerEvent('pointerup', { pointerId: 1 }));
+    expect(edgeManager.getEdge(edge.id)).toMatchObject({ from: a.id, to: c.id });
+
+    interaction.selectEdge(edge.id);
+    const tipTo2 = [...scene.children].find(
+      (obj) => obj.userData?.isEdgeTip && obj.userData.end === 'to',
+    ) as THREE.Mesh;
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(tipTo2)) {
+        return [{ object: tipTo2 }];
+      }
+      return [];
+    });
+    canvas.dispatchEvent(
+      createPointerEvent('pointerdown', { clientX: 100, clientY: 100, pointerId: 1 }),
+    );
+    // invalid: self-loop onto from node
+    intersectObjects.mockImplementation((targets: THREE.Object3D[]) => {
+      if (targets.includes(a.mesh)) {
+        return [{ object: a.mesh }];
+      }
+      return [];
+    });
+    window.dispatchEvent(createPointerEvent('pointerup', { pointerId: 1 }));
+    expect(edgeManager.getEdge(edge.id)).toMatchObject({ from: a.id, to: c.id });
+    expect(controls.enabled).toBe(true);
+  });
+});

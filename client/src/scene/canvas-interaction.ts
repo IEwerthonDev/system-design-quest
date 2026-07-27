@@ -66,7 +66,9 @@ export interface CanvasInteraction {
 
 const DRAG_THRESHOLD_PX = 4;
 
-type PointerPhase = 'none' | 'body' | 'linking';
+type PointerPhase = 'none' | 'body' | 'linking' | 'reconnecting';
+
+const EDGE_TIP_RADIUS = 0.14;
 
 export function createCanvasInteraction(
   options: CreateCanvasInteractionOptions,
@@ -102,7 +104,10 @@ export function createCanvasInteraction(
   let pressComponentId: string | null = null;
 
   const flowEdges = new Map<string, FlowEdgeObject>();
+  const tipMeshes = new Map<'from' | 'to', THREE.Mesh>();
   let controlsBeforeGesture = true;
+  let reconnectEdgeId: string | null = null;
+  let reconnectSnapshot: { from: string; to: string } | null = null;
 
   const getRect = (): DOMRect => canvas.getBoundingClientRect();
 
@@ -321,6 +326,79 @@ export function createCanvasInteraction(
     return String(hit.userData.componentId);
   };
 
+  const clearEdgeTips = (): void => {
+    for (const mesh of tipMeshes.values()) {
+      scene.remove(mesh);
+      mesh.geometry.dispose();
+      (mesh.material as THREE.Material).dispose();
+    }
+    tipMeshes.clear();
+  };
+
+  const placeEdgeTips = (edgeId: string): void => {
+    clearEdgeTips();
+    const edge = edgeManager.getEdge(edgeId);
+    if (!edge) {
+      return;
+    }
+    for (const end of ['from', 'to'] as const) {
+      const nodeId = end === 'from' ? edge.from : edge.to;
+      const kind = end === 'from' ? 'out' : 'in';
+      const pos =
+        handles.getHandleWorldPosition(nodeId, kind) ?? nodeWorldPos(nodeId);
+      if (!pos) {
+        continue;
+      }
+      const geometry = new THREE.SphereGeometry(EDGE_TIP_RADIUS, 12, 10);
+      const material = new THREE.MeshBasicMaterial({
+        color: end === 'from' ? 0x60a5fa : 0x34d399,
+        transparent: true,
+        opacity: 0.95,
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.copy(pos);
+      mesh.renderOrder = 9;
+      mesh.userData = { isEdgeTip: true, edgeId, end };
+      scene.add(mesh);
+      tipMeshes.set(end, mesh);
+    }
+  };
+
+  const pickEdgeTip = (): { edgeId: string; end: 'from' | 'to' } | null => {
+    const tips = [...tipMeshes.values()];
+    if (tips.length === 0) {
+      return null;
+    }
+    const hits = raycaster.intersectObjects(tips, false);
+    const hit = hits[0]?.object;
+    if (!hit?.userData?.isEdgeTip) {
+      return null;
+    }
+    return {
+      edgeId: String(hit.userData.edgeId),
+      end: hit.userData.end as 'from' | 'to',
+    };
+  };
+
+  const canReconnectTo = (
+    edgeId: string,
+    end: 'from' | 'to',
+    newNodeId: string,
+  ): boolean => {
+    const edge = edgeManager.getEdge(edgeId);
+    if (!edge || !componentManager.getInstance(newNodeId)) {
+      return false;
+    }
+    const nextFrom = end === 'from' ? newNodeId : edge.from;
+    const nextTo = end === 'to' ? newNodeId : edge.to;
+    if (nextFrom === nextTo) {
+      return false;
+    }
+    return !edgeManager
+      .getEdges()
+      .some((e) => e.id !== edgeId && e.from === nextFrom && e.to === nextTo);
+  };
+
   const pickEdge = (): string | null => {
     const meshes = [...flowEdges.values()].map((edge) => edge.mesh);
     if (meshes.length === 0) {
@@ -439,6 +517,7 @@ export function createCanvasInteraction(
     }
     selectedComponentId = id;
     selectedEdgeId = null;
+    clearEdgeTips();
     if (selectedComponentId) {
       componentManager.setSelected(selectedComponentId, true);
       mode = 'idle';
@@ -455,7 +534,149 @@ export function createCanvasInteraction(
     }
     selectedEdgeId = edgeId && edgeManager.getEdge(edgeId) ? edgeId : null;
     mode = selectedEdgeId ? 'edgeSelected' : hoverComponentId ? 'hover' : 'idle';
+    if (selectedEdgeId) {
+      placeEdgeTips(selectedEdgeId);
+    } else {
+      clearEdgeTips();
+    }
     syncComponentPanel();
+  };
+
+  const beginReconnect = (
+    edgeId: string,
+    end: 'from' | 'to',
+    pointer: THREE.Vector3,
+  ): void => {
+    const edge = edgeManager.getEdge(edgeId);
+    if (!edge) {
+      return;
+    }
+    reconnectEdgeId = edgeId;
+    reconnectEnd = end;
+    reconnectSnapshot = { from: edge.from, to: edge.to };
+    mode = 'reconnecting';
+    invalidTarget = false;
+    controlsBeforeGesture = controls.enabled;
+    controls.enabled = false;
+
+    const visual = flowEdges.get(edgeId);
+    if (visual) {
+      visual.mesh.visible = false;
+    }
+
+    const fixedNodeId = end === 'from' ? edge.to : edge.from;
+    const fixedKind = end === 'from' ? 'in' : 'out';
+    const fixedPos =
+      handles.getHandleWorldPosition(fixedNodeId, fixedKind) ??
+      nodeWorldPos(fixedNodeId) ??
+      pointer;
+    linkPreview.showPreview(fixedPos, pointer);
+    linkPreview.setValidTarget(true);
+    handles.setForcedVisible(
+      componentManager.getAllInstances().map((instance) => instance.id),
+    );
+    clearEdgeTips();
+  };
+
+  const endReconnect = (commit: boolean, clientX?: number, clientY?: number): void => {
+    const edgeId = reconnectEdgeId;
+    const end = reconnectEnd;
+    const snapshot = reconnectSnapshot;
+
+    if (commit && edgeId && end && clientX !== undefined && clientY !== undefined) {
+      prepareRaycaster(clientX, clientY);
+      const target = resolveLinkTargetForReconnect(edgeId, end);
+      if (target?.valid) {
+        edgeManager.reconnectEndpoint(edgeId, end, target.componentId);
+        syncFlowEdgeGeometry(edgeId);
+        syncStoreFromScene();
+      }
+    } else if (edgeId && snapshot) {
+      // invalid / cancel — domain unchanged; restore visual
+      syncFlowEdgeGeometry(edgeId);
+    }
+
+    linkPreview.hidePreview();
+    handles.setForcedVisible([]);
+    clearHighlight();
+    const visual = edgeId ? flowEdges.get(edgeId) : undefined;
+    if (visual) {
+      visual.mesh.visible = true;
+    }
+    canvas.style.cursor = '';
+    controls.enabled = controlsBeforeGesture;
+    reconnectEdgeId = null;
+    reconnectEnd = null;
+    reconnectSnapshot = null;
+    invalidTarget = false;
+
+    if (edgeId && edgeManager.getEdge(edgeId)) {
+      selectedEdgeId = edgeId;
+      mode = 'edgeSelected';
+      placeEdgeTips(edgeId);
+      syncComponentPanel();
+    } else {
+      mode = 'idle';
+      clearEdgeTips();
+    }
+  };
+
+  const resolveLinkTargetForReconnect = (
+    edgeId: string,
+    end: 'from' | 'to',
+  ): { componentId: string; valid: boolean } | null => {
+    const handle = pickHandle();
+    if (handle) {
+      return {
+        componentId: handle.componentId,
+        valid: canReconnectTo(edgeId, end, handle.componentId),
+      };
+    }
+    const bodyId = pickComponentBody();
+    if (bodyId) {
+      return {
+        componentId: bodyId,
+        valid: canReconnectTo(edgeId, end, bodyId),
+      };
+    }
+    return null;
+  };
+
+  const updateReconnectPointer = (clientX: number, clientY: number): void => {
+    if (!reconnectEdgeId || !reconnectEnd) {
+      return;
+    }
+    const ndc = pointerToNdc(clientX, clientY, getRect());
+    raycaster.setFromCamera(new THREE.Vector2(ndc.x, ndc.y), camera);
+    const tip =
+      raycastToXZPlane(raycaster, camera, ndc) ?? new THREE.Vector3(0, 0, 0);
+    tip.y = 0.55;
+
+    const target = resolveLinkTargetForReconnect(reconnectEdgeId, reconnectEnd);
+    if (!target) {
+      invalidTarget = false;
+      linkPreview.setValidTarget(true);
+      canvas.style.cursor = 'crosshair';
+      clearHighlight();
+      linkPreview.updatePreview(tip);
+      return;
+    }
+
+    invalidTarget = !target.valid;
+    linkPreview.setValidTarget(target.valid);
+    canvas.style.cursor = target.valid ? 'pointer' : 'not-allowed';
+    if (target.valid) {
+      setHighlight(target.componentId);
+      const snap =
+        handles.getHandleWorldPosition(
+          target.componentId,
+          reconnectEnd === 'to' ? 'in' : 'out',
+        ) ?? tip;
+      linkPreview.updatePreview(snap);
+    } else {
+      clearHighlight();
+      linkPreview.updatePreview(tip);
+    }
   };
 
   const deleteEdge = (edgeId: string): boolean => {
@@ -466,6 +687,7 @@ export function createCanvasInteraction(
     if (selectedEdgeId === edgeId) {
       selectedEdgeId = null;
       mode = 'idle';
+      clearEdgeTips();
       syncComponentPanel();
     }
     syncStoreFromScene();
@@ -532,6 +754,22 @@ export function createCanvasInteraction(
     pointerPhase = 'none';
 
     prepareRaycaster(event.clientX, event.clientY);
+
+    const tip = pickEdgeTip();
+    if (tip) {
+      const planeHit =
+        raycastToXZPlane(
+          raycaster,
+          camera,
+          pointerToNdc(event.clientX, event.clientY, getRect()),
+        ) ?? new THREE.Vector3(0, 0, 0);
+      planeHit.y = 0.55;
+      beginReconnect(tip.edgeId, tip.end, planeHit);
+      pointerPhase = 'reconnecting';
+      canvas.setPointerCapture(event.pointerId);
+      return;
+    }
+
     const handle = pickHandle();
 
     if (handle?.kind === 'out') {
@@ -567,6 +805,11 @@ export function createCanvasInteraction(
   };
 
   const onPointerMove = (event: PointerEvent): void => {
+    if (pointerPhase === 'reconnecting' || mode === 'reconnecting') {
+      updateReconnectPointer(event.clientX, event.clientY);
+      return;
+    }
+
     if (pointerPhase === 'linking' || mode === 'linking') {
       updateLinkingPointer(event.clientX, event.clientY);
       return;
@@ -594,6 +837,12 @@ export function createCanvasInteraction(
   };
 
   const onPointerUp = (event: PointerEvent): void => {
+    if (pointerPhase === 'reconnecting' || mode === 'reconnecting') {
+      endReconnect(true, event.clientX, event.clientY);
+      pointerPhase = 'none';
+      return;
+    }
+
     if (pointerPhase === 'linking' || mode === 'linking') {
       finishLinking(event.clientX, event.clientY);
       pointerPhase = 'none';
@@ -694,9 +943,14 @@ export function createCanvasInteraction(
       canvas.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('keydown', onKeyDown);
-      endLinking();
+      if (mode === 'reconnecting') {
+        endReconnect(false);
+      } else {
+        endLinking();
+      }
       clearHoverHandles();
       clearHighlight();
+      clearEdgeTips();
       for (const id of [...flowEdges.keys()]) {
         removeFlowEdgeVisual(id);
       }
