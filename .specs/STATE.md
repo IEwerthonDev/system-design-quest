@@ -22,19 +22,21 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `connection-intent` — Execute T1–T5 done; T6 vercel.json in progress |
-| **Próximo passo** | T6 gate → T7 Hobby preview (team Spiral Out) → Verifier |
+| **Fase atual** | `connection-intent` — Execute T1–T7 done; Verifier pending |
+| **Próximo passo** | Verifier → merge when PASS |
 | **Feature ativa** | `connection-intent` |
 | **Branch** | `feature/playground-parity` |
-| **Bloqueios** | Hobby preview = **static client only** (no Fastify). Set `VITE_API_URL` to a reachable API host for sessions/judge; without it, those calls fail soft as today. |
-| **Artefatos** | `vercel.json` → `npx nx run client:build` → `dist/client` |
+| **Bloqueios** | Hobby = static client only; set `VITE_API_URL` for sessions/judge API |
+| **Preview URL** | https://system-design-quest-6got4fdgs-spiral-out.vercel.app |
+| **Deployment** | `dpl_3oGFwtWvXsPb8a4ojxeBbwJmLaVd` (Spiral Out / Hobby) — READY |
 
-### Deploy note (Hobby / T6)
+### Deploy note (Hobby / T6–T7)
 
 - **Serves:** Vite client static artifacts from `dist/client` (`vercel.json`)
 - **Does not serve:** Fastify `server/` on Hobby in this feature — deferred (serverless/proxy follow-up)
 - **Env:** optional `VITE_API_URL` (used by `sessions-api` / `leaderboard-api`) pointing at an external API base URL when available
 - **Build:** `client:build` uses `skipTypeCheck: true` so Hobby preview is not blocked by pre-existing TS errors in legacy/test surfaces; quality gate remains `nx run-many -t lint test`
+- **Preview:** https://system-design-quest-6got4fdgs-spiral-out.vercel.app (team Spiral Out)
 
 ---
 
