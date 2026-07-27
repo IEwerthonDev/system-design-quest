@@ -22,6 +22,15 @@ export type {
   ReqCoverageItem,
   Verdict,
 } from './schema/judge';
+export type { LeaderboardEntry, LeaderboardSubmitInput } from './schema/leaderboard';
+export {
+  isQualifyingForLeaderboard,
+  isValidNickname,
+  LEADERBOARD_DEFAULT_LIMIT,
+  normalizeNickname,
+  NICKNAME_MAX_LENGTH,
+  NICKNAME_MIN_LENGTH,
+} from './schema/leaderboard';
 export { applyVerdictRules, isBlocker } from './judge/apply-verdict';
 export { getGoldenGraph } from './judge/golden-graphs';
 export type { GoldenGraphTier } from './judge/golden-graphs';
