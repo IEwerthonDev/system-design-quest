@@ -235,9 +235,9 @@ Phase 5 (Release):   T6 → T7
 
 **Done when:**
 
-- [ ] Preview deployment succeeds (or failure reported with MCP error — do not fake URL)
-- [ ] Preview URL written to `.specs/STATE.md` Handoff
-- [ ] Commit only if STATE/docs change: `docs: record connection-intent Hobby preview URL` (skip empty commit)
+- [x] Preview deployment succeeds (or failure reported with MCP error — do not fake URL)
+- [x] Preview URL written to `.specs/STATE.md` Handoff
+- [x] Commit only if STATE/docs change: `docs: record connection-intent Hobby preview URL` (skip empty commit)
 
 **Tests:** none  
 **Gate:** none (release); feature code already full-gated in T5/T6
