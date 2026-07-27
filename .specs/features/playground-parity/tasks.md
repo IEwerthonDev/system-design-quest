@@ -314,9 +314,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-05, PP-06
 
 **Done when:**
-- [ ] Modal does not overflow fixture viewport; actions visible
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): viewport-safe session confirm modal`
+- [x] Modal does not overflow fixture viewport; actions visible
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): viewport-safe session confirm modal`
 
 **Tests:** unit  
 **Gate:** quick client
