@@ -10,6 +10,7 @@ describe('__GAME_STATE__ test hook', () => {
     const state = getGameState();
     expect(window.__GAME_STATE__).toBe(state);
     expect(state).toMatchObject({
+      problemId: '',
       phase: 'canvas',
       mode: 'study',
       graph: { nodes: [], edges: [] },

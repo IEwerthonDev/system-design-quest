@@ -56,7 +56,7 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 - [x] `ComponentType` union + metadata (categoria, label, descrição, quando usar)
 - [x] `getComponentsForTier(1)` retorna 15 tipos
 - [x] Testes: shape, categorias, IDs únicos
-- [ ] Commit: `feat(shared): tier-1 component catalog (15 types)`
+- [x] Commit: `feat(shared): tier-1 component catalog (15 types)`
 
 ---
 
@@ -69,9 +69,9 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-03 (parcial)
 
-- [ ] `createSession(problemId, mode)` com fases: `briefing | requirements | canvas | result`
-- [ ] `advancePhase`, `setGraph`, `getGraph`
-- [ ] Expõe via `window.__GAME_STATE__`
+- [x] `createSession(problemId, mode)` com fases: `briefing | requirements | canvas | result`
+- [x] `advancePhase`, `setGraph`, `getGraph`
+- [x] Expõe via `window.__GAME_STATE__`
 - [ ] Commit: `feat(client): session store and phase machine`
 
 ---

@@ -4,6 +4,7 @@ export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
 export type GameMode = 'study' | 'speedrun';
 
 export interface GameState {
+  problemId: string;
   graph: ArchitectureGraph;
   phase: GamePhase;
   mode: GameMode;
@@ -18,6 +19,7 @@ declare global {
 const emptyGraph: ArchitectureGraph = { nodes: [], edges: [] };
 
 const initialState: GameState = {
+  problemId: '',
   graph: emptyGraph,
   phase: 'canvas',
   mode: 'study',
