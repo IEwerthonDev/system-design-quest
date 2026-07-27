@@ -1,5 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
-import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
+import { getGoldenGraph, type ArchitectureGraph, type JudgeResult } from '@sdq/shared';
+import { clearCachedJudgePayload } from '../judge/judge-api';
+import { VERDICT_LABELS } from '../ui/result-panel';
 import {
   canGoBackPhase,
   getPreviousPhase,
@@ -283,6 +285,69 @@ describe('phase navigation', () => {
       expect(container.querySelector('[data-testid="result-summary"]')?.textContent).toBe(
         sampleJudgeResult.summary,
       );
+    });
+
+    it('renders FAIL verdict in result panel for bad golden graph via mocked fetch', async () => {
+      const badGoldenResult: JudgeResult = {
+        verdict: 'FAIL',
+        score: 32,
+        summary: 'O design conecta o cliente diretamente ao banco de dados.',
+        nextStep: 'Adicione um app server entre o cliente e o banco.',
+        strengths: [],
+        criticalIssues: [
+          {
+            title: 'Client talks directly to database',
+            explanation: 'There is no application layer to enforce redirect logic.',
+            howToImprove: 'Add an app server between client and database.',
+            whyItMatters: 'Direct DB access cannot scale or stay secure.',
+            severity: 'blocker',
+          },
+        ],
+        improvements: [],
+        requirementCoverage: [],
+        judgeDebate: {
+          rigorous: 'FAIL — missing application tier.',
+          pragmatic: 'Not viable for production traffic.',
+          consensus: 'FAIL 32/100 — add an application layer.',
+        },
+      };
+
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(JSON.stringify(badGoldenResult), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+      vi.stubGlobal('fetch', fetchMock);
+
+      try {
+        mountPhaseNavigation(container);
+
+        container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+        container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+        setGraph(getGoldenGraph('bad'));
+        container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+
+        await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+        expect(fetchMock).toHaveBeenCalledWith(
+          '/api/judge',
+          expect.objectContaining({ method: 'POST' }),
+        );
+        expect(getJudgeResult()?.verdict).toBe('FAIL');
+        expect(container.querySelector('[data-testid="result-verdict-badge"]')?.textContent).toBe(
+          VERDICT_LABELS.FAIL,
+        );
+        expect(container.querySelector('[data-testid="result-score"]')?.textContent).toContain('32');
+
+        container.querySelector<HTMLButtonElement>('[data-testid="result-details-toggle"]')!.click();
+        expect(
+          container.querySelector('[data-testid="result-critical-issues"]')?.textContent,
+        ).toContain('Client talks directly to database');
+      } finally {
+        vi.unstubAllGlobals();
+        clearCachedJudgePayload();
+      }
     });
   });
 });

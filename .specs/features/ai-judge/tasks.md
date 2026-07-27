@@ -208,9 +208,9 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-08, all P1 stories
 
-- [ ] Server: 3 golden graphs through full `judgeSubmission` → expected verdict bands
-- [ ] Client: mocked `/api/judge` → result panel renders FAIL for bad graph
-- [ ] Full gate: `npx nx run-many -t lint test`
+- [x] Server: 3 golden graphs through full `judgeSubmission` → expected verdict bands
+- [x] Client: mocked `/api/judge` → result panel renders FAIL for bad graph
+- [x] Full gate: `npx nx run-many -t lint test`
 - [ ] Commit: `test(ai-judge): golden submission integration tests`
 
 ---
