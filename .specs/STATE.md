@@ -22,30 +22,30 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 4 `speedrun` merged em `main`** ✅ |
-| **Próximo passo** | Specify → Tasks para **Fase 5 `polish`** |
-| **Feature ativa** | `polish` (não iniciada) |
+| **Fase atual** | **Fase 5 `polish`** — Execute T1–T8 |
+| **Próximo passo** | T1: component GLB manifest |
+| **Feature ativa** | `polish` (`feature/polish`) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `problem-library` spec/design/tasks/validation em `main` |
+| **Artefatos** | `.specs/features/polish/{spec,context,design,tasks}.md` |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| Fase 4 `speedrun` implementada em `feature/speedrun` | ✅ OK |
-| Gate `npx nx run-many -t lint test` | ✅ OK |
-| Verifier validation.md | ⚠️ PASS with minor gaps |
-| Merge → `main` | pendente nesta sessão |
+| Discuss confirmado 1A/2A/3/4A | ✅ OK |
+| Spec/design/tasks escritos | ✅ OK |
+| Branch `feature/polish` | ✅ criada |
+| Execute | T1 pendente |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx run-many -t lint test`
+**Gate:** `npx nx test client` (quick) · full: `npx nx run-many -t lint test` && `npx playwright test`
 
 **Prompt para nova sessão:**
 ```
-Branch main. Fases 0–4 merged (foundation + mvp-canvas + ai-judge + problem-library + speedrun).
-Próximo: Fase 5 polish (.specs/features/polish/spec.md).
-Gate: npx nx run-many -t lint test
+Branch feature/polish. Spec/design/tasks ready. Start T1 (GLB manifest).
+Read .specs/STATE.md Handoff + .specs/features/polish/tasks.md.
+Gate: npx nx test client
 ```
 
 ---
