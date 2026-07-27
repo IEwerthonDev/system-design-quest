@@ -116,6 +116,30 @@ describe('judge API client', () => {
     expect(window.__GAME_STATE__.judgingStep).toBeNull();
   });
 
+  it('throws server_error JudgeApiError with PT-BR message for HTTP 500', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ error: 'Internal server error' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const promise = submitForJudging(sampleInput, () => undefined, {
+      fetchFn,
+      stepIntervalMs: 5_000,
+    });
+
+    const assertion = expect(promise).rejects.toMatchObject({
+      code: 'server_error',
+      message:
+        'O servidor não conseguiu julgar sua arquitetura agora. Tente novamente em instantes.',
+    });
+
+    await vi.runAllTimersAsync();
+    await assertion;
+    expect(window.__GAME_STATE__.judgingStep).toBeNull();
+  });
+
   it('throws rate_limit JudgeApiError with PT-BR message for HTTP 429', async () => {
     const fetchFn = vi.fn().mockResolvedValue(
       new Response(
