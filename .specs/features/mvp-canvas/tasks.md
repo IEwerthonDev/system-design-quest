@@ -412,10 +412,10 @@ Foundation (Fase 0)
 
 ## Verification (post-T22)
 
-- [ ] `npx nx run-many -t lint test` — all green
-- [ ] Checkpoint 1a, 1b, 1c passam manualmente
-- [ ] Verifier sub-agent roda contra PROD-01–04, 11–16
-- [ ] `validation.md` com PASS/FAIL
+- [x] `npx nx run-many -t lint test` — all green (155 tests, 0 errors)
+- [ ] Checkpoint 1a, 1b, 1c passam manualmente (WebGL UAT — ver `validation.md`)
+- [x] Verifier standalone pass contra PROD-01–04, 11–16
+- [x] `validation.md` com PASS (2 gaps Phase 3 documentados)
 
 ## Estimativa de sessões
 
