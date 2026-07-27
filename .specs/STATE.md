@@ -22,34 +22,20 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `canvas-graph-dnd` — **Verify PASS** ✅ |
-| **Próximo passo** | Merge `feature/canvas-graph-dnd` → `main` (push/PR se desejado) |
-| **Feature ativa** | `canvas-graph-dnd` (pronta) |
+| **Fase atual** | `canvas-graph-dnd` **merged em `main`** ✅ (`5e56c72`) |
+| **Próximo passo** | Demo / UAT manual; backlog deferred (PNG, 2D, Tier 3–4) |
+| **Feature ativa** | nenhuma (merged) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | T1–T11 + fix `d7aa155`; validation PASS; gate 369 |
+| **Artefatos** | validation PASS; merge SSH `main` |
 
-### Context Checkpoint (2026-07-27 — verify PASS)
+### Context Checkpoint (2026-07-27 — merged main)
 
 | Sinal | Status |
 | ----- | ------ |
-| Execute | T1–T11 + CGD-04 fix done |
-| Verifier | ✅ PASS (re-verify após `d7aa155`) |
-| Gate | 369 passed |
-| Sensor | 3/3 killed |
+| Merge → `main` | ✅ `5e56c72` via SSH |
+| Verifier | ✅ PASS |
 
-**Veredito:** **GREEN** (feature complete)
-
-**Branch:** `feature/canvas-graph-dnd`  
-**HEAD tip:** `d7aa155` (+ docs commit after)  
-**Report:** `.specs/features/canvas-graph-dnd/validation.md`  
-**Stash:** `stash@{0}` wip-pre-canvas-graph-dnd — pode dropar se obsoleto
-
-**Prompt pós-merge / PR:**
-```
-Branch feature/canvas-graph-dnd. Verify PASS. Ready to push SSH + gh pr create → main.
-Read .specs/STATE.md Handoff + validation.md.
-Gate already green: npx nx run-many -t lint test
-```
+**Veredito:** **GREEN**
 
 ---
 
