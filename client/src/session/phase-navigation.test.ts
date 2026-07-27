@@ -200,14 +200,16 @@ describe('phase navigation', () => {
         false,
       );
       expect(window.__GAME_STATE__.phase).toBe('canvas');
+      const phaseBack = container.querySelector('[data-testid="phase-back"]');
+      expect(phaseBack?.classList.contains('sdq-phase-back--in-header')).toBe(true);
       expect(
         container
-          .querySelector('[data-testid="phase-back"]')
-          ?.classList.contains('sdq-phase-back--with-palette'),
+          .querySelector('[data-testid="session-header-leading"]')
+          ?.contains(phaseBack),
       ).toBe(true);
       const phaseNavCss = document.getElementById('sdq-phase-nav-styles')?.textContent ?? '';
-      expect(phaseNavCss).toMatch(/\.sdq-phase-back--with-palette\s*\{\s*left:\s*16px/);
-      expect(phaseNavCss).not.toMatch(/\.sdq-phase-back--with-palette\s*\{[^}]*left:\s*236px/);
+      expect(phaseNavCss).toMatch(/\.sdq-phase-back--in-header\s*\{\s*position:\s*static/);
+      expect(phaseNavCss).not.toMatch(/\.sdq-phase-back--with-palette/);
       expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
     });
 

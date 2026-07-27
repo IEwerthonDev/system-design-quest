@@ -2,6 +2,8 @@ export interface SessionHeader {
   root: HTMLElement;
   setTitle(title: string): void;
   setVisible(visible: boolean): void;
+  /** Left of brand — e.g. phase back button during canvas. */
+  leadingSlot: HTMLElement;
   controlsSlot: HTMLElement;
   destroy(): void;
 }
@@ -24,11 +26,19 @@ function injectStyles(): void {
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 0 16px 0 24px;
+      padding: 0 16px 0 16px;
       pointer-events: none;
       background: linear-gradient(180deg, rgba(10,25,48,0.85), transparent);
     }
     .sdq-session-header > * { pointer-events: auto; }
+    .sdq-session-header__leading {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .sdq-session-header__leading:empty {
+      display: none;
+    }
     .sdq-session-header__brand {
       font-family: ui-monospace, Menlo, monospace;
       font-size: 11px;
@@ -59,6 +69,10 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
   root.setAttribute('data-testid', 'session-header');
   root.hidden = true;
 
+  const leadingSlot = document.createElement('div');
+  leadingSlot.className = 'sdq-session-header__leading';
+  leadingSlot.setAttribute('data-testid', 'session-header-leading');
+
   const brand = document.createElement('div');
   brand.className = 'sdq-session-header__brand';
   brand.innerHTML = `SYSTEM DESIGN QUEST<strong data-testid="session-title">DESIGN SESSION: ${problemTitle}</strong>`;
@@ -66,11 +80,12 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
   const controlsSlot = document.createElement('div');
   controlsSlot.className = 'sdq-session-header__controls';
 
-  root.append(brand, controlsSlot);
+  root.append(leadingSlot, brand, controlsSlot);
   container.append(root);
 
   return {
     root,
+    leadingSlot,
     controlsSlot,
     setTitle(title) {
       const el = root.querySelector('[data-testid="session-title"]');

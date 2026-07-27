@@ -107,9 +107,13 @@ function injectPhaseNavigationStyles(root: HTMLElement): void {
       font: 600 13px system-ui, sans-serif;
       cursor: pointer;
     }
-    /* Stay in the palette column — do not shift into the session header title. */
-    .sdq-phase-back--with-palette {
-      left: 16px;
+    /* Canvas: sit in session header leading slot — never over the palette. */
+    .sdq-phase-back--in-header {
+      position: static;
+      top: auto;
+      left: auto;
+      z-index: auto;
+      flex-shrink: 0;
     }
     .sdq-phase-back:hover {
       background: rgba(51, 65, 85, 0.95);
@@ -269,6 +273,16 @@ export function mountPhaseNavigation(
   });
 
   const sessionHeader = mountSessionHeader(shell, problem.title);
+
+  const placeBackButton = (inHeader: boolean): void => {
+    backButton.classList.toggle('sdq-phase-back--in-header', inHeader);
+    if (inHeader) {
+      sessionHeader.leadingSlot.append(backButton);
+    } else if (backButton.parentElement !== shell) {
+      shell.append(backButton);
+    }
+  };
+
   const blueprint = (
     window as Window & { __BLUEPRINT__?: import('../blueprint/blueprint-canvas').BlueprintCanvas }
   ).__BLUEPRINT__;
@@ -352,7 +366,7 @@ export function mountPhaseNavigation(
     palette.hidden = !visibility.palette;
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
-    backButton.classList.toggle('sdq-phase-back--with-palette', visibility.palette);
+    placeBackButton(visibility.palette);
     sessionHeader.setVisible(phase === 'canvas');
     if (phase !== 'canvas') {
       problemDrawer.close();

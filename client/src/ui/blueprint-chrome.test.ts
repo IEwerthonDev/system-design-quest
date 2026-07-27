@@ -77,6 +77,8 @@ describe('session header', () => {
     expect(host.querySelector('[data-testid="session-title"]')?.textContent).toContain(
       'Design a URL Shortener',
     );
+    expect(host.querySelector('[data-testid="session-header-leading"]')).toBeTruthy();
+    expect(header.leadingSlot).toBeTruthy();
     header.destroy();
   });
 });
