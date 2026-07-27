@@ -6,12 +6,14 @@ export interface UserPreferences {
   onboardingCompleted: boolean;
   experienceLevel: ExperienceLevel | null;
   guidedModeRequested: boolean;
+  libraryUnlocked: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   onboardingCompleted: false,
   experienceLevel: null,
   guidedModeRequested: false,
+  libraryUnlocked: false,
 };
 
 function resolveStorage(storage?: Storage): Storage {
@@ -99,4 +101,13 @@ export function completeOnboardingExperienced(storage?: Storage): UserPreference
     },
     storage,
   );
+}
+
+export function unlockProblemLibrary(storage?: Storage): UserPreferences {
+  return savePreferences({ libraryUnlocked: true }, storage);
+}
+
+export function isProblemLibraryUnlocked(preferences?: UserPreferences): boolean {
+  const prefs = preferences ?? loadPreferences();
+  return prefs.libraryUnlocked;
 }

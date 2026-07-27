@@ -4,6 +4,10 @@ import type { GameMode, GamePhase } from '../test-hook';
 import { initGameState } from '../test-hook';
 import { advancePhase as computeNextPhase, retreatPhase as computePreviousPhase } from './phase-machine';
 
+type GraphChangeListener = (graph: ArchitectureGraph) => void;
+
+const graphChangeListeners = new Set<GraphChangeListener>();
+
 export interface SessionRequirements {
   functional: string[];
   nonFunctional: string[];
@@ -138,6 +142,17 @@ export function setGraph(graph: ArchitectureGraph): void {
     graph: cloneGraph(graph),
   };
   syncToGameState(activeSession);
+  const snapshot = cloneGraph(graph);
+  for (const listener of graphChangeListeners) {
+    listener(snapshot);
+  }
+}
+
+export function subscribeGraphChanges(listener: GraphChangeListener): () => void {
+  graphChangeListeners.add(listener);
+  return () => {
+    graphChangeListeners.delete(listener);
+  };
 }
 
 export function getGraph(): ArchitectureGraph {

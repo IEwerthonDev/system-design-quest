@@ -23,10 +23,30 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | Campo | Valor |
 | ----- | ----- |
 | **Fase atual** | Foundation mergeada em `main` — MVP Canvas sub-fase 1a |
-| **Próximo passo** | Executar T1–T8 de `.specs/features/mvp-canvas/tasks.md` |
-| **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) |
+| **Próximo passo** | **T17** — Component palette tooltips (`feat(client): component palette tooltips`) |
+| **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) — **Checkpoint 1b concluído** |
 | **Bloqueios** | Nenhum |
 | **Artefatos aprovados** | `foundation/validation.md` PASS, `mvp-canvas/tasks.md`, AD-016, AD-017 |
+
+### Context Checkpoint (2026-07-27)
+
+| Sinal | Status |
+| ----- | ------ |
+| T1–T16 implemented on `feature/mvp-canvas` | ✅ OK |
+| Sub-fase 1c em andamento | ✅ OK |
+| Gate `npx nx test shared client` | ✅ 134 testes |
+
+**Veredito:** **GREEN**
+
+**Gate:** `npx nx test shared client`
+
+**Prompt para nova sessão (T17):**
+```
+Branch feature/mvp-canvas. T1–T16 done (commit T16 pending).
+Read .specs/STATE.md Handoff + .specs/features/mvp-canvas/tasks.md T17.
+Implement T17: component palette tooltips + glossary helpers.
+Gate: npx nx test shared client
+```
 
 ---
 

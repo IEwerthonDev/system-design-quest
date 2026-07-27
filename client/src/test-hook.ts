@@ -17,6 +17,7 @@ export interface GameState {
   requirements: GameRequirements;
   guidedMode: boolean;
   experienceLevel: ExperienceLevel | null;
+  guidedStep: string | null;
 }
 
 declare global {
@@ -37,6 +38,7 @@ const initialState: GameState = {
   requirements: emptyRequirements,
   guidedMode: false,
   experienceLevel: null,
+  guidedStep: null,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -46,6 +48,7 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     requirements: { functional: [], nonFunctional: [] },
     guidedMode: false,
     experienceLevel: null,
+    guidedStep: null,
     ...overrides,
   };
   return window.__GAME_STATE__;
@@ -78,4 +81,8 @@ export function setRequirements(requirements: GameRequirements): void {
 
 export function setMode(mode: GameMode): void {
   getGameState().mode = mode;
+}
+
+export function setGuidedStep(step: string | null): void {
+  getGameState().guidedStep = step;
 }

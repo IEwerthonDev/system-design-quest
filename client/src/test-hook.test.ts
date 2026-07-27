@@ -17,6 +17,7 @@ describe('__GAME_STATE__ test hook', () => {
       requirements: { functional: [], nonFunctional: [] },
       guidedMode: false,
       experienceLevel: null,
+      guidedStep: null,
     });
   });
 

@@ -1,6 +1,10 @@
 import { getProblem, URL_SHORTENER_ID } from '@sdq/shared';
+import { getCurrentStep } from '../guided/guided-mode';
+import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
+import { unlockProblemLibrary } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
+import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
@@ -16,6 +20,7 @@ import {
   goBackPhase,
   setGraph,
   setRequirements,
+  subscribeGraphChanges,
 } from './session-store';
 
 export interface PhaseLayerVisibility {
@@ -37,6 +42,7 @@ export interface MountPhaseNavigationOptions {
 export interface PhaseNavigation {
   root: HTMLElement;
   sync(): void;
+  destroy(): void;
 }
 
 export function getPhaseLayerVisibility(phase: GamePhase): PhaseLayerVisibility {
@@ -149,8 +155,26 @@ export function mountPhaseNavigation(
     },
   });
 
+  let guidedOverlay: ReturnType<typeof mountGuidedOverlay> | null = null;
+  let unsubscribeGraphChanges: (() => void) | null = null;
+
+  if (guidedMode) {
+    guidedOverlay = mountGuidedOverlay(shell, problemId, {
+      onComplete: () => {
+        unlockProblemLibrary();
+      },
+      onStepChange: (stepId) => {
+        setGuidedStep(stepId);
+      },
+    });
+    unsubscribeGraphChanges = subscribeGraphChanges(() => {
+      sync();
+    });
+  }
+
   const sync = (): void => {
-    const phase = getSession()?.phase ?? 'briefing';
+    const session = getSession();
+    const phase = session?.phase ?? 'briefing';
     const visibility = getPhaseLayerVisibility(phase);
 
     briefingPanel.root.hidden = !visibility.briefing;
@@ -169,6 +193,11 @@ export function mountPhaseNavigation(
     } else {
       resultPlaceholder?.classList.remove('sdq-result-placeholder--visible');
     }
+
+    if (guidedOverlay && session) {
+      guidedOverlay.sync(phase, session.graph);
+      setGuidedStep(getCurrentStep(guidedOverlay.getState())?.id ?? null);
+    }
   };
 
   backButton.addEventListener('click', () => {
@@ -178,5 +207,12 @@ export function mountPhaseNavigation(
 
   sync();
 
-  return { root: shell, sync };
+  return {
+    root: shell,
+    sync,
+    destroy: () => {
+      unsubscribeGraphChanges?.();
+      guidedOverlay?.destroy();
+    },
+  };
 }

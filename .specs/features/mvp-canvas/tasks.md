@@ -86,7 +86,7 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 - [x] Paleta lateral agrupada por categoria (Client, Edge, Traffic, Compute, Data, Messaging, Observability)
 - [x] Drag da paleta dispara evento `palette:drop` com `ComponentType`
-- [ ] Commit: `feat(client): component palette with categories`
+- [x] Commit: `feat(client): component palette with categories`
 
 ---
 
@@ -101,7 +101,7 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 - [x] Primitivo Three.js colorido por categoria + label flutuante
 - [x] `addComponent(type, position)` + drag no plano XZ (raycast)
-- [ ] Commit: `feat(client): 3d component instances with xz drag`
+- [x] Commit: `feat(client): 3d component instances with xz drag`
 
 ---
 
@@ -114,9 +114,9 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-03
 
-- [ ] Click seleciona; painel permite renomear label e nota (≤200 chars)
-- [ ] Delete remove componente + conexões
-- [ ] Commit: `feat(client): component selection and properties`
+- [x] Click seleciona; painel permite renomear label e nota (≤200 chars)
+- [x] Delete remove componente + conexões
+- [x] Commit: `feat(client): component selection and properties`
 
 ---
 
@@ -128,8 +128,8 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-04 (parcial)
 
-- [ ] Conectar dois componentes → `ConnectionEdge` com direção configurável
-- [ ] Commit: `feat(client): directed edge connections`
+- [x] Conectar dois componentes → `ConnectionEdge` com direção configurável
+- [x] Commit: `feat(client): directed edge connections`
 
 ---
 
@@ -141,9 +141,9 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-04
 
-- [ ] `TubeGeometry` + shader com `uTime`; banda luminosa na direção da seta
-- [ ] Bidirecional: duas bandas opostas
-- [ ] Commit: `feat(client): animated flow edge shader`
+- [x] `TubeGeometry` + shader com `uTime`; banda luminosa na direção da seta
+- [x] Bidirecional: duas bandas opostas
+- [x] Commit: `feat(client): animated flow edge shader`
 
 ---
 
@@ -156,10 +156,10 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8
 
 **Req:** PROD-03, AD-016 (validação local)
 
-- [ ] `serializeGraph()` → `ArchitectureGraph` JSON
-- [ ] Submit com grafo vazio → FAIL local ("Adicione pelo menos um componente")
-- [ ] Submit válido → avança fase `result` com placeholder (sem IA)
-- [ ] Commit: `feat(client): graph serialization and local submit validation`
+- [x] `serializeGraph()` → `ArchitectureGraph` JSON
+- [x] Submit com grafo vazio → FAIL local ("Adicione pelo menos um componente")
+- [x] Submit válido → avança fase `result` com placeholder (sem IA)
+- [x] Commit: `feat(client): graph serialization and local submit validation`
 
 **Checkpoint 1a:** `npm run dev` → montar Client→LB→App→DB → ver animação → submit.
 
@@ -182,8 +182,8 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-01
 
-- [ ] `Problem` com briefing, métricas, constraints, dificuldade `easy`, sugestões FR/NFR
-- [ ] Commit: `feat(shared): url shortener problem definition`
+- [x] `Problem` com briefing, métricas, constraints, dificuldade `easy`, sugestões FR/NFR
+- [x] Commit: `feat(shared): url shortener problem definition`
 
 ---
 
@@ -195,9 +195,9 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-01
 
-- [ ] Exibe título, narrativa, métricas, tags, badge Easy
-- [ ] Botão "Começar" avança para requisitos
-- [ ] Commit: `feat(client): briefing panel`
+- [x] Exibe título, narrativa, métricas, tags, badge Easy
+- [x] Botão "Começar" avança para requisitos
+- [x] Commit: `feat(client): briefing panel`
 
 ---
 
@@ -209,9 +209,9 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-02
 
-- [ ] Listas separadas FR/NFR: add, edit, remove
-- [ ] Texto mínimo 10 chars; aviso se vazio ao avançar (não bloqueia)
-- [ ] Commit: `feat(client): requirements panel`
+- [x] Listas separadas FR/NFR: add, edit, remove
+- [x] Texto mínimo 10 chars; aviso se vazio ao avançar (não bloqueia)
+- [x] Commit: `feat(client): requirements panel`
 
 ---
 
@@ -223,9 +223,9 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-01, PROD-02
 
-- [ ] Fluxo: briefing → requirements → canvas → result
-- [ ] Voltar preserva estado
-- [ ] Commit: `feat(client): phase navigation wiring`
+- [x] Fluxo: briefing → requirements → canvas → result
+- [x] Voltar preserva estado
+- [x] Commit: `feat(client): phase navigation wiring`
 
 ---
 
@@ -237,8 +237,8 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-15
 
-- [ ] ≥3 FR + ≥2 NFR clicáveis por problema; editáveis após adicionar
-- [ ] Commit: `feat(client): requirement suggestion cards`
+- [x] ≥3 FR + ≥2 NFR clicáveis por problema; editáveis após adicionar
+- [x] Commit: `feat(client): requirement suggestion cards`
 
 ---
 
@@ -250,8 +250,8 @@ T9 → T10 → T11 → T12 → T13 → T14
 
 **Req:** PROD-02
 
-- [ ] Requisitos persistem ao navegar entre fases; expostos em `__GAME_STATE__`
-- [ ] Commit: `feat(client): requirements session persistence`
+- [x] Requisitos persistem ao navegar entre fases; expostos em `__GAME_STATE__`
+- [x] Commit: `feat(client): requirements session persistence`
 
 **Checkpoint 1b:** fluxo completo URL Shortener até submit local.
 
@@ -274,10 +274,10 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-11
 
-- [ ] 3 telas: o que é SD, fluxo do jogo, iniciante vs experiente
-- [ ] "Pular" persiste preferência; não exibe novamente
-- [ ] "Sou iniciante" → inicia modo guiado URL Shortener
-- [ ] Commit: `feat(client): first-visit onboarding`
+- [x] 3 telas: o que é SD, fluxo do jogo, iniciante vs experiente
+- [x] "Pular" persiste preferência; não exibe novamente
+- [x] "Sou iniciante" → inicia modo guiado URL Shortener
+- [x] Commit: `feat(client): first-visit onboarding`
 
 ---
 
@@ -290,10 +290,10 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-12
 
-- [ ] Highlights sequenciais: briefing → requisitos → componentes → conexão → submit
-- [ ] Ordem sugerida: Client → LB → App → Cache → DB
-- [ ] Hints não bloqueiam; ignorar hint permitido
-- [ ] Conclusão desbloqueia biblioteca (placeholder até Fase 3)
+- [x] Highlights sequenciais: briefing → requisitos → componentes → conexão → submit
+- [x] Ordem sugerida: Client → LB → App → Cache → DB
+- [x] Hints não bloqueiam; ignorar hint permitido
+- [x] Conclusão desbloqueia biblioteca (placeholder até Fase 3)
 - [ ] Commit: `feat(client): guided mode tutorial`
 
 ---
