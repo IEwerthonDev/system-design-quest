@@ -186,10 +186,10 @@ O loop pedagógico está incompleto: o jogador monta arquitetura e submete, mas 
 
 | ID | Story | Phase | Status |
 | -- | ----- | ----- | ------ |
-| JUDGE-01 | P1: Endpoint | Design | Pending |
-| JUDGE-02 | P1: Dual-judge orchestration | Design | Pending |
+| JUDGE-01 | P1: Endpoint | Execute T4 | Partial (T5 route pending) |
+| JUDGE-02 | P1: Dual-judge orchestration | Execute T4 | Done |
 | JUDGE-03 | P1: Veredito AD-016 | Execute T1 | Done |
-| JUDGE-04 | P1: Cobertura requisitos | Design | Pending |
+| JUDGE-04 | P1: Cobertura requisitos | Execute T4 | Done |
 | JUDGE-05 | P1: UI resultado | Design | Pending |
 | JUDGE-06 | P1: Loading/erro/retry | Design | Pending |
 | JUDGE-07 | P2: Feedback em camadas | Design | Pending |

@@ -105,11 +105,11 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-01, JUDGE-02, JUDGE-04
 
-- [ ] `judgeSubmission(input, client)` runs parallel judges → merge → `applyVerdictRules`
-- [ ] Loads problem via `getProblem(problemId)`
-- [ ] `requirementCoverage` populated from declared requirements
-- [ ] Tests with mock: good→PASS/PARTIAL≥70, bad→FAIL, medium→PARTIAL/FAIL
-- [ ] Commit: `feat(server): dual-judge orchestration`
+- [x] `judgeSubmission(input, client)` runs parallel judges → merge → `applyVerdictRules`
+- [x] Loads problem via `getProblem(problemId)`
+- [x] `requirementCoverage` populated from declared requirements
+- [x] Tests with mock: good→PASS/PARTIAL≥70, bad→FAIL, medium→PARTIAL/FAIL
+- [x] Commit: `feat(server): dual-judge orchestration`
 
 ---
 
