@@ -1,8 +1,25 @@
 export type {
   ArchitectureGraph,
+  CacheConfig,
+  CdnConfig,
+  ComponentConfig,
   ComponentNode,
   ConnectionEdge,
+  PartitioningStrategy,
+  PressureLevel,
+  SimulationSettings,
+  SqlDbConfig,
+  Vec2,
 } from './schema/architecture-graph';
+export {
+  DEFAULT_SIMULATION,
+  defaultConfigForType,
+  normalizeGraph,
+  normalizeNode,
+  normalizeSimulation,
+} from './schema/normalize-graph';
+export { edgeReadWeight, evaluateSimulation } from './simulation/evaluate-simulation';
+export type { SimulationEvaluation } from './simulation/evaluate-simulation';
 export type { ComponentCategory, ComponentType, ComponentTypeMeta } from './schema/component-types';
 export type {
   Difficulty,
