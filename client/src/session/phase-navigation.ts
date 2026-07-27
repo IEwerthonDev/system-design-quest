@@ -4,6 +4,7 @@ import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
 import { unlockProblemLibrary } from '../storage/preferences';
+import { isQualifyingCompletion, recordCompletion } from '../storage/progress';
 import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
@@ -231,6 +232,9 @@ export function mountPhaseNavigation(
 
     const judgeResult = getJudgeResult();
     if (phase === 'result' && judgeResult) {
+      if (isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
+        recordCompletion(problemId, judgeResult.verdict, judgeResult.score);
+      }
       if (!resultPanel) {
         resultPanel = mountResultPanel(resultHost, judgeResult, {
           beginnerMode,
