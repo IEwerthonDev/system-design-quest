@@ -22,29 +22,30 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 2 `ai-judge`** — T1–T13 done, Verifier PASS ✅ |
-| **Próximo passo** | Commit T11–T13 (3 commits atômicos) → merge `feature/ai-judge` → `main` |
-| **Feature ativa** | `ai-judge` em `feature/ai-judge` |
+| **Fase atual** | **Fase 2 `ai-judge` merged em `main`** — loop pedagógico completo ✅ |
+| **Próximo passo** | Specify → Tasks para **Fase 3 `problem-library`** (27 problemas) |
+| **Feature ativa** | `problem-library` (não iniciada — sem spec/tasks ainda) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
+| **Artefatos** | `ai-judge` spec/design/tasks/validation em `main`; catálogo em `docs/PROBLEM-LIBRARY.md` |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| Nova sessão, tarefa única (iniciar Fase 2) | ✅ OK |
-| Branch `feature/ai-judge` criada | ✅ OK |
-| Spec draft em `.specs/features/ai-judge/spec.md` | ✅ OK |
-| Uncommitted: apenas specs/docs | ✅ OK |
+| Merge `feature/ai-judge` → `main` (fast-forward) | ✅ OK |
+| Gate `npx nx run-many -t lint test` pré-merge | ✅ OK |
+| HEAD `main` = `a4e995c` | ✅ OK |
+| Stash: docs unrelated (`AGENTS.md`, foundation) | ⚠️ ver `git stash list` |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx test shared`
+**Gate:** `npx nx run-many -t lint test`
 
 **Prompt para nova sessão:**
 ```
-Branch feature/ai-judge. T1–T9 implemented (T9 uncommitted).
-Execute T10: golden submission integration tests.
+Branch main. Fases 0–2 merged (foundation + mvp-canvas + ai-judge).
+Iniciar Fase 3: Specify problem-library (.specs/features/problem-library/spec.md).
+Catálogo: docs/PROBLEM-LIBRARY.md (27 problemas). Só url-shortener implementado hoje.
 Gate: npx nx run-many -t lint test
 ```
 
