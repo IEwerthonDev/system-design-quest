@@ -1,7 +1,7 @@
 import type { ArchitectureGraph } from '@sdq/shared';
 import type { GameMode, GamePhase } from '../test-hook';
 import { initGameState } from '../test-hook';
-import { advancePhase as computeNextPhase } from './phase-machine';
+import { advancePhase as computeNextPhase, retreatPhase as computePreviousPhase } from './phase-machine';
 
 export interface SessionRequirements {
   functional: string[];
@@ -28,6 +28,13 @@ function cloneGraph(graph: ArchitectureGraph): ArchitectureGraph {
       position: { ...node.position },
     })),
     edges: graph.edges.map((edge) => ({ ...edge })),
+  };
+}
+
+function cloneRequirements(requirements: SessionRequirements): SessionRequirements {
+  return {
+    functional: [...requirements.functional],
+    nonFunctional: [...requirements.nonFunctional],
   };
 }
 
@@ -70,6 +77,37 @@ export function advancePhase(): Session {
   };
   syncToGameState(activeSession);
   return activeSession;
+}
+
+export function goBackPhase(): Session {
+  if (!activeSession) {
+    throw new Error('No active session');
+  }
+
+  activeSession = {
+    ...activeSession,
+    phase: computePreviousPhase(activeSession.phase),
+  };
+  syncToGameState(activeSession);
+  return activeSession;
+}
+
+export function setRequirements(requirements: SessionRequirements): void {
+  if (!activeSession) {
+    throw new Error('No active session');
+  }
+
+  activeSession = {
+    ...activeSession,
+    requirements: cloneRequirements(requirements),
+  };
+}
+
+export function getRequirements(): SessionRequirements {
+  if (!activeSession) {
+    throw new Error('No active session');
+  }
+  return cloneRequirements(activeSession.requirements);
 }
 
 export function setGraph(graph: ArchitectureGraph): void {
