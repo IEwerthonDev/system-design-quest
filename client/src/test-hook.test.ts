@@ -18,6 +18,7 @@ describe('__GAME_STATE__ test hook', () => {
       guidedMode: false,
       experienceLevel: null,
       guidedStep: null,
+      elapsedMs: null,
     });
   });
 

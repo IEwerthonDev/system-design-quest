@@ -4,8 +4,10 @@ import { PHASE_ORDER } from './phase-machine';
 import {
   advancePhase,
   createSession,
+  getElapsedMs,
   getGraph,
   getSession,
+  markSubmitted,
   resetSessionStore,
   setGraph,
 } from './session-store';
@@ -91,5 +93,25 @@ describe('session store', () => {
     const serialized = JSON.stringify(window.__GAME_STATE__);
     expect(serialized).toContain('url-shortener');
     expect(serialized).toContain('app_server');
+  });
+
+  it('tracks elapsedMs for speedrun and null for study', () => {
+    let now = 1000;
+    const clock = () => now;
+
+    createSession('url-shortener', 'speedrun', {}, clock);
+    now = 61000;
+    markSubmitted(clock);
+
+    const session = getSession();
+    expect(session).not.toBeNull();
+    if (session) {
+      expect(getElapsedMs(session, clock)).toBe(60000);
+    }
+    expect(window.__GAME_STATE__.elapsedMs).toBe(60000);
+
+    resetSessionStore();
+    createSession('url-shortener', 'study', {}, clock);
+    expect(window.__GAME_STATE__.elapsedMs).toBeNull();
   });
 });

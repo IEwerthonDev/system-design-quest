@@ -28,6 +28,7 @@ export interface Session {
   guidedMode: boolean;
   experienceLevel: ExperienceLevel | null;
   startedAt: number;
+  submittedAt: number | null;
   judgeResult: JudgeResult | null;
 }
 
@@ -55,7 +56,7 @@ function cloneJudgeResult(result: JudgeResult): JudgeResult {
   return JSON.parse(JSON.stringify(result)) as JudgeResult;
 }
 
-function syncToGameState(session: Session): void {
+function syncToGameState(session: Session, now: () => number = Date.now): void {
   initGameState({
     problemId: session.problemId,
     mode: session.mode,
@@ -66,13 +67,36 @@ function syncToGameState(session: Session): void {
     experienceLevel: session.experienceLevel,
     judgeResult: session.judgeResult ? cloneJudgeResult(session.judgeResult) : null,
     judgingStep: getGameState().judgingStep,
+    elapsedMs: session.mode === 'speedrun' ? getElapsedMs(session, now) : null,
   });
+}
+
+export function getElapsedMs(session: Session, now: () => number = Date.now): number {
+  const end = session.submittedAt ?? now();
+  return Math.max(0, end - session.startedAt);
+}
+
+export function markSubmitted(now: () => number = Date.now): void {
+  if (!activeSession) {
+    throw new Error('No active session');
+  }
+
+  if (activeSession.submittedAt !== null) {
+    return;
+  }
+
+  activeSession = {
+    ...activeSession,
+    submittedAt: now(),
+  };
+  syncToGameState(activeSession, now);
 }
 
 export function createSession(
   problemId: string,
   mode: GameMode,
   options: CreateSessionOptions = {},
+  now: () => number = Date.now,
 ): Session {
   sessionIdCounter += 1;
   activeSession = {
@@ -84,10 +108,11 @@ export function createSession(
     graph: { nodes: [], edges: [] },
     guidedMode: options.guidedMode ?? false,
     experienceLevel: options.experienceLevel ?? null,
-    startedAt: Date.now(),
+    startedAt: now(),
+    submittedAt: null,
     judgeResult: null,
   };
-  syncToGameState(activeSession);
+  syncToGameState(activeSession, now);
   return activeSession;
 }
 

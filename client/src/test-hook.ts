@@ -21,6 +21,7 @@ export interface GameState {
   guidedStep: string | null;
   judgeResult: JudgeResult | null;
   judgingStep: JudgingStep | null;
+  elapsedMs: number | null;
 }
 
 declare global {
@@ -44,6 +45,7 @@ const initialState: GameState = {
   guidedStep: null,
   judgeResult: null,
   judgingStep: null,
+  elapsedMs: null,
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -56,6 +58,7 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     guidedStep: null,
     judgeResult: null,
     judgingStep: null,
+    elapsedMs: null,
     ...overrides,
   };
   return window.__GAME_STATE__;
