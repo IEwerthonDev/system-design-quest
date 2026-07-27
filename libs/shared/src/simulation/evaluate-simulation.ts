@@ -1,0 +1,181 @@
+import type { ArchitectureGraph, ComponentType, PressureLevel } from '../schema/architecture-graph';
+import { normalizeGraph } from '../schema/normalize-graph';
+
+export type { PressureLevel };
+
+export interface SimulationEvaluation {
+  nodes: Record<string, PressureLevel>;
+  hotReadPath: boolean;
+}
+
+const BASE_LOAD = 10;
+
+const CAPACITY_PER_REPLICA: Partial<Record<ComponentType, number>> = {
+  client_web: 50,
+  client_mobile: 50,
+  dns: 40,
+  cdn: 30,
+  waf: 40,
+  load_balancer: 40,
+  api_gateway: 40,
+  reverse_proxy: 40,
+  rate_limiter: 35,
+  app_server: 15,
+  microservice: 15,
+  serverless: 18,
+  worker: 10,
+  auth_service: 20,
+  cache_redis: 30,
+  sql_db: 12,
+  nosql_db: 12,
+  object_storage: 25,
+  message_queue: 20,
+  kafka: 22,
+  pub_sub: 20,
+  search_engine: 14,
+  monitoring: 40,
+  logging: 40,
+  notification: 20,
+};
+
+function capacityPerReplica(type: ComponentType): number {
+  return CAPACITY_PER_REPLICA[type] ?? 20;
+}
+
+/** 1 = fully read-biased edge, 0 = fully write-biased, 0.5 = mixed */
+export function edgeReadWeight(fromType: ComponentType, toType: ComponentType): number {
+  if (toType === 'cache_redis' || toType === 'cdn') {
+    return 0.95;
+  }
+  if (toType === 'sql_db' || toType === 'nosql_db') {
+    if (fromType === 'cache_redis') {
+      return 0.9;
+    }
+    if (fromType === 'app_server' || fromType === 'microservice' || fromType === 'worker') {
+      return 0.35;
+    }
+    return 0.5;
+  }
+  if (
+    fromType === 'client_web' ||
+    fromType === 'client_mobile' ||
+    toType === 'load_balancer' ||
+    toType === 'waf' ||
+    toType === 'api_gateway'
+  ) {
+    return 0.5;
+  }
+  return 0.5;
+}
+
+function hitRateOf(node: ArchitectureGraph['nodes'][number]): number | null {
+  if (node.config?.kind === 'cache' || node.config?.kind === 'cdn') {
+    return node.config.hitRate;
+  }
+  return null;
+}
+
+function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'sql_db') {
+    return 1;
+  }
+  const { shardCount, keySkew } = node.config;
+  return Math.sqrt(shardCount) * (1 - (keySkew / 100) * 0.5);
+}
+
+function nodeCapacity(node: ArchitectureGraph['nodes'][number]): number {
+  const reps = node.replicas ?? 1;
+  return reps * capacityPerReplica(node.type) * sqlCapacityModifier(node);
+}
+
+function pressureFromRatio(ratio: number): PressureLevel {
+  if (ratio >= 1) {
+    return 'hot';
+  }
+  if (ratio >= 0.7) {
+    return 'warn';
+  }
+  return 'ok';
+}
+
+/**
+ * Deterministic educational simulation (AD-020).
+ * Speed is intentionally ignored — visual-only on the client.
+ */
+export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluation {
+  const normalized = normalizeGraph(graph);
+  const { traffic, readRatio } = normalized.simulation!;
+  const readFrac = readRatio / 100;
+  const writeFrac = 1 - readFrac;
+
+  const typeById = new Map(normalized.nodes.map((n) => [n.id, n]));
+  const loadById: Record<string, number> = {};
+  for (const node of normalized.nodes) {
+    loadById[node.id] = 0;
+  }
+
+  for (const edge of normalized.edges) {
+    const from = typeById.get(edge.from);
+    const to = typeById.get(edge.to);
+    if (!from || !to) {
+      continue;
+    }
+
+    const w = edgeReadWeight(from.type, to.type);
+    let load = BASE_LOAD * traffic * (readFrac * w + writeFrac * (1 - w));
+
+    if (from.type === 'cache_redis' || from.type === 'cdn') {
+      const hr = hitRateOf(from) ?? 90;
+      load *= 1 - hr / 100;
+    }
+
+    loadById[edge.to] = (loadById[edge.to] ?? 0) + load;
+  }
+
+  const caches = normalized.nodes.filter((n) => n.type === 'cache_redis' || n.type === 'cdn');
+  if (caches.length > 0) {
+    const avgHit = caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
+    for (const edge of normalized.edges) {
+      const from = typeById.get(edge.from);
+      const to = typeById.get(edge.to);
+      if (!from || !to) {
+        continue;
+      }
+      if (
+        (from.type === 'app_server' || from.type === 'microservice') &&
+        (to.type === 'sql_db' || to.type === 'nosql_db')
+      ) {
+        // High hit rate should visibly unload parallel app→DB read pressure (pedagogical).
+        const reduction = readFrac * (avgHit / 100) * 0.95;
+        loadById[edge.to] = Math.max(0, (loadById[edge.to] ?? 0) * (1 - reduction));
+      }
+    }
+  }
+
+  const nodes: Record<string, PressureLevel> = {};
+  let anyHotOnReadPath = false;
+
+  for (const node of normalized.nodes) {
+    const load = loadById[node.id] ?? 0;
+    const capacity = Math.max(0.001, nodeCapacity(node));
+    const ratio = load / capacity;
+    const level = pressureFromRatio(ratio);
+    nodes[node.id] = level;
+
+    if (
+      level === 'hot' &&
+      readFrac >= 0.7 &&
+      (node.type === 'cache_redis' ||
+        node.type === 'sql_db' ||
+        node.type === 'app_server' ||
+        node.type === 'cdn')
+    ) {
+      anyHotOnReadPath = true;
+    }
+  }
+
+  return {
+    nodes,
+    hotReadPath: anyHotOnReadPath && readFrac >= 0.7,
+  };
+}
