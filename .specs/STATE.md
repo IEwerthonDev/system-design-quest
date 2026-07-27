@@ -22,20 +22,21 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `canvas-graph-dnd` **merged em `main`** ✅ (`5e56c72`) |
-| **Próximo passo** | Demo / UAT manual; backlog deferred (PNG, 2D, Tier 3–4) |
-| **Feature ativa** | nenhuma (merged) |
+| **Fase atual** | Hotfix `hidden` leaderboard modal merged |
+| **Próximo passo** | Hard refresh no browser (localhost:4200) |
+| **Feature ativa** | nenhuma |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | validation PASS; merge SSH `main` |
+| **Artefatos** | `fix/hidden-leaderboard-modal` → `main` |
 
-### Context Checkpoint (2026-07-27 — merged main)
+### Context Checkpoint (2026-07-27 — empty Fechar modal)
 
 | Sinal | Status |
 | ----- | ------ |
-| Merge → `main` | ✅ `5e56c72` via SSH |
-| Verifier | ✅ PASS |
+| Bug | `.sdq-leaderboard { display:flex }` vs `[hidden]` |
+| Fix | `[hidden]{display:none!important}` + leaderboard rule |
+| Gate | leaderboard-panel + client tests PASS |
 
-**Veredito:** **GREEN**
+**Veredito:** **GREEN** (hotfix)
 
 ---
 
