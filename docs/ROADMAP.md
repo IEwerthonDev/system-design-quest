@@ -48,16 +48,16 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 
 ---
 
-## Fase 1b — YouTube Hard (`feature/mvp-youtube`)
+## Fase 1b — Primeiros Medium (`feature/mvp-medium-problems`)
 
-**Objetivo:** Segundo problema (pedido original do usuário) após tutorial.
+**Objetivo:** Adicionar 2–3 problemas Medium após tutorial (YouTube, Chat).
 
 | Entrega | Req IDs |
 | ------- | ------- |
-| Problema YouTube Upload/Stream/Likes com briefing completo | PROD-01 |
-| Briefing com links contextuais para conceitos (CDN, transcoding) | PROD-14 |
+| YouTube Upload/Stream/Social (Medium) | PROD-01 |
+| Chat System (Medium) | PROD-09 |
 
-**Critério de done:** Jogador que completou tutorial consegue iniciar problema YouTube em Modo Livre.
+**Critério de done:** Jogador progride Easy → Medium com nível visível na biblioteca.
 
 ---
 
@@ -82,27 +82,29 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 
 ## Fase 3 — Problem Library (`feature/problem-library`)
 
-**Objetivo:** Expandir para 8+ problemas reais.
+**Objetivo:** 27 problemas em 3 níveis (7 Easy · 10 Medium · 10 Hard). Ver `docs/PROBLEM-LIBRARY.md`.
 
-| Problema | Dificuldade | Tags |
-| -------- | ----------- | ---- |
-| YouTube Upload/Stream/Social | Hard | CDN, transcoding, fan-out |
-| Netflix Video Streaming | Hard | ABR, CDN, encoding |
-| Uber Nearby Drivers | Hard | geospatial, geohash, 1M RPS |
-| Ticketmaster Peak Ticketing | Hard | queues, inventory, consistency |
-| URL Shortener | Easy | hashing, caching, KV |
-| News Feed | Medium | fan-out, ranking, redis |
-| Rate Limiter | Medium | token-bucket, distributed |
-| Chat System | Medium | websockets, sharding, presence |
+### 🟢 Easy (7)
+
+URL Shortener · Rate Limiter · Pastebin · Unique ID Gen · Distributed Cache · Notification System · Key-Value Store
+
+### 🟡 Medium (10)
+
+Chat · News Feed · Search Autocomplete · Instagram · Google Drive · Yelp Nearby · Hotel Booking · **YouTube** · **Uber** · TikTok
+
+### 🔴 Hard (10)
+
+**Netflix** · **Ticketmaster** · Google Maps · Google Docs · Stripe Payments · Zoom · DoorDash · Distributed Kafka · S3 Storage · Distributed Lock
 
 | Entrega | Req IDs |
 | ------- | ------- |
-| Tela de biblioteca com filtros | PROD-09 |
-| **Trilha de progressão** com ordem recomendada e badges | PROD-18 |
-| Cada problema com briefing + rubrica oculta para juiz | PROD-09 |
+| Tela de biblioteca com filtros por nível + tags | PROD-09, PROD-19 |
+| Badges 🟢🟡🔴 e contador de progresso por nível | PROD-19 |
+| Trilha de progressão recomendada | PROD-18 |
+| 27 briefings + rubricas ocultas para juiz | PROD-09 |
 | Home screen com seleção de problema | PROD-01 |
 
-**Critério de done:** 8 problemas jogáveis end-to-end com julgamento IA.
+**Critério de done:** 27 problemas jogáveis end-to-end com julgamento IA; filtros por nível funcionando.
 
 ---
 
@@ -160,10 +162,10 @@ Cada feature segue: **Specify → Design → Tasks → Execute → Verify** (TLC
 | ---- | --------------- | ------------ |
 | 0 Foundation | ~8 | Medium |
 | 1 MVP Canvas | ~20 | Large |
-| 1b YouTube | ~4 | Medium |
+| 1b Medium problems | ~4 | Medium |
 | 2 AI Judge | ~10 | Large |
-| 3 Problem Library | ~8 | Medium |
+| 3 Problem Library | ~12 | Large |
 | 4 Speedrun | ~6 | Medium |
 | 5 Polish | ~8 | Medium |
 
-**Total:** ~64 tasks atômicas.
+**Total:** ~68 tasks atômicas.

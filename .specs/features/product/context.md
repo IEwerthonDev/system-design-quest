@@ -39,8 +39,8 @@ Referência: [Analisei o Site do Lucas Montano de System Design](https://www.you
 
 - **Problema do Playground:** usuário chega no canvas e trava — lista de componentes sem contexto, problemas difíceis de cara, sem tutorial
 - **Nossa resposta:** Modo Guiado com URL Shortener como primeiro problema; tooltips em tudo; feedback em camadas
-- **Primeiro problema do MVP:** URL Shortener (tutorial), não YouTube
-- **YouTube** permanece como problema Hard na biblioteca (pedido original do usuário)
+- **Primeiro problema do MVP:** URL Shortener (Easy, tutorial guiado)
+- **YouTube, Netflix, Uber, Ticketmaster:** incluídos nos níveis Medium/Hard conforme `docs/PROBLEM-LIBRARY.md`
 
 ### Julgamento
 
@@ -48,18 +48,18 @@ Referência: [Analisei o Site do Lucas Montano de System Design](https://www.you
 - Feedback deve sempre explicar: **o quê**, **como melhorar**, **por quê**
 - Verificar cobertura dos requisitos que o jogador declarou (não só requisitos "esperados" ocultos)
 
-### Problemas Iniciais
+### Problemas por Nível
 
-| Sistema | Escopo do problema | Dificuldade |
-| ------- | ------------------ | ----------- |
-| YouTube | Upload, streaming, likes/comments | Hard |
-| Netflix | Video streaming ABR + CDN | Hard |
-| Uber | Geospatial nearby drivers, 1M RPS | Hard |
-| Ticketmaster | Peak ticketing, filas, inventory | Hard |
-| URL Shortener | Hashing, redirect, analytics | Easy |
-| News Feed | Fan-out, ranking, real-time | Medium |
-| Rate Limiter | Token bucket distribuído | Medium |
-| Chat | WebSockets, delivery, presence | Medium |
+Catálogo completo em `docs/PROBLEM-LIBRARY.md` (27 problemas no launch).
+
+| Nível | Qtd | Exemplos |
+| ----- | --- | -------- |
+| 🟢 **Easy** | 7 | URL Shortener (tutorial), Rate Limiter, Pastebin, Notification System |
+| 🟡 **Medium** | 10 | YouTube, Uber, Chat, News Feed, Instagram, TikTok, Hotel Booking |
+| 🔴 **Hard** | 10 | Netflix, Ticketmaster, Stripe, Google Maps, Google Docs, Zoom, S3 |
+
+**Trilha recomendada (newbie):**
+`url-shortener` → `rate-limiter` → `chat-system` → `news-feed` → `youtube` → `netflix-streaming` → `ticketmaster`
 
 ### Agent's Discretion
 

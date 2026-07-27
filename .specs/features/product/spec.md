@@ -208,9 +208,10 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 **Acceptance Criteria**:
 
-1. WHEN o jogador acessa a biblioteca THEN o sistema SHALL exibir ordem recomendada com badge "Iniciante" nos problemas Easy/Medium iniciais
-2. WHEN um problema Hard é selecionado sem ter completado URL Shortener THEN o sistema SHALL exibir aviso amigável (não bloqueante)
-3. WHEN o jogador completa um problema com PARTIAL+ em Study THEN o sistema SHALL marcar como concluído na trilha
+1. WHEN o jogador acessa a biblioteca THEN o sistema SHALL exibir ordem recomendada por nível (Easy → Medium → Hard) com badge "Recomendado"
+2. WHEN um problema Hard é selecionado sem ter completado nenhum Easy THEN o sistema SHALL exibir aviso amigável (não bloqueante)
+3. WHEN o jogador completa um problema com PARTIAL+ em Study THEN o sistema SHALL marcar como concluído na trilha e atualizar contador por nível
+4. WHEN o jogador tenta speedrun em nível Medium sem 2 Easy concluídos THEN o sistema SHALL exibir aviso (Study recomendado primeiro)
 
 ---
 
@@ -241,14 +242,29 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 ---
 
-### P2: Biblioteca de Problemas
+### P2: Biblioteca de Problemas por Nível
 
-**User Story**: Como estudante, quero praticar com problemas de sistemas reais (Netflix, Uber, Ticketmaster, etc.).
+**User Story**: Como estudante, quero escolher problemas por dificuldade (Fácil, Médio, Difícil) e ver uma trilha recomendada.
+
+**Why P2**: Progressão estruturada evita que iniciantes caiam em problemas Hard de cara.
 
 **Acceptance Criteria**:
 
-1. WHEN o jogador acessa a biblioteca THEN o sistema SHALL listar problemas com filtro por dificuldade e tags
-2. WHEN a biblioteca lança THEN o sistema SHALL incluir no mínimo: YouTube (upload/stream/social), URL Shortener, News Feed, Rate Limiter, Uber Geo, Chat, Video Streaming (Netflix), Ticketmaster (ticketing peak)
+1. WHEN o jogador acessa a biblioteca THEN o sistema SHALL exibir problemas agrupados ou filtráveis por nível: `easy` (🟢 Fácil), `medium` (🟡 Médio), `hard` (🔴 Difícil)
+2. WHEN a biblioteca lança THEN o sistema SHALL incluir no mínimo **7 Easy, 10 Medium, 10 Hard** (ver `docs/PROBLEM-LIBRARY.md`)
+3. WHEN um problema é listado THEN o sistema SHALL exibir: título, nível, tags, tempo estimado, badge "Recomendado" na trilha
+4. WHEN o jogador filtra por nível THEN o sistema SHALL atualizar a lista em < 200ms (client-side)
+5. WHEN o jogador completa um problema THEN o sistema SHALL marcar progresso por nível (ex: "3/7 Easy concluídos")
+
+**Problemas obrigatórios no launch (pedido do usuário + curadoria):**
+
+| Nível | Problemas destacados |
+| ----- | -------------------- |
+| Easy | URL Shortener, Rate Limiter, Pastebin |
+| Medium | YouTube, Uber, Chat, News Feed, Instagram |
+| Hard | Netflix, Ticketmaster, Stripe Payments, Google Maps |
+
+**Independent Test**: Filtrar por Hard → ver Netflix e Ticketmaster; filtrar por Easy → ver URL Shortener com badge Tutorial.
 
 ---
 
@@ -283,7 +299,7 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 | PROD-06 | P1: Cobertura requisitos | ai-judge | Pending |
 | PROD-07 | P2: Modos Study/Speedrun | speedrun | Pending |
 | PROD-08 | P2: Ranking | speedrun | Pending |
-| PROD-09 | P2: Biblioteca | problem-library | Pending |
+| PROD-09 | P2: Biblioteca por nível | problem-library | Pending |
 | PROD-10 | P3: Rever tutorial | polish | Pending |
 | PROD-11 | P1: Onboarding | mvp-canvas | Pending |
 | PROD-12 | P1: Modo Guiado | mvp-canvas | Pending |
@@ -293,8 +309,9 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 | PROD-16 | P2: Dicas no canvas | mvp-canvas | Pending |
 | PROD-17 | P2: Feedback em camadas | ai-judge | Pending |
 | PROD-18 | P2: Trilha de progressão | problem-library | Pending |
+| PROD-19 | P2: Filtros e badges de nível | problem-library | Pending |
 
-**Coverage:** 18 total, 0 mapped to tasks, 18 unmapped ⚠️
+**Coverage:** 19 total, 0 mapped to tasks, 19 unmapped ⚠️
 
 ---
 

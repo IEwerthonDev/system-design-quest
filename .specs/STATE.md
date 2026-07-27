@@ -46,7 +46,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | AD-011 | active | **Idioma UI: PT-BR** com termos técnicos em inglês quando padrão da indústria | Usuário brasileiro; termos como "Load Balancer" permanecem em inglês |
 | AD-012 | active | **Branch `main` = produção**; features em `feature/<story-slug>` | Fluxo Git solicitado pelo usuário |
 | AD-013 | active | **Newbie-friendly é pilar de produto**, não polish | Feedback do [vídeo nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM): iniciantes travam no canvas; tutorial + Modo Guiado desde o MVP |
-| AD-014 | active | **URL Shortener = primeiro problema (tutorial guiado)**; YouTube = Hard na biblioteca | Progressão Easy → Hard; atende pedido original sem assustar iniciantes |
+| AD-014 | active | **URL Shortener = primeiro problema (tutorial guiado)**; YouTube = Medium na biblioteca | Progressão Easy → Medium → Hard |
+| AD-015 | active | **Três níveis de dificuldade:** `easy`, `medium`, `hard` com filtros, badges e trilha recomendada | Biblioteca curada em `docs/PROBLEM-LIBRARY.md` (27 problemas no launch) |
 
 ---
 
@@ -57,7 +58,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | 0 | `foundation` | Monorepo, CI, canvas vazio, spec infra |
 | 1 | `mvp-canvas` | 1 problema, canvas 3D, requisitos, submit |
 | 2 | `ai-judge` | Julgamento dual-LLM + feedback detalhado |
-| 3 | `problem-library` | 10+ problemas (YouTube, Netflix, Uber…) |
+| 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
 | 4 | `speedrun` | Timer, categorias, leaderboard |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
 

@@ -2,7 +2,7 @@
 
 Jogo educativo no browser para aprender **System Design** desenhando arquiteturas 3D — **newbie-friendly** com tutorial guiado, tooltips e feedback em linguagem simples.
 
-Resolva problemas reais (YouTube, Netflix, Uber, Ticketmaster…), levante requisitos, monte sua arquitetura com ícones 3D conectados por linhas animadas, e receba feedback detalhado de IA.
+Resolva problemas reais organizados em **3 níveis** — 🟢 Fácil, 🟡 Médio, 🔴 Difícil — desde URL Shortener até Netflix, Uber e Ticketmaster.
 
 **Inspirado por:** [System Design Playground](https://system-design-playground.replit.app/) · padrões 3D do [nj-mmo](https://github.com/IEwerthonDev/nj-mmo) · diagramas Hayk Simonyan
 
@@ -64,6 +64,7 @@ npm test           # todos os testes
 
 ## Documentação
 
+- [Biblioteca de Problemas](docs/PROBLEM-LIBRARY.md) — 27 problemas por nível (Easy/Medium/Hard)
 - [Newbie-Friendly](docs/NEWBIE-FRIENDLY.md) — princípios para iniciantes
 - [Roadmap](docs/ROADMAP.md) — fases e entregas
 - [Catálogo de Componentes 3D](docs/COMPONENT-CATALOG.md) — ícones e categorias

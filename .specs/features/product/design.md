@@ -224,10 +224,12 @@ sequenceDiagram
 
 ### Shared — Problem Definitions (`libs/shared/src/problems/`)
 
-- **Purpose:** Definições tipadas de cada problema com briefing, rubrica e requisitos esperados (para o juiz, não visíveis ao jogador)
+- **Purpose:** Definições tipadas de cada problema com briefing, rubrica, nível (`easy`|`medium`|`hard`) e ordem na trilha
 - **Interfaces:**
   - `getProblem(id: string): Problem`
   - `listProblems(filter?: ProblemFilter): ProblemSummary[]`
+  - `listProblemsByDifficulty(difficulty: Difficulty): ProblemSummary[]`
+  - `getRecommendedTrack(): ProblemSummary[]`
 
 ### Shared — Architecture Graph (`libs/shared/src/schema/`)
 

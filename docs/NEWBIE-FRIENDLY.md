@@ -94,17 +94,15 @@ Dicas **não revelam** a solução completa — só direcionam o raciocínio.
 
 Toggle **"Modo iniciante"** no feedback: esconde jargão, mantém explicações com analogias.
 
-### 7. Trilha de progressão
+### 7. Trilha de progressão por nível
 
-Ordem recomendada na biblioteca (badge "Recomendado para iniciantes"):
+Ordem recomendada — ver catálogo completo em `docs/PROBLEM-LIBRARY.md`:
 
-1. URL Shortener (Easy) — tutorial
-2. Rate Limiter (Medium)
-3. News Feed (Medium)
-4. Chat (Medium)
-5. YouTube / Netflix / Uber / Ticketmaster (Hard)
+**🟢 Easy:** URL Shortener (tutorial) → Rate Limiter → Pastebin → Notification System  
+**🟡 Medium:** Chat → News Feed → YouTube → Uber  
+**🔴 Hard:** Netflix → Ticketmaster → Stripe Payments  
 
-Speedrun desbloqueado por problema após completar em Study com PARTIAL+.
+Speedrun desbloqueado por problema após PARTIAL+ em Study. Ranking filtrável por **problema** ou **nível**.
 
 ---
 
@@ -137,3 +135,4 @@ Speedrun desbloqueado por problema após completar em Study com PARTIAL+.
 | Dicas no canvas | PROD-16 |
 | Feedback em camadas | PROD-17 |
 | Trilha de progressão | PROD-18 |
+| Filtros e badges de nível | PROD-19 |
