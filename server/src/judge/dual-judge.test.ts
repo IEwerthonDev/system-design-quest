@@ -63,7 +63,15 @@ describe('buildRequirementCoverage', () => {
       'Redirect HTTP 302',
       '100k read RPS',
     ]);
-    expect(coverage.every((item) => item.explanation.length > 0)).toBe(true);
+    expect(coverage.every((item) => ['covered', 'partial', 'missing'].includes(item.status))).toBe(
+      true,
+    );
+    expect(coverage.some((item) => item.status === 'partial' && item.explanation.length > 0)).toBe(
+      true,
+    );
+    expect(coverage.some((item) => item.status === 'missing' && item.explanation.length > 0)).toBe(
+      true,
+    );
   });
 
   it('returns empty array when no requirements were declared', async () => {
