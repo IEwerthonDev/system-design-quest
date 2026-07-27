@@ -8,7 +8,7 @@
 
 ## Vision
 
-Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D. O jogador lê um problema real (YouTube, Netflix, Uber, Ticketmaster…), levanta requisitos funcionais e não-funcionais, monta a arquitetura com ícones 3D conectados por linhas animadas, e recebe julgamento detalhado de IA — incluindo o que faltou, o que está errado, e como melhorar (com o porquê).
+Jogo educativo no browser para aprender System Design desenhando arquiteturas em canvas **blueprint 2D** (paridade System Design Playground). O jogador lê um problema real (YouTube, Netflix, Uber, Ticketmaster…), levanta requisitos funcionais e não-funcionais, monta a arquitetura com cards conectados por fluxo animado, configura replicas/hit rate/shards, simula tráfego, e recebe julgamento detalhado de IA — incluindo o que faltou, o que está errado, e como melhorar (com o porquê).
 
 **Inspirações:**
 - [System Design Playground](https://system-design-playground.replit.app/) — fluxo problema → canvas → juízes IA
@@ -22,21 +22,22 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Hotfix layout+canvas DnD merged (`f0d02cd`) |
-| **Próximo passo** | Hard refresh localhost:4200 — testar palette + handles |
-| **Feature ativa** | nenhuma |
+| **Fase atual** | Specify+Design+Tasks done — Execute T1 |
+| **Próximo passo** | T1 schema normalize → T2 sim → T3–T11 blueprint |
+| **Feature ativa** | `blueprint-2d-canvas` |
+| **Branch** | `feature/blueprint-2d-canvas` |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | clearAppUi + Voltar/Dicas offset + palette text/plain |
+| **Artefatos** | `.specs/features/blueprint-2d-canvas/{spec,context,design,tasks}.md` |
 
-### Context Checkpoint (2026-07-27 — canvas overlap + DnD)
+### Context Checkpoint (2026-07-27 — blueprint-2d start)
 
 | Sinal | Status |
 | ----- | ------ |
-| Bugs | Dicas/Voltar sob paleta; canvas destruído no nav |
-| Fix | clearAppUi; left 236px; drag text/plain |
-| Merge | `f0d02cd` → main |
+| Chat | Execute plan requested |
+| Spec | Locked 1B/2A/reps |
+| Gate | Pending T1 |
 
-**Veredito:** **GREEN** (hotfix)
+**Veredito:** **GREEN**
 
 ---
 
@@ -44,16 +45,16 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | ID | Status | Decision | Rationale |
 | -- | ------ | -------- | --------- |
-| AD-001 | active | **Monorepo Nx** com `client/`, `server/`, `libs/shared/` | Mesmo padrão do nj-mmo; separação clara entre canvas 3D, API de julgamento e dados compartilhados |
-| AD-002 | active | **Three.js vanilla** (sem React Three Fiber) para o canvas 3D | Proven no nj-mmo; controle total sobre shaders de fluxo de dados nas conexões |
-| AD-003 | active | **UI em DOM vanilla** sobreposto ao canvas (painéis, formulários) | Consistente com nj-mmo; evita re-render do React invalidando WebGL context |
+| AD-001 | active | **Monorepo Nx** com `client/`, `server/`, `libs/shared/` | Separação clara entre canvas de sessão, API de julgamento e dados compartilhados |
+| AD-002 | superseded by AD-018 | **Three.js vanilla** para o canvas 3D | Substituído por blueprint DOM+SVG (paridade Playground) |
+| AD-003 | active | **UI em DOM vanilla** (painéis + agora o próprio canvas de sessão) | Consistente; canvas 2D é DOM/SVG |
 | AD-004 | active | **Estado do diagrama serializável em JSON** (`ArchitectureGraph`) | Permite salvar, enviar ao juiz, replay e speedrun verification sem depender do WebGL |
 | AD-005 | active | **Dois modos de jogo:** Study (sem timer) e Speedrun (com timer + ranking por categoria) | Requisito explícito do usuário; ranking só aceita soluções corretas |
 | AD-006 | active | **Juiz dual-LLM** (rigor vs pragmatismo → consenso) | Inspirado no System Design Playground; feedback mais rico |
 | AD-007 | active | **Requisitos como checklist editável + campos livres** antes do canvas | Força o jogador a praticar levantamento de requisitos, não só desenhar |
-| AD-008 | active | **Conexões com fluxo animado** via custom shader em `TubeGeometry` | Brilho direcional nas setas indica direção do fluxo de dados |
-| AD-009 | active | **Catálogo de componentes 3D manifest-driven** (GLB + fallback primitivo) | Mesmo padrão de manifest do nj-mmo; assets CC0 |
-| AD-010 | active | **Testes:** lógica em unit (Vitest), canvas via `window.__GAME_STATE__` hook | WebGL não é testável em jsdom; AD-014 do nj-mmo como referência |
+| AD-008 | superseded by AD-018 | **Conexões com fluxo animado** via `TubeGeometry` shader | Substituído por SVG paths + packet animation CSS/JS |
+| AD-009 | superseded by AD-018 | **Catálogo 3D GLB** no canvas de sessão | Sessão usa ícones 2D; GLB/`component-lab` orphan ok |
+| AD-010 | active | **Testes:** lógica em unit (Vitest), canvas via `window.__GAME_STATE__` hook | Sem WebGL; assert grafo + estado de interação |
 | AD-011 | active | **Idioma UI: PT-BR** com termos técnicos em inglês quando padrão da indústria | Usuário brasileiro; termos como "Load Balancer" permanecem em inglês |
 | AD-012 | active | **Branch `main` = produção**; features em `feature/<story-slug>` | Fluxo Git solicitado pelo usuário |
 | AD-013 | active | **Newbie-friendly é pilar de produto**, não polish | Feedback do [vídeo nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM): iniciantes travam no canvas; tutorial + Modo Guiado desde o MVP |
@@ -61,6 +62,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | AD-015 | active | **Três níveis de dificuldade:** `easy`, `medium`, `hard` com filtros, badges e trilha recomendada | Biblioteca curada em `docs/PROBLEM-LIBRARY.md` (27 problemas no launch) |
 | AD-016 | active | **Critério de score e veredito** — verdeto `PASS` se score ≥ 80 e zero blockers críticos; `PARTIAL` se score ≥ 70 e zero blockers; `FAIL` caso contrário. Ranking speedrun aceita apenas `PASS` ou `PARTIAL` com score ≥ 70 e zero blockers. Canvas vazio = FAIL local sem LLM | Unifica product spec, judge prompts e leaderboard; decisão tomada antes da Fase 2 |
 | AD-017 | active | **Tiers de componentes:** Tier 1 = 15 tipos (MVP 1a, canvas jogável); Tier 2 = 25 tipos (MVP 1c, meta do canvas); Tier 3 = 36 tipos (catálogo completo, Fase 3); Tier 4 = GLB assets (Fase 5 polish) | Alinha goal "≥25" com roadmap; evita bloquear 1a por catálogo completo |
+| AD-018 | active | **Canvas de sessão = DOM node cards + SVG edges** sobre grid CSS blueprint; pan/zoom no world container | Paridade System Design Playground; supersede AD-002/008/009 no path de jogo |
+| AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
+| AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
 
 ---
 
@@ -75,5 +79,6 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
 | — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
+| — | `blueprint-2d-canvas` | Canvas 2D Playground + sim + configs | 🔄 Execute |
 
 Detalhes em `docs/ROADMAP.md`.
