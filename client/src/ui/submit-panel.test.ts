@@ -9,6 +9,7 @@ import {
   resetSessionStore,
   setGraph,
 } from '../session/session-store';
+import * as gameSounds from '../audio/game-sounds';
 import {
   EMPTY_GRAPH_MESSAGE,
   mountSubmitPanel,
@@ -106,6 +107,7 @@ describe('submit panel', () => {
 
     const submitForJudging = vi.fn().mockResolvedValue(sampleJudgeResult);
     const onJudgeSuccess = vi.fn();
+    const soundSpy = vi.spyOn(gameSounds, 'playGameSound').mockImplementation(() => undefined);
 
     const panel = mountSubmitPanel(container, {
       getGraph: () => sampleGraph,
@@ -122,6 +124,7 @@ describe('submit panel', () => {
     const result = await panel.submit();
 
     expect(result.success).toBe(true);
+    expect(soundSpy).toHaveBeenCalledWith('submit');
     expect(submitForJudging).toHaveBeenCalledTimes(1);
     expect(onJudgeSuccess).toHaveBeenCalledWith(sampleJudgeResult);
     expect(
@@ -129,6 +132,7 @@ describe('submit panel', () => {
         'sdq-judging-overlay--visible',
       ),
     ).toBe(false);
+    soundSpy.mockRestore();
   });
 
   it('shows retry on judge error and stays on canvas', async () => {
