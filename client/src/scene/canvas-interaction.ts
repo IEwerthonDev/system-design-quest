@@ -54,6 +54,10 @@ export interface CanvasInteraction {
   getComponentManager(): ComponentManager;
   getEdgeManager(): EdgeManager;
   getFlowEdges(): ReadonlyMap<string, FlowEdgeObject>;
+  selectEdge(edgeId: string | null): void;
+  deleteEdge(edgeId: string): boolean;
+  invertEdge(edgeId: string): boolean;
+  deleteSelected(): boolean;
   syncStoreFromScene(): void;
   loadGraph(graph: ArchitectureGraph): void;
   update(dt: number): void;
@@ -118,6 +122,23 @@ export function createCanvasInteraction(
   };
 
   const syncComponentPanel = (): void => {
+    if (selectedEdgeId) {
+      const edge = edgeManager.getEdge(selectedEdgeId);
+      if (!edge) {
+        selectedEdgeId = null;
+      } else {
+        propertiesPanel.sync({
+          mode: 'edge',
+          visible: true,
+          componentId: null,
+          label: '',
+          note: '',
+          edgeId: edge.id,
+          edgeDirection: edge.direction === 'bidirectional' ? 'bidirectional' : 'forward',
+        });
+        return;
+      }
+    }
     if (!selectedComponentId) {
       propertiesPanel.sync({
         mode: 'hidden',
@@ -300,6 +321,19 @@ export function createCanvasInteraction(
     return String(hit.userData.componentId);
   };
 
+  const pickEdge = (): string | null => {
+    const meshes = [...flowEdges.values()].map((edge) => edge.mesh);
+    if (meshes.length === 0) {
+      return null;
+    }
+    const hits = raycaster.intersectObjects(meshes, false);
+    const hit = hits[0]?.object;
+    if (!hit?.userData?.isFlowEdge || !hit.userData.edgeId) {
+      return null;
+    }
+    return String(hit.userData.edgeId);
+  };
+
   const resolveLinkTarget = (): { componentId: string; valid: boolean } | null => {
     const handle = pickHandle();
     if (handle) {
@@ -408,8 +442,81 @@ export function createCanvasInteraction(
     if (selectedComponentId) {
       componentManager.setSelected(selectedComponentId, true);
       mode = 'idle';
+    } else if (mode === 'edgeSelected') {
+      mode = 'idle';
     }
     syncComponentPanel();
+  };
+
+  const selectEdge = (edgeId: string | null): void => {
+    if (selectedComponentId) {
+      componentManager.setSelected(selectedComponentId, false);
+      selectedComponentId = null;
+    }
+    selectedEdgeId = edgeId && edgeManager.getEdge(edgeId) ? edgeId : null;
+    mode = selectedEdgeId ? 'edgeSelected' : hoverComponentId ? 'hover' : 'idle';
+    syncComponentPanel();
+  };
+
+  const deleteEdge = (edgeId: string): boolean => {
+    if (!edgeManager.removeEdge(edgeId)) {
+      return false;
+    }
+    removeFlowEdgeVisual(edgeId);
+    if (selectedEdgeId === edgeId) {
+      selectedEdgeId = null;
+      mode = 'idle';
+      syncComponentPanel();
+    }
+    syncStoreFromScene();
+    return true;
+  };
+
+  const invertEdge = (edgeId: string): boolean => {
+    const inverted = edgeManager.invert(edgeId);
+    if (!inverted) {
+      return false;
+    }
+    syncFlowEdgeGeometry(edgeId);
+    if (selectedEdgeId === edgeId) {
+      syncComponentPanel();
+    }
+    syncStoreFromScene();
+    return true;
+  };
+
+  const deleteSelectedComponent = (id?: string): boolean => {
+    const targetId = id ?? selectedComponentId;
+    if (!targetId) {
+      return false;
+    }
+    edgeManager.removeEdgesForNode(targetId);
+    for (const edge of [...flowEdges.keys()]) {
+      if (!edgeManager.getEdge(edge)) {
+        removeFlowEdgeVisual(edge);
+      }
+    }
+    handles.detach(targetId);
+    const removed = componentManager.removeComponent(targetId);
+    if (!removed) {
+      return false;
+    }
+    if (selectedComponentId === targetId) {
+      selectedComponentId = null;
+      syncComponentPanel();
+    }
+    if (hoverComponentId === targetId) {
+      hoverComponentId = null;
+    }
+    syncStoreFromScene();
+    return true;
+  };
+
+  const deleteSelected = (): boolean => {
+    if (selectedEdgeId) {
+      return deleteEdge(selectedEdgeId);
+    }
+    return deleteSelectedComponent();
   };
 
   const prepareRaycaster = (clientX: number, clientY: number): void => {
@@ -441,6 +548,12 @@ export function createCanvasInteraction(
       return;
     }
 
+    const edgeId = pickEdge();
+    if (edgeId) {
+      selectEdge(edgeId);
+      return;
+    }
+
     const bodyId = pickComponentBody();
     if (bodyId) {
       pressComponentId = bodyId;
@@ -450,6 +563,7 @@ export function createCanvasInteraction(
     }
 
     selectComponent(null);
+    selectEdge(null);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
@@ -514,21 +628,11 @@ export function createCanvasInteraction(
     ) {
       return;
     }
-    if (!selectedComponentId) {
+    if (!selectedEdgeId && !selectedComponentId) {
       return;
     }
     event.preventDefault();
-    edgeManager.removeEdgesForNode(selectedComponentId);
-    for (const edge of [...flowEdges.keys()]) {
-      if (!edgeManager.getEdge(edge)) {
-        removeFlowEdgeVisual(edge);
-      }
-    }
-    componentManager.removeComponent(selectedComponentId);
-    handles.detach(selectedComponentId);
-    selectedComponentId = null;
-    syncComponentPanel();
-    syncStoreFromScene();
+    deleteSelected();
   };
 
   canvas.addEventListener('pointerdown', onPointerDown);
@@ -545,6 +649,10 @@ export function createCanvasInteraction(
     getComponentManager: () => componentManager,
     getEdgeManager: () => edgeManager,
     getFlowEdges: () => flowEdges,
+    selectEdge,
+    deleteEdge,
+    invertEdge,
+    deleteSelected,
     syncStoreFromScene,
     loadGraph(graph) {
       for (const id of [...componentManager.getAllInstances().map((i) => i.id)]) {
@@ -560,16 +668,12 @@ export function createCanvasInteraction(
           y: node.position.y,
           z: node.position.z,
         });
-        // Keep generated ids stable when possible by replacing — manager assigns ids;
-        // for MVP load we place by type/position. Full id restore deferred if needed.
-        void instance;
-        void clampNote;
-        handles.attach(componentManager.getInstance(instance.id)!);
+        handles.attach(instance);
         if (node.label) {
           componentManager.setLabel(instance.id, node.label);
         }
         if (node.note) {
-          componentManager.setNote(instance.id, node.note);
+          componentManager.setNote(instance.id, clampNote(node.note));
         }
       }
       edgeManager.setEdges(graph.edges.map((edge) => ({ ...edge })));
