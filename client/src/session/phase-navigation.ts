@@ -7,6 +7,7 @@ import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { bindGlossaryShortcut, openGlossaryPanel } from '../ui/glossary';
+import { mountHintsPanel } from '../ui/hints-panel';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
@@ -150,6 +151,13 @@ export function mountPhaseNavigation(
   const glossaryPanel = openGlossaryPanel(problemId, shell);
   const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
 
+  const hintsPanel = mountHintsPanel(shell, {
+    problemId,
+    guidedMode,
+    getGraph,
+  });
+  hintsPanel.root.hidden = true;
+
   const submitPanel = mountSubmitPanel(shell, {
     getGraph,
     onSubmitSuccess: (graph) => {
@@ -186,6 +194,11 @@ export function mountPhaseNavigation(
     palette.hidden = !visibility.palette;
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
+    hintsPanel.root.hidden = phase !== 'canvas' || mode !== 'study';
+
+    if (phase === 'canvas' && mode === 'study') {
+      hintsPanel.sync();
+    }
 
     if (phase === 'requirements') {
       requirementsPanel.setRequirements(getRequirements());

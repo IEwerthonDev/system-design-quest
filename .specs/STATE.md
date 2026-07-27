@@ -23,8 +23,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | Campo | Valor |
 | ----- | ----- |
 | **Fase atual** | Foundation mergeada em `main` — MVP Canvas sub-fase 1a |
-| **Próximo passo** | **T19** — Glossary panel atalho G (`feat(client): glossary panel`) |
-| **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) — **Checkpoint 1b concluído** |
+| **Próximo passo** | **Verifier** pós-T22 + checkpoint 1c manual |
+| **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) — **Sub-fase 1c concluída (T19–T22)** |
 | **Bloqueios** | Nenhum |
 | **Artefatos aprovados** | `foundation/validation.md` PASS, `mvp-canvas/tasks.md`, AD-016, AD-017 |
 
@@ -32,20 +32,20 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Sinal | Status |
 | ----- | ------ |
-| T1–T18 implemented on `feature/mvp-canvas` | ✅ OK |
-| Sub-fase 1c em andamento (T19–T22) | ✅ OK |
-| Gate `npx nx test shared client` | ✅ 142 testes |
+| T1–T22 implemented on `feature/mvp-canvas` | ✅ OK |
+| Sub-fase 1c concluída | ✅ OK |
+| Gate `npx nx test shared client` | ✅ 154 testes |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx test shared client`
+**Gate:** `npx nx test shared client` · full: `npx nx run-many -t lint test`
 
-**Prompt para nova sessão (T19):**
+**Prompt para nova sessão (Verifier 1c):**
 ```
-Branch feature/mvp-canvas. T1–T18 committed.
-Read .specs/STATE.md Handoff + .specs/features/mvp-canvas/tasks.md T19.
-Implement T19: glossary panel (atalho G).
-Gate: npx nx test shared client
+Branch feature/mvp-canvas. T1–T22 committed (df0a999..T22).
+Read .specs/features/mvp-canvas/tasks.md Verification (post-T22).
+Run Verifier sub-agent against PROD-01–04, 11–16.
+Gate: npx nx run-many -t lint test
 ```
 
 ---

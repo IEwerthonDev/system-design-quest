@@ -321,7 +321,7 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 **Req:** PROD-14
 
 - [x] Ícone `?` em cada métrica → explicação em linguagem simples
-- [ ] Commit: `feat(client): briefing metric explanations`
+- [x] Commit: `feat(client): briefing metric explanations`
 
 ---
 
@@ -333,8 +333,8 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-13
 
-- [ ] Atalho `G` abre painel com termos do problema atual
-- [ ] Commit: `feat(client): glossary panel`
+- [x] Atalho `G` abre painel com termos do problema atual
+- [x] Commit: `feat(client): glossary panel`
 
 ---
 
@@ -349,8 +349,8 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **+10 tipos:** `microservice`, `nosql_db`, `kafka`, `pub_sub`, `search_engine`, `waf`, `reverse_proxy`, `logging`, `notification`, `serverless`
 
-- [ ] `getComponentsForTier(2)` retorna 25 tipos
-- [ ] Commit: `feat(shared): expand component catalog to 25 types`
+- [x] `getComponentsForTier(2)` retorna 25 tipos
+- [x] Commit: `feat(shared): expand component catalog to 25 types`
 
 ---
 
@@ -362,8 +362,8 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** AD-009
 
-- [ ] Página isolada para preview de primitivos por tipo
-- [ ] Commit: `feat(client): component lab page`
+- [x] Página isolada para preview de primitivos por tipo
+- [x] Commit: `feat(client): component lab page`
 
 ---
 
@@ -375,9 +375,9 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-16 (P2 — não bloqueia merge se omitido)
 
-- [ ] 2–3 dicas baseadas no problema + estado do grafo
-- [ ] Marcar dica resolvida ao adicionar componente relevante
-- [ ] Commit: `feat(client): contextual hints panel`
+- [x] 2–3 dicas baseadas no problema + estado do grafo
+- [x] Marcar dica resolvida ao adicionar componente relevante
+- [x] Commit: `feat(client): contextual hints panel`
 
 **Checkpoint 1c:** onboarding → tutorial guiado completo em <15 min (teste manual).
 
