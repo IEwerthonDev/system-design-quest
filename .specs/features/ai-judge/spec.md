@@ -186,7 +186,7 @@ O loop pedagógico está incompleto: o jogador monta arquitetura e submete, mas 
 
 | ID | Story | Phase | Status |
 | -- | ----- | ----- | ------ |
-| JUDGE-01 | P1: Endpoint | Execute T4 | Partial (T5 route pending) |
+| JUDGE-01 | P1: Endpoint | Execute T5 | Done |
 | JUDGE-02 | P1: Dual-judge orchestration | Execute T4 | Done |
 | JUDGE-03 | P1: Veredito AD-016 | Execute T1 | Done |
 | JUDGE-04 | P1: Cobertura requisitos | Execute T4 | Done |
@@ -194,7 +194,7 @@ O loop pedagógico está incompleto: o jogador monta arquitetura e submete, mas 
 | JUDGE-06 | P1: Loading/erro/retry | Design | Pending |
 | JUDGE-07 | P2: Feedback em camadas | Design | Pending |
 | JUDGE-08 | P2: Golden tests | Design | Pending |
-| JUDGE-09 | P1: Rate limiting | Design | Pending |
+| JUDGE-09 | P1: Rate limiting | Execute T5 | Done |
 | JUDGE-10 | P1: Tipos shared `JudgeResult` | Execute T1 | Done |
 
 **Parent mapping:** JUDGE-01..06 → PROD-05; JUDGE-04 → PROD-06; JUDGE-07 → PROD-17

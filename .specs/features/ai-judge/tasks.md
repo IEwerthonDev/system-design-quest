@@ -124,11 +124,11 @@ T1 → T2 → T3 → T4 → T5 → T6 → T7 → T8 → T9 → T10
 
 **Req:** JUDGE-01, JUDGE-09
 
-- [ ] `POST /api/judge` validates body, calls `judgeSubmission`
-- [ ] Rate limit 20/IP/hour when `NODE_ENV=production` only
-- [ ] 400 invalid input, 429 rate limit, 503 no key in prod
-- [ ] Register route in `buildApp`
-- [ ] Commit: `feat(server): judge API route with rate limiting`
+- [x] `POST /api/judge` validates body, calls `judgeSubmission`
+- [x] Rate limit 20/IP/hour when `NODE_ENV=production` only
+- [x] 400 invalid input, 429 rate limit, 503 no key in prod
+- [x] Register route in `buildApp`
+- [x] Commit: `feat(server): judge API route with rate limiting`
 
 ---
 
