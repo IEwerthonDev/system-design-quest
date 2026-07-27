@@ -12,6 +12,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 **Inspirações:**
 - [System Design Playground](https://system-design-playground.replit.app/) — fluxo problema → canvas → juízes IA
+- [Análise do Playground (newbie-friendly)](https://www.youtube.com/watch?v=nvZch2Z7eMM) — o que evitar para iniciantes
 - [nj-mmo](../nj-mmo) — Three.js + Vite no browser, padrões de renderer e test hooks
 - Vídeos Hayk Simonyan — vocabulário visual de componentes de system design
 
@@ -22,7 +23,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | Campo | Valor |
 | ----- | ----- |
 | **Fase atual** | Specify + Design (planejamento inicial) |
-| **Próximo passo** | Confirmar spec do produto → criar branch `feature/foundation` → executar tasks da Fase 0 |
+| **Próximo passo** | Confirmar spec atualizada (newbie-friendly) → criar branch `feature/foundation` |
 | **Feature ativa** | `product` (visão geral) + `foundation` (scaffold) |
 | **Bloqueios** | Nenhum |
 
@@ -44,6 +45,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | AD-010 | active | **Testes:** lógica em unit (Vitest), canvas via `window.__GAME_STATE__` hook | WebGL não é testável em jsdom; AD-014 do nj-mmo como referência |
 | AD-011 | active | **Idioma UI: PT-BR** com termos técnicos em inglês quando padrão da indústria | Usuário brasileiro; termos como "Load Balancer" permanecem em inglês |
 | AD-012 | active | **Branch `main` = produção**; features em `feature/<story-slug>` | Fluxo Git solicitado pelo usuário |
+| AD-013 | active | **Newbie-friendly é pilar de produto**, não polish | Feedback do [vídeo nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM): iniciantes travam no canvas; tutorial + Modo Guiado desde o MVP |
+| AD-014 | active | **URL Shortener = primeiro problema (tutorial guiado)**; YouTube = Hard na biblioteca | Progressão Easy → Hard; atende pedido original sem assustar iniciantes |
 
 ---
 

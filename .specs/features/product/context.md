@@ -17,6 +17,7 @@ Jogo educativo no browser para aprender System Design. O jogador resolve problem
 ### Visual & UX
 
 - Design **moderno e minimalista** — fundo escuro suave, painéis com glassmorphism leve, tipografia sans-serif (Inter ou similar)
+- **Newbie-friendly por padrão** — ver `docs/NEWBIE-FRIENDLY.md`
 - Canvas 3D ocupa ~70% da tela; painéis laterais para paleta e propriedades
 - Conexões: linha com **brilho animado** na direção da seta (efeito "dados fluindo")
 - Câmera: vista isométrica levemente inclinada (não primeira pessoa); orbit controls para zoom/pan
@@ -24,12 +25,22 @@ Jogo educativo no browser para aprender System Design. O jogador resolve problem
 
 ### Fluxo do Jogo
 
+0. **Onboarding** (primeira visita) → escolher iniciante ou experiente
 1. **Home** → escolher modo (Study / Speedrun) e problema
-2. **Briefing** → ler descrição + métricas
-3. **Requisitos** → listas editáveis FR / NFR
-4. **Canvas** → montar arquitetura 3D
-5. **Resultado** → veredito + feedback estruturado + cobertura de requisitos
+2. **Briefing** → ler descrição + métricas (com tooltips `?`)
+3. **Requisitos** → listas editáveis FR / NFR + sugestões clicáveis
+4. **Canvas** → montar arquitetura 3D (Modo Guiado com highlights ou Modo Livre)
+5. **Resultado** → resumo simples + detalhes expandíveis + cobertura de requisitos
 6. (Speedrun) → tempo registrado se correto
+
+### Newbie-Friendly (feedback do vídeo)
+
+Referência: [Analisei o Site do Lucas Montano de System Design](https://www.youtube.com/watch?v=nvZch2Z7eMM)
+
+- **Problema do Playground:** usuário chega no canvas e trava — lista de componentes sem contexto, problemas difíceis de cara, sem tutorial
+- **Nossa resposta:** Modo Guiado com URL Shortener como primeiro problema; tooltips em tudo; feedback em camadas
+- **Primeiro problema do MVP:** URL Shortener (tutorial), não YouTube
+- **YouTube** permanece como problema Hard na biblioteca (pedido original do usuário)
 
 ### Julgamento
 
@@ -75,6 +86,7 @@ Jogo educativo no browser para aprender System Design. O jogador resolve problem
   - [Video 1](https://www.youtube.com/watch?v=oYxTTirKY8M&t=1678s)
   - [Video 2](https://www.youtube.com/watch?v=Rrd6xkyjPB8)
   - [Video 3](https://www.youtube.com/watch?v=n28iOV_Y_tQ&t=610s)
+- **Análise do Playground (newbie-friendly)**: [nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM)
 
 ---
 
