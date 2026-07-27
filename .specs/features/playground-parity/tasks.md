@@ -205,9 +205,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-02
 
 **Done when:**
-- [ ] Inputs have max="5"; setting 5 works
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `fix(client): cap sim speed and traffic sliders at 5x`
+- [x] Inputs have max="5"; setting 5 works
+- [x] Gate: `npx nx test client`
+- [x] Commit: `fix(client): cap sim speed and traffic sliders at 5x`
 
 **Tests:** unit  
 **Gate:** quick client

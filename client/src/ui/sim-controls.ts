@@ -113,8 +113,8 @@ export function mountSimControls(
     return { field, input, valueEl };
   };
 
-  const speed = makeSlider('speed', 'Speed', 1, 10, 'sim-speed');
-  const traffic = makeSlider('traffic', 'Traffic', 1, 10, 'sim-traffic');
+  const speed = makeSlider('speed', 'Speed', 1, 5, 'sim-speed');
+  const traffic = makeSlider('traffic', 'Traffic', 1, 5, 'sim-traffic');
   const rw = makeSlider('readRatio', 'Reads vs Writes', 0, 100, 'sim-read-ratio');
   const hint = document.createElement('div');
   hint.className = 'sdq-sim-controls__hint';
