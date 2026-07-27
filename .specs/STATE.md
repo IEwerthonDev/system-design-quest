@@ -22,27 +22,32 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `blueprint-2d-canvas` **Verify PASS** (`98b81ec`) |
-| **Próximo passo** | Hard refresh localhost:4200 — UAT Playground-like canvas; depois merge → main |
-| **Feature ativa** | `blueprint-2d-canvas` (pronta) |
-| **Branch** | `feature/blueprint-2d-canvas` |
-| **Bloqueios** | Nenhum |
-| **Artefatos** | `client/src/blueprint/*`, sim controls, AD-018..020 |
+| **Fase atual** | `connection-intent` — TLC Specify (edge label pill + CONNECTION INTENT menu) |
+| **Próximo passo** | Confirmar spec `connection-intent` → Discuss gray areas se necessário → Design/Tasks/Execute |
+| **Feature ativa** | `connection-intent` (filho de playground-parity / blueprint-2d) |
+| **Branch** | `feature/playground-parity` |
+| **Bloqueios** | Nenhum (Voltar hotfix + TLC playground-parity committed) |
+| **Artefatos** | `playground-parity` Verify PASS; hotfix `11d8dc8`; próximo: `.specs/features/connection-intent/` |
 
-### Context Checkpoint (2026-07-27 — blueprint execute)
+### Context Checkpoint (2026-07-27 — post-commit, Specify connection intent)
 
 | Sinal | Status |
 | ----- | ------ |
-| Gate | `npx nx run-many -t lint test` PASS |
-| Sim | 1B pressure engine |
-| UI | 2D blueprint + popover + header |
+| Chat length | GREEN — turn 1, ordered steps |
+| Uncommitted | GREEN — Voltar + playground-parity `.specs` committed |
+| Spec drift | GREEN |
+| Gate | AMBER — full `run-many` não re-rodado nesta sessão (client tests PASS no hotfix) |
+| Task clarity | GREEN — Specify edge label preview + CONNECTION INTENT |
 
 **Veredito:** **GREEN**
 
+**Commits Execute (playground-parity):** `490ef2a`…`06c70e3` (T1–T17) + `dfd4080` `638ea33` (Verify) + `11d8dc8` (Voltar hotfix)
+
 **Prompt para nova sessão:**
 ```
-Branch feature/blueprint-2d-canvas. Blueprint 2D + sim + configs committed.
-Read .specs/STATE.md Handoff. Run Verifier if needed, then merge to main after UAT.
+Branch feature/playground-parity. playground-parity Verify PASS + Voltar hotfix committed (11d8dc8).
+Read .specs/STATE.md Handoff + .specs/features/connection-intent/spec.md (or create if missing).
+Continue TLC: confirm/discuss → Design/Tasks → Execute edge label pill + CONNECTION INTENT menu.
 Gate: npx nx run-many -t lint test
 ```
 
@@ -72,6 +77,7 @@ Gate: npx nx run-many -t lint test
 | AD-018 | active | **Canvas de sessão = DOM node cards + SVG edges** sobre grid CSS blueprint; pan/zoom no world container | Paridade System Design Playground; supersede AD-002/008/009 no path de jogo |
 | AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
+| AD-021 | active | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
 
 ---
 
@@ -86,6 +92,8 @@ Gate: npx nx run-many -t lint test
 | 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
 | — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
-| — | `blueprint-2d-canvas` | Canvas 2D Playground + sim + configs | 🔄 Execute |
+| — | `blueprint-2d-canvas` | Canvas 2D Playground + sim + configs | ✅ Merged (`4b8c87a`) |
+| — | `playground-parity` | Sim labels + judge sidebar + session history | ✅ Verify PASS (+ Voltar hotfix) |
+| — | `connection-intent` | Edge label pill + CONNECTION INTENT menu | 🔄 Specify |
 
 Detalhes em `docs/ROADMAP.md`.

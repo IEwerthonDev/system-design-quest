@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 2,
+  "next_id": 6,
   "lessons": [
     {
       "id": "L-001",
@@ -22,6 +22,78 @@
       ],
       "created": "2026-07-27T17:05:16Z",
       "last_seen": "2026-07-27T17:05:16Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::assert animated edge packets sample the bezier path not the chord pair path c q tests with packet position checks",
+      "text": "Assert animated edge packets sample the Bezier path (not the chord); pair path C/Q tests with packet position checks",
+      "signal": "ac_gap",
+      "scope": "client/blueprint",
+      "status": "candidate",
+      "features": [
+        "playground-parity"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "PP-04 AC3 / svg-edges.ts:133-134 (client/blueprint)"
+      ],
+      "created": "2026-07-27T21:21:31Z",
+      "last_seen": "2026-07-27T21:21:31Z"
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::reopen flows must assert the full re submit confirm transition on the same session id not only hydrate and submit button presence",
+      "text": "Reopen flows must assert the full re-submit confirm transition on the same session id, not only hydrate and submit button presence",
+      "signal": "ac_gap",
+      "scope": "client/sessions",
+      "status": "candidate",
+      "features": [
+        "playground-parity"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "PP-08 AC2 / sessions-dashboard.test.ts:263 (client/sessions)"
+      ],
+      "created": "2026-07-27T21:21:31Z",
+      "last_seen": "2026-07-27T21:21:31Z"
+    },
+    {
+      "id": "L-004",
+      "key": "spec_precision_gap::vague shall continue working criteria need at least one concrete post change interaction assertion not only element absence",
+      "text": "Vague SHALL continue working criteria need at least one concrete post-change interaction assertion, not only element absence",
+      "signal": "spec_precision_gap",
+      "scope": "client/ui",
+      "status": "candidate",
+      "features": [
+        "playground-parity"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "PP-03 AC2 (client/ui)"
+      ],
+      "created": "2026-07-27T21:21:31Z",
+      "last_seen": "2026-07-27T21:21:31Z"
+    },
+    {
+      "id": "L-005",
+      "key": "ac_gap::when specs require valid curved paths for near coincident endpoints assert d has c q and parsed coordinates are non nan",
+      "text": "When specs require valid curved paths for near-coincident endpoints, assert d has C/Q and parsed coordinates are non-NaN",
+      "signal": "ac_gap",
+      "scope": "client/blueprint",
+      "status": "candidate",
+      "features": [
+        "playground-parity"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "edge from≈to / svg-edges (client/blueprint)"
+      ],
+      "created": "2026-07-27T21:21:31Z",
+      "last_seen": "2026-07-27T21:21:31Z"
     }
   ]
 }
