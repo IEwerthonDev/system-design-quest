@@ -108,10 +108,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-01
 
 **Done when:**
-- [ ] Hot node has latencyMs 280; ok 35; warn 120
-- [ ] Speed change does not alter pressures or latencyMs
-- [ ] Gate: `npx nx test shared`
-- [ ] Commit: `feat(shared): educational latencyMs from simulation pressure`
+- [x] Hot node has latencyMs 280; ok 35; warn 120
+- [x] Speed change does not alter pressures or latencyMs
+- [x] Gate: `npx nx test shared`
+- [x] Commit: `feat(shared): educational latencyMs from simulation pressure`
 
 **Tests:** unit  
 **Gate:** quick shared

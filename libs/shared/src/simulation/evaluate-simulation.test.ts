@@ -75,6 +75,41 @@ describe('evaluateSimulation', () => {
     expect(evaluateSimulation(a).nodes).toEqual(evaluateSimulation(b).nodes);
   });
 
+  it('maps pressure levels to educational latencyMs', () => {
+    const hot = evaluateSimulation(urlShortenerFixture(10, 5));
+    expect(hot.nodes.db).toBe('hot');
+    expect(hot.latencyMs.db).toBe(280);
+
+    const warn = evaluateSimulation(urlShortenerFixture(10, 1));
+    expect(warn.nodes.db).toBe('warn');
+    expect(warn.latencyMs.db).toBe(120);
+
+    const idle = evaluateSimulation({
+      nodes: [
+        {
+          id: 'lonely',
+          type: 'monitoring',
+          label: 'Mon',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+        },
+      ],
+      edges: [],
+      simulation: { running: true, speed: 1, traffic: 1, readRatio: 80 },
+    });
+    expect(idle.nodes.lonely).toBe('ok');
+    expect(idle.latencyMs.lonely).toBe(35);
+  });
+
+  it('does not change latencyMs when only speed changes', () => {
+    const a = urlShortenerFixture(50, 5);
+    const b = { ...a, simulation: { ...a.simulation!, speed: 1 } };
+    const ea = evaluateSimulation(a);
+    const eb = evaluateSimulation(b);
+    expect(ea.nodes).toEqual(eb.nodes);
+    expect(ea.latencyMs).toEqual(eb.latencyMs);
+  });
+
   it('increases sql capacity with more shards', () => {
     const base = urlShortenerFixture(20, 5);
     const sharded: ArchitectureGraph = {

@@ -5,8 +5,15 @@ export type { PressureLevel };
 
 export interface SimulationEvaluation {
   nodes: Record<string, PressureLevel>;
+  latencyMs: Record<string, number>;
   hotReadPath: boolean;
 }
+
+const LATENCY_MS_BY_PRESSURE: Record<PressureLevel, number> = {
+  ok: 35,
+  warn: 120,
+  hot: 280,
+};
 
 const BASE_LOAD = 10;
 
@@ -153,6 +160,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
   }
 
   const nodes: Record<string, PressureLevel> = {};
+  const latencyMs: Record<string, number> = {};
   let anyHotOnReadPath = false;
 
   for (const node of normalized.nodes) {
@@ -161,6 +169,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
     const ratio = load / capacity;
     const level = pressureFromRatio(ratio);
     nodes[node.id] = level;
+    latencyMs[node.id] = LATENCY_MS_BY_PRESSURE[level];
 
     if (
       level === 'hot' &&
@@ -176,6 +185,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
 
   return {
     nodes,
+    latencyMs,
     hotReadPath: anyHotOnReadPath && readFrac >= 0.7,
   };
 }
