@@ -75,6 +75,13 @@ function injectPaletteStyles(root: HTMLElement): void {
       font-size: 13px;
       z-index: 10;
       padding: 12px 10px 24px;
+      transition: width 0.18s ease;
+    }
+    .sdq-palette__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
     }
     .sdq-palette__title {
       font-size: 11px;
@@ -82,7 +89,22 @@ function injectPaletteStyles(root: HTMLElement): void {
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: #94a3b8;
-      margin-bottom: 12px;
+      margin-bottom: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .sdq-palette__collapse {
+      flex-shrink: 0;
+      border: 1px solid #475569;
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font: 600 11px system-ui, sans-serif;
+    }
+    .sdq-palette__collapse:hover {
+      background: #334155;
     }
     .sdq-palette__section {
       margin-bottom: 14px;
@@ -110,6 +132,26 @@ function injectPaletteStyles(root: HTMLElement): void {
     }
     .sdq-palette__item:active {
       cursor: grabbing;
+    }
+    /* Desktop minimize: slim rail with toggle only */
+    .sdq-palette.sdq-palette--collapsed {
+      width: 52px;
+      padding: 12px 6px;
+      overflow: hidden;
+    }
+    .sdq-palette.sdq-palette--collapsed .sdq-palette__section {
+      display: none;
+    }
+    .sdq-palette.sdq-palette--collapsed .sdq-palette__title {
+      display: none;
+    }
+    .sdq-palette.sdq-palette--collapsed .sdq-palette__header {
+      margin-bottom: 0;
+      justify-content: center;
+    }
+    .sdq-palette.sdq-palette--collapsed .sdq-palette__collapse {
+      padding: 6px 8px;
+      width: 100%;
     }
   `;
   root.append(style);
@@ -186,12 +228,20 @@ export function mountPalette(
   collapseBtn.className = 'sdq-palette__collapse';
   collapseBtn.setAttribute('data-testid', 'palette-collapse');
   collapseBtn.setAttribute('aria-expanded', 'true');
-  collapseBtn.textContent = 'Recolher paleta';
+  collapseBtn.setAttribute('aria-label', 'Minimizar componentes');
+  collapseBtn.title = 'Minimizar';
+  collapseBtn.textContent = '«';
   collapseBtn.addEventListener('click', () => {
     const collapsed = !palette.classList.contains('sdq-palette--collapsed');
     palette.classList.toggle('sdq-palette--collapsed', collapsed);
-    collapseBtn.textContent = collapsed ? 'Expandir paleta' : 'Recolher paleta';
+    collapseBtn.textContent = collapsed ? '»' : '«';
+    collapseBtn.title = collapsed ? 'Expandir' : 'Minimizar';
+    collapseBtn.setAttribute(
+      'aria-label',
+      collapsed ? 'Expandir componentes' : 'Minimizar componentes',
+    );
     collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    document.documentElement.classList.toggle('sdq-palette-is-collapsed', collapsed);
   });
 
   header.append(title, collapseBtn);

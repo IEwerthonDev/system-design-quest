@@ -29,6 +29,10 @@ function injectStyles(): void {
       padding: 0 16px 0 16px;
       pointer-events: none;
       background: linear-gradient(180deg, rgba(10,25,48,0.85), transparent);
+      transition: left 0.18s ease;
+    }
+    html.sdq-palette-is-collapsed .sdq-session-header {
+      left: 52px;
     }
     .sdq-session-header > * { pointer-events: auto; }
     .sdq-session-header__leading {

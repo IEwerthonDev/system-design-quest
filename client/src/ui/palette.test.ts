@@ -54,6 +54,7 @@ describe('component palette', () => {
   afterEach(() => {
     container.remove();
     dropTarget.remove();
+    document.documentElement.classList.remove('sdq-palette-is-collapsed');
   });
 
   it('renders tier-1 components grouped by palette categories', () => {
@@ -64,6 +65,27 @@ describe('component palette', () => {
 
     const types = [...items].map((el) => el.getAttribute('data-component-type'));
     expect(types).toEqual(expect.arrayContaining([...TIER_1_TYPES]));
+  });
+
+  it('minimizes and expands the Componentes palette on desktop', () => {
+    const palette = mountPalette(container, { tier: 1 });
+    const btn = container.querySelector<HTMLButtonElement>('[data-testid="palette-collapse"]');
+    expect(btn).toBeTruthy();
+    expect(btn?.getAttribute('aria-expanded')).toBe('true');
+
+    btn!.click();
+    expect(palette.classList.contains('sdq-palette--collapsed')).toBe(true);
+    expect(btn?.textContent).toBe('»');
+    expect(btn?.getAttribute('aria-expanded')).toBe('false');
+    expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(true);
+
+    const css = document.getElementById('sdq-palette-styles')?.textContent ?? '';
+    expect(css).toMatch(/\.sdq-palette\.sdq-palette--collapsed\s*\{[^}]*width:\s*52px/);
+
+    btn!.click();
+    expect(palette.classList.contains('sdq-palette--collapsed')).toBe(false);
+    expect(btn?.textContent).toBe('«');
+    expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(false);
   });
 
   it('shows category headings Client, Edge, Traffic, Compute, Data, Messaging, Observability', () => {

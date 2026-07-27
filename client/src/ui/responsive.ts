@@ -25,6 +25,7 @@ function injectResponsiveStyles(): void {
       border-bottom: 1px solid rgba(148, 163, 184, 0.2);
     }
     .sdq-layout--tablet .sdq-palette.sdq-palette--collapsed {
+      width: 100%;
       max-height: 44px;
       overflow: hidden;
     }
@@ -38,29 +39,6 @@ function injectResponsiveStyles(): void {
       right: 8px !important;
       width: auto !important;
       max-width: none !important;
-    }
-    .sdq-palette__collapse {
-      display: none;
-      margin-left: auto;
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #e2e8f0;
-      border-radius: 6px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font: 600 11px system-ui, sans-serif;
-    }
-    .sdq-layout--tablet .sdq-palette__collapse {
-      display: inline-block;
-    }
-    .sdq-palette__header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .sdq-palette__header .sdq-palette__title {
-      margin-bottom: 0;
     }
   `;
   document.head.appendChild(style);
@@ -96,11 +74,17 @@ export function startResponsiveLayout(options?: {
     paletteCollapsed = collapsed;
     const palette = document.querySelector('.sdq-palette');
     palette?.classList.toggle(PALETTE_COLLAPSED_CLASS, collapsed);
+    document.documentElement.classList.toggle('sdq-palette-is-collapsed', collapsed);
     const btn = document.querySelector(
       '[data-testid="palette-collapse"]',
     ) as HTMLButtonElement | null;
     if (btn) {
-      btn.textContent = collapsed ? 'Expandir paleta' : 'Recolher paleta';
+      btn.textContent = collapsed ? '»' : '«';
+      btn.title = collapsed ? 'Expandir' : 'Minimizar';
+      btn.setAttribute(
+        'aria-label',
+        collapsed ? 'Expandir componentes' : 'Minimizar componentes',
+      );
       btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     }
   };
@@ -121,6 +105,7 @@ export function startResponsiveLayout(options?: {
       window.removeEventListener('resize', onResize);
       root.classList.remove(LAYOUT_TABLET_CLASS);
       setPaletteCollapsed(false);
+      document.documentElement.classList.remove('sdq-palette-is-collapsed');
     },
   };
 }

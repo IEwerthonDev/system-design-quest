@@ -10,6 +10,7 @@ import {
 describe('responsive layout', () => {
   afterEach(() => {
     document.documentElement.classList.remove(LAYOUT_TABLET_CLASS);
+    document.documentElement.classList.remove('sdq-palette-is-collapsed');
     document.body.replaceChildren();
   });
 
@@ -41,10 +42,12 @@ describe('responsive layout', () => {
     controller.setPaletteCollapsed(true);
     expect(palette.classList.contains(PALETTE_COLLAPSED_CLASS)).toBe(true);
     expect(controller.isPaletteCollapsed()).toBe(true);
-    expect(btn.textContent).toMatch(/Expandir/i);
+    expect(btn.textContent).toBe('»');
+    expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(true);
 
     controller.setPaletteCollapsed(false);
     expect(palette.classList.contains(PALETTE_COLLAPSED_CLASS)).toBe(false);
+    expect(btn.textContent).toBe('«');
     controller.dispose();
   });
 });
