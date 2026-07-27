@@ -22,30 +22,30 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Foundation mergeada em `main` — MVP Canvas sub-fase 1a |
-| **Próximo passo** | Manual UAT checkpoints 1a–1c → merge `feature/mvp-canvas` → Phase 2 `ai-judge` |
-| **Feature ativa** | `mvp-canvas` — **Verifier PASS** (validation.md) |
+| **Fase atual** | **Fase 2 `ai-judge`** — Execute T1 concluído |
+| **Próximo passo** | Execute T2 (golden graph fixtures) |
+| **Feature ativa** | `ai-judge` em `feature/ai-judge` |
 | **Bloqueios** | Nenhum |
-| **Artefatos aprovados** | `foundation/validation.md` PASS, `mvp-canvas/tasks.md`, AD-016, AD-017 |
+| **Artefatos** | spec/context/design/tasks **aprovados** 2026-07-27 |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| T1–T22 committed on `feature/mvp-canvas` | ✅ OK |
-| Verifier PASS (`validation.md`) | ✅ OK |
-| Gate `npx nx run-many -t lint test` | ✅ 155 testes |
-| Manual UAT 1a–1c | ⏳ Pendente |
+| Nova sessão, tarefa única (iniciar Fase 2) | ✅ OK |
+| Branch `feature/ai-judge` criada | ✅ OK |
+| Spec draft em `.specs/features/ai-judge/spec.md` | ✅ OK |
+| Uncommitted: apenas specs/docs | ✅ OK |
 
 **Veredito:** **GREEN**
 
-**Gate:** `npx nx run-many -t lint test`
+**Gate:** `npx nx test shared`
 
-**Prompt para nova sessão (merge / Fase 2):**
+**Prompt para nova sessão:**
 ```
-Branch feature/mvp-canvas. Verifier PASS em .specs/features/mvp-canvas/validation.md.
-Run manual UAT: npm run dev → checkpoints 1a/1b/1c.
-Then merge to main and start ai-judge feature.
+Branch feature/ai-judge. T1 committed (judge types + AD-016 verdict rules).
+Execute T2: golden graph fixtures in libs/shared/src/judge/golden-graphs.ts.
+Gate: npx nx test shared
 ```
 
 ---
