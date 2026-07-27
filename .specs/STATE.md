@@ -22,31 +22,23 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | **Fase 5 `polish`** — T1–T8 executed, awaiting Verifier |
-| **Próximo passo** | Verifier → merge `feature/polish` → `main` |
-| **Feature ativa** | `polish` (`feature/polish`) |
+| **Fase atual** | **Fase 5 `polish` verified PASS** — merging to `main` |
+| **Próximo passo** | Merge completo; produto Fases 0–5 |
+| **Feature ativa** | `polish` (verify PASS) |
 | **Bloqueios** | Nenhum |
-| **Artefatos** | `.specs/features/polish/{spec,context,design,tasks}.md` |
+| **Artefatos** | `.specs/features/polish/validation.md` PASS |
 
 ### Context Checkpoint (2026-07-27)
 
 | Sinal | Status |
 | ----- | ------ |
-| T1–T8 commits | ✅ OK |
-| Gate lint/test | pendente neste handoff |
-| e2e Playwright | ✅ tutorial pass |
-| SSH docs | ✅ AGENTS |
+| Verifier | ✅ PASS |
+| Gate lint/test + e2e | ✅ OK |
+| Merge → main | em progresso |
 
 **Veredito:** **GREEN**
 
 **Gate:** `npx nx run-many -t lint test` && `npx playwright test`
-
-**Prompt para nova sessão:**
-```
-Branch feature/polish. T1–T8 done. Run Verifier on polish, then merge to main via SSH.
-Read .specs/STATE.md Handoff + .specs/features/polish/tasks.md.
-Gate: npx nx run-many -t lint test && npx playwright test
-```
 
 ---
 
