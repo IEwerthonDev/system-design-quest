@@ -22,10 +22,11 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Specify + Design (planejamento inicial) |
-| **Próximo passo** | Confirmar spec atualizada (newbie-friendly) → criar branch `feature/foundation` |
-| **Feature ativa** | `product` (visão geral) + `foundation` (scaffold) |
+| **Fase atual** | Foundation mergeada em `main` — MVP Canvas sub-fase 1a |
+| **Próximo passo** | Executar T1–T8 de `.specs/features/mvp-canvas/tasks.md` |
+| **Feature ativa** | `mvp-canvas` (branch `feature/mvp-canvas`) |
 | **Bloqueios** | Nenhum |
+| **Artefatos aprovados** | `foundation/validation.md` PASS, `mvp-canvas/tasks.md`, AD-016, AD-017 |
 
 ---
 
@@ -48,6 +49,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | AD-013 | active | **Newbie-friendly é pilar de produto**, não polish | Feedback do [vídeo nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM): iniciantes travam no canvas; tutorial + Modo Guiado desde o MVP |
 | AD-014 | active | **URL Shortener = primeiro problema (tutorial guiado)**; YouTube = Medium na biblioteca | Progressão Easy → Medium → Hard |
 | AD-015 | active | **Três níveis de dificuldade:** `easy`, `medium`, `hard` com filtros, badges e trilha recomendada | Biblioteca curada em `docs/PROBLEM-LIBRARY.md` (27 problemas no launch) |
+| AD-016 | active | **Critério de score e veredito** — verdeto `PASS` se score ≥ 80 e zero blockers críticos; `PARTIAL` se score ≥ 70 e zero blockers; `FAIL` caso contrário. Ranking speedrun aceita apenas `PASS` ou `PARTIAL` com score ≥ 70 e zero blockers. Canvas vazio = FAIL local sem LLM | Unifica product spec, judge prompts e leaderboard; decisão tomada antes da Fase 2 |
+| AD-017 | active | **Tiers de componentes:** Tier 1 = 15 tipos (MVP 1a, canvas jogável); Tier 2 = 25 tipos (MVP 1c, meta do canvas); Tier 3 = 36 tipos (catálogo completo, Fase 3); Tier 4 = GLB assets (Fase 5 polish) | Alinha goal "≥25" com roadmap; evita bloquear 1a por catálogo completo |
 
 ---
 
@@ -56,7 +59,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas 3D
 | Fase | Feature slug | Entrega |
 | ---- | ------------ | ------- |
 | 0 | `foundation` | Monorepo, CI, canvas vazio, spec infra |
-| 1 | `mvp-canvas` | 1 problema, canvas 3D, requisitos, submit |
+| 1 | `mvp-canvas` | Canvas + tutorial (1a/1b/1c) |
 | 2 | `ai-judge` | Julgamento dual-LLM + feedback detalhado |
 | 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
 | 4 | `speedrun` | Timer, categorias, leaderboard |

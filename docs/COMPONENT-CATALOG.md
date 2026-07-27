@@ -4,6 +4,31 @@ Vocabulário visual inspirado nos diagramas de System Design do Hayk Simonyan e 
 
 ---
 
+## Tiers de Implementação (AD-017)
+
+O catálogo completo tem **36 tipos**. A entrega é incremental:
+
+| Tier | Qtd | Fase | Uso |
+| ---- | --- | ---- | --- |
+| **Tier 1** | 15 | mvp-canvas 1a | Canvas jogável; URL Shortener guiado |
+| **Tier 2** | 25 | mvp-canvas 1c | Meta do MVP canvas (product goal) |
+| **Tier 3** | 36 | problem-library | Catálogo completo no launch |
+| **Tier 4** | 36 GLB | polish | Ícones CC0 substituem primitivos |
+
+### Tier 1 — 15 tipos (MVP 1a)
+
+`client_web`, `client_mobile`, `dns`, `cdn`, `load_balancer`, `api_gateway`, `app_server`, `cache_redis`, `sql_db`, `rate_limiter`, `object_storage`, `message_queue`, `worker`, `monitoring`, `auth_service`
+
+### Tier 2 — +10 tipos (total 25, MVP 1c)
+
+`microservice`, `nosql_db`, `kafka`, `pub_sub`, `search_engine`, `waf`, `reverse_proxy`, `logging`, `notification`, `serverless`
+
+### Tier 3 — +11 tipos (total 36, problem-library)
+
+Demais tipos das seções abaixo: clients restantes, edge, compute, data, messaging, search, security, observability.
+
+---
+
 ## Categorias da Paleta
 
 | Categoria | Cor na UI | Descrição |

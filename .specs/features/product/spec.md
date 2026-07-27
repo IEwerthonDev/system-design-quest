@@ -9,7 +9,7 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 - [ ] Jogador completa um problema de system design (briefing → requisitos → arquitetura 3D → feedback) em modo Study em < 30 min
 - [ ] Feedback de IA cobre: funciona/não funciona, gaps de requisitos, melhorias com justificativa
 - [ ] Modo Speedrun com ranking por categoria (problema), aceitando apenas soluções corretas
-- [ ] Canvas 3D com ≥ 25 tipos de componentes e conexões com animação de fluxo direcional
+- [ ] Canvas 3D com ≥ 25 tipos de componentes no MVP canvas (AD-017 Tier 2) e ≥ 36 no launch (Tier 3); conexões com animação de fluxo direcional
 - [ ] ≥ 70% dos iniciantes completam o tutorial guiado (URL Shortener) sem abandonar
 - [ ] Toda métrica do briefing e todo componente da paleta têm explicação acessível em 1 clique
 
@@ -36,9 +36,11 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 | Assets 3D | CC0 packs (KayKit, Kenney) + primitivos Three.js | AD-004 do nj-mmo | y |
 | Primeiro problema do MVP | URL Shortener como **tutorial guiado**; YouTube como 2º problema Hard | Newbie-friendly (vídeo nvZch2Z7eMM) + pedido original do usuário | y |
 | Tom do feedback para iniciantes | Resumo em linguagem simples + seção técnica expandível | Evita desânimo de feedback excessivamente técnico | y |
-| Critério "correto" para ranking | Score de consenso dos juízes ≥ 70% E zero blockers críticos | Evita ranking de designs quebrados | n |
+| Critério "correto" para ranking | Score ≥ 70, zero blockers críticos, veredito PASS ou PARTIAL — ver AD-016 | Evita ranking de designs quebrados | y |
 
-**Open questions:** confirmar provedor de IA e auth antes da Fase 2 (ai-judge) e Fase 4 (speedrun).
+**Open questions:** confirmar provedor de IA e auth antes da Fase 2 (ai-judge) e Fase 4 (speedrun). Critério de score resolvido em AD-016.
+
+> **Nota de escopo:** "MVP pedagógico completo" (briefing → requisitos → canvas → feedback IA) exige **Fase 1 (`mvp-canvas`) + Fase 2 (`ai-judge`)**. A Fase 1 sozinha entrega submit com validação local.
 
 ---
 
@@ -289,29 +291,29 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 ## Requirement Traceability
 
-| Requirement ID | Story | Phase | Status |
-| -------------- | ----- | ----- | ------ |
-| PROD-01 | P1: Briefing | foundation | Pending |
-| PROD-02 | P1: Requisitos | mvp-canvas | Pending |
-| PROD-03 | P1: Canvas 3D | mvp-canvas | Pending |
-| PROD-04 | P1: Conexões animadas | mvp-canvas | Pending |
-| PROD-05 | P1: Julgamento | ai-judge | Pending |
-| PROD-06 | P1: Cobertura requisitos | ai-judge | Pending |
-| PROD-07 | P2: Modos Study/Speedrun | speedrun | Pending |
-| PROD-08 | P2: Ranking | speedrun | Pending |
-| PROD-09 | P2: Biblioteca por nível | problem-library | Pending |
-| PROD-10 | P3: Rever tutorial | polish | Pending |
-| PROD-11 | P1: Onboarding | mvp-canvas | Pending |
-| PROD-12 | P1: Modo Guiado | mvp-canvas | Pending |
-| PROD-13 | P1: Tooltips/glossário | mvp-canvas | Pending |
-| PROD-14 | P1: Métricas explicadas | mvp-canvas | Pending |
-| PROD-15 | P1: Requisitos assistidos | mvp-canvas | Pending |
-| PROD-16 | P2: Dicas no canvas | mvp-canvas | Pending |
-| PROD-17 | P2: Feedback em camadas | ai-judge | Pending |
-| PROD-18 | P2: Trilha de progressão | problem-library | Pending |
-| PROD-19 | P2: Filtros e badges de nível | problem-library | Pending |
+| Requirement ID | Story | Phase | Tasks | Status |
+| -------------- | ----- | ----- | ----- | ------ |
+| PROD-01 | P1: Briefing | mvp-canvas 1b | T9, T10, T12 | Pending |
+| PROD-02 | P1: Requisitos | mvp-canvas 1b | T11, T12, T14 | Pending |
+| PROD-03 | P1: Canvas 3D | foundation + mvp-canvas | FND-02, T1–T5, T8, T20 | Pending |
+| PROD-04 | P1: Conexões animadas | mvp-canvas 1a | T6, T7 | Pending |
+| PROD-05 | P1: Julgamento | ai-judge | (tasks TBD) | Pending |
+| PROD-06 | P1: Cobertura requisitos | ai-judge | (tasks TBD) | Pending |
+| PROD-07 | P2: Modos Study/Speedrun | speedrun | (tasks TBD) | Pending |
+| PROD-08 | P2: Ranking | speedrun | (tasks TBD) | Pending |
+| PROD-09 | P2: Biblioteca por nível | problem-library | (tasks TBD) | Pending |
+| PROD-10 | P3: Rever tutorial | polish | (tasks TBD) | Pending |
+| PROD-11 | P1: Onboarding | mvp-canvas 1c | T15 | Pending |
+| PROD-12 | P1: Modo Guiado | mvp-canvas 1c | T16 | Pending |
+| PROD-13 | P1: Tooltips/glossário | mvp-canvas 1c | T17, T19 | Pending |
+| PROD-14 | P1: Métricas explicadas | mvp-canvas 1c | T18 | Pending |
+| PROD-15 | P1: Requisitos assistidos | mvp-canvas 1b | T13 | Pending |
+| PROD-16 | P2: Dicas no canvas | mvp-canvas 1c | T22 (stretch) | Pending |
+| PROD-17 | P2: Feedback em camadas | ai-judge | (tasks TBD) | Pending |
+| PROD-18 | P2: Trilha de progressão | problem-library | (tasks TBD) | Pending |
+| PROD-19 | P2: Filtros e badges de nível | problem-library | (tasks TBD) | Pending |
 
-**Coverage:** 19 total, 0 mapped to tasks, 19 unmapped ⚠️
+**Coverage:** 19 total, 10 mapped to mvp-canvas tasks, 9 awaiting feature tasks
 
 ---
 

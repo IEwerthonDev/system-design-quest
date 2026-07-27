@@ -2,7 +2,7 @@
 
 **Spec:** `.specs/features/product/spec.md`  
 **Context:** `.specs/features/product/context.md`  
-**Status:** Draft — pending user approval
+**Status:** Confirmed — 2026-07-27 (pré-coding review)
 
 ---
 
@@ -220,7 +220,7 @@ sequenceDiagram
 - **Interfaces:**
   - `submitScore(entry: LeaderboardEntry): Promise<void>`
   - `getLeaderboard(problemId: string, limit: number): LeaderboardEntry[]`
-- **Validation:** Só aceita se `verdict ∈ {PASS, PARTIAL}` e `score ≥ 70`
+- **Validation:** Só aceita se `verdict ∈ {PASS, PARTIAL}` e `score ≥ 70` e zero blockers críticos — ver **AD-016** em `.specs/STATE.md`
 
 ### Shared — Problem Definitions (`libs/shared/src/problems/`)
 

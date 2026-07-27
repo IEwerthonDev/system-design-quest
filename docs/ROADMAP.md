@@ -25,39 +25,47 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 
 ## Fase 1 — MVP Canvas (`feature/mvp-canvas`)
 
-**Objetivo:** Loop jogável com tutorial guiado (URL Shortener) + experiência newbie-friendly.
+**Objetivo:** Loop jogável com tutorial guiado (URL Shortener) + experiência newbie-friendly.  
+**Tasks:** `.specs/features/mvp-canvas/tasks.md` (22 tasks em 3 sub-fases).
+
+> **MVP pedagógico completo** (com feedback IA) = Fase 1 + Fase 2. Fase 1 sozinha entrega submit com validação local.
+
+### Sub-fase 1a — Canvas jogável (T1–T8)
+
+| Entrega | Req IDs |
+| ------- | ------- |
+| Paleta com **15 componentes** 3D primitivos (AD-017 Tier 1) | PROD-03 |
+| Drag & drop + seleção + delete + label/nota | PROD-03 |
+| Conexões com setas e animação de fluxo | PROD-04 |
+| Serialização `ArchitectureGraph` JSON | PROD-03 |
+| Botão Submeter → validação local (não-vazio) | PROD-03, AD-016 |
+
+**Marco testável:** montar grafo 3D e submeter (sem briefing/requisitos ainda).
+
+### Sub-fase 1b — Fluxo de fases (T9–T14)
+
+| Entrega | Req IDs |
+| ------- | ------- |
+| Problema URL Shortener com briefing | PROD-01 |
+| UI de requisitos (FR/NFR editáveis) | PROD-02 |
+| Requisitos assistidos (sugestões clicáveis) | PROD-15 |
+| Navegação briefing → requisitos → canvas | PROD-01, PROD-02 |
+
+**Marco testável:** fluxo URL Shortener end-to-end até submit local.
+
+### Sub-fase 1c — Newbie-friendly (T15–T22)
 
 | Entrega | Req IDs |
 | ------- | ------- |
 | Onboarding 3 telas (iniciante vs experiente) | PROD-11 |
-| Problema URL Shortener com briefing + tutorial guiado | PROD-12, PROD-01 |
 | Modo Guiado com highlights passo a passo | PROD-12 |
 | Tooltips em componentes + glossário de métricas (`?`) | PROD-13, PROD-14 |
-| Requisitos assistidos (sugestões clicáveis) | PROD-15 |
-| UI de briefing + navegação de fases | PROD-01 |
-| UI de requisitos (FR/NFR editáveis) | PROD-02 |
-| Paleta com ≥ 15 componentes 3D (primitivos) | PROD-03 |
-| Drag & drop + seleção + delete | PROD-03 |
-| Conexões com setas e animação de fluxo | PROD-04 |
-| Painel de dicas contextuais (Modo Study) | PROD-16 |
-| Serialização `ArchitectureGraph` JSON | PROD-03 |
-| Botão Submeter → validação local (não-vazio) | PROD-03 |
+| Glossário (atalho G) | PROD-13 |
+| Expandir paleta para **25 componentes** (AD-017 Tier 2) | PROD-03 |
 | `component-lab.html` para iterar ícones | AD-009 |
+| Painel de dicas contextuais (stretch) | PROD-16 |
 
-**Critério de done:** Iniciante completa onboarding → tutorial URL Shortener guiado → submit com validação local.
-
----
-
-## Fase 1b — Primeiros Medium (`feature/mvp-medium-problems`)
-
-**Objetivo:** Adicionar 2–3 problemas Medium após tutorial (YouTube, Chat).
-
-| Entrega | Req IDs |
-| ------- | ------- |
-| YouTube Upload/Stream/Social (Medium) | PROD-01 |
-| Chat System (Medium) | PROD-09 |
-
-**Critério de done:** Jogador progride Easy → Medium com nível visível na biblioteca.
+**Critério de done (Fase 1):** Iniciante completa onboarding → tutorial URL Shortener guiado → submit com validação local; paleta com 25 tipos.
 
 ---
 
@@ -118,7 +126,7 @@ Chat · News Feed · Search Autocomplete · Instagram · Google Drive · Yelp Ne
 | Cronômetro visível no speedrun | PROD-07 |
 | `POST /api/leaderboard` + `GET /api/leaderboard/:problemId` | PROD-08 |
 | Tela de ranking por categoria | PROD-08 |
-| Rejeição de FAIL no ranking | PROD-07, PROD-08 |
+| Rejeição de FAIL no ranking | PROD-07, PROD-08, AD-016 |
 | Nickname anônimo ou GitHub OAuth | Assumption |
 
 **Critério de done:** Speedrun com design correto aparece no ranking; design incorreto não.
@@ -131,7 +139,7 @@ Chat · News Feed · Search Autocomplete · Instagram · Google Drive · Yelp Ne
 
 | Entrega | Req IDs |
 | ------- | ------- |
-| Substituir primitivos por GLB icons (CC0) | AD-009 |
+| Substituir primitivos por GLB icons (CC0) — catálogo completo 36 tipos | AD-009, AD-017 Tier 4 |
 | Opção "Refazer tutorial" em configurações | PROD-10 |
 | Sons sutis (place, connect, submit) | — |
 | Responsive layout (tablet) | — |
@@ -158,14 +166,15 @@ Cada feature segue: **Specify → Design → Tasks → Execute → Verify** (TLC
 
 ## Estimativa de Esforço (ordem de grandeza)
 
-| Fase | Tasks estimadas | Complexidade |
-| ---- | --------------- | ------------ |
-| 0 Foundation | ~8 | Medium |
-| 1 MVP Canvas | ~20 | Large |
-| 1b Medium problems | ~4 | Medium |
-| 2 AI Judge | ~10 | Large |
-| 3 Problem Library | ~12 | Large |
-| 4 Speedrun | ~6 | Medium |
-| 5 Polish | ~8 | Medium |
+| Fase | Tasks estimadas | Sessões (~7 tasks) | Complexidade |
+| ---- | --------------- | ------------------ | ------------ |
+| 0 Foundation | 8 | 1 | Medium |
+| 1a Canvas jogável | 8 | 1–2 | Medium |
+| 1b Fluxo de fases | 6 | 1 | Medium |
+| 1c Newbie-friendly | 8 | 1–2 | Large |
+| 2 AI Judge | ~10 | 2 | Large |
+| 3 Problem Library | ~16 | 2–3 | Large |
+| 4 Speedrun | ~6 | 1 | Medium |
+| 5 Polish | ~8 | 1–2 | Medium |
 
-**Total:** ~68 tasks atômicas.
+**Total:** ~70 tasks atômicas · **~10–12 sessões** para produto completo · **~5–6 sessões** para loop pedagógico (foundation + mvp-canvas + ai-judge).

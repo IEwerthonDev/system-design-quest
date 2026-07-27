@@ -10,8 +10,8 @@ Resolva problemas reais organizados em **3 níveis** — 🟢 Fácil, 🟡 Médi
 
 | Fase | Branch | Status |
 | ---- | ------ | ------ |
-| 0 Foundation | `feature/foundation` | ✅ Scaffold completo |
-| 1 MVP Canvas | `feature/mvp-canvas` | 📋 Em desenvolvimento |
+| 0 Foundation | `main` | ✅ Merge completo |
+| 1 MVP Canvas | `feature/mvp-canvas` | 📋 Sub-fase 1a em andamento (22 tasks, 3 sub-fases) |
 | 2 AI Judge | `feature/ai-judge` | 📋 Planejado |
 | 3 Problem Library | `feature/problem-library` | 📋 Planejado |
 | 4 Speedrun | `feature/speedrun` | 📋 Planejado |

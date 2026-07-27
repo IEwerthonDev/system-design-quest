@@ -17,9 +17,10 @@ export type ComponentType =
 
 export type ComponentCategory =
   | 'client'
-  | 'network'
+  | 'edge'
+  | 'traffic'
   | 'compute'
-  | 'storage'
+  | 'data'
   | 'messaging'
   | 'observability'
   | 'security';
@@ -29,4 +30,5 @@ export interface ComponentTypeMeta {
   label: string;
   category: ComponentCategory;
   description: string;
+  whenToUse: string;
 }

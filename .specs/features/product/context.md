@@ -2,7 +2,7 @@
 
 **Gathered:** 2026-07-27  
 **Spec:** `.specs/features/product/spec.md`  
-**Status:** Ready for design
+**Status:** Design confirmed — 2026-07-27
 
 ---
 
