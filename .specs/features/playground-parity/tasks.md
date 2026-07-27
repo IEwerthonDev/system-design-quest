@@ -260,9 +260,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-04
 
 **Done when:**
-- [ ] Test fails if path is straight-only; passes with Bezier
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `test(client): assert blueprint edges use bezier curves`
+- [x] Test fails if path is straight-only; passes with Bezier
+- [x] Gate: `npx nx test client`
+- [x] Commit: `test(client): assert blueprint edges use bezier curves`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -278,9 +278,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-06, PP-07
 
 **Done when:**
-- [ ] PUT/GET paths match server; errors surfaced
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): design sessions API client`
+- [x] PUT/GET paths match server; errors surfaced
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): design sessions API client`
 
 **Tests:** unit  
 **Gate:** quick client
