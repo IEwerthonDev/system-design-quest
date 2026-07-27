@@ -294,7 +294,7 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 - [x] Ordem sugerida: Client → LB → App → Cache → DB
 - [x] Hints não bloqueiam; ignorar hint permitido
 - [x] Conclusão desbloqueia biblioteca (placeholder até Fase 3)
-- [ ] Commit: `feat(client): guided mode tutorial`
+- [x] Commit: `feat(client): guided mode tutorial`
 
 ---
 
@@ -307,7 +307,7 @@ T15 → T16 → T17 → T18 → T19 → T20 → T21 → T22
 
 **Req:** PROD-13
 
-- [ ] Hover em componente: nome, descrição ≤2 frases, "quando usar"
+- [x] Hover em componente: nome, descrição ≤2 frases, "quando usar"
 - [ ] Commit: `feat(client): component palette tooltips`
 
 ---

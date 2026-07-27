@@ -4,6 +4,7 @@ import {
   type ComponentCategory,
   type ComponentType,
 } from '@sdq/shared';
+import { bindComponentTooltip } from './glossary';
 
 export const PALETTE_DROP_EVENT = 'palette:drop';
 export const PALETTE_MIME_TYPE = 'application/x-sdq-component';
@@ -213,6 +214,8 @@ export function mountPalette(
         event.dataTransfer.setData(PALETTE_MIME_TYPE, meta.type);
         event.dataTransfer.effectAllowed = 'copy';
       });
+
+      bindComponentTooltip(item, meta.type);
 
       list.append(item);
     }
