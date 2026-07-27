@@ -223,10 +223,10 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-01
 
 **Done when:**
-- [ ] hot→BOTTLENECK red; warn→QUEUEING yellow; ok→no load label
-- [ ] ms bar green/yellow/red; `__GAME_STATE__.latencyMs` present when running
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `feat(client): bottleneck queueing labels and ms bar`
+- [x] hot→BOTTLENECK red; warn→QUEUEING yellow; ok→no load label
+- [x] ms bar green/yellow/red; `__GAME_STATE__.latencyMs` present when running
+- [x] Gate: `npx nx test client`
+- [x] Commit: `feat(client): bottleneck queueing labels and ms bar`
 
 **Tests:** unit  
 **Gate:** quick client
@@ -242,9 +242,9 @@ Phase 5 (Dashboard):  T16 → T17
 **Requirement:** PP-03
 
 **Done when:**
-- [ ] Canvas phase: no `[data-testid="hints-panel"]`
-- [ ] Gate: `npx nx test client`
-- [ ] Commit: `fix(client): remove hints panel from session canvas`
+- [x] Canvas phase: no `[data-testid="hints-panel"]`
+- [x] Gate: `npx nx test client`
+- [x] Commit: `fix(client): remove hints panel from session canvas`
 
 **Tests:** unit  
 **Gate:** quick client

@@ -11,7 +11,6 @@ import type { GameMode, GamePhase } from '../test-hook';
 import { setGuidedStep } from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { bindGlossaryShortcut, openGlossaryPanel } from '../ui/glossary';
-import { mountHintsPanel } from '../ui/hints-panel';
 import { mountPalette } from '../ui/palette';
 import { mountRequirementsPanel } from '../ui/requirements-panel';
 import { mountSuggestionCards } from '../ui/requirement-suggestions';
@@ -211,13 +210,6 @@ export function mountPhaseNavigation(
   const glossaryPanel = openGlossaryPanel(problemId, shell);
   const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
 
-  const hintsPanel = mountHintsPanel(shell, {
-    problemId,
-    guidedMode,
-    getGraph,
-  });
-  hintsPanel.root.hidden = true;
-
   const timerPanel = mountTimerPanel(shell, {
     getMode: () => getSession()?.mode ?? mode,
     now,
@@ -275,14 +267,9 @@ export function mountPhaseNavigation(
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
     backButton.classList.toggle('sdq-phase-back--with-palette', visibility.palette);
-    hintsPanel.root.hidden = phase !== 'canvas' || mode !== 'study';
     sessionHeader.setVisible(phase === 'canvas');
     if (phase !== 'canvas') {
       problemDrawer.close();
-    }
-
-    if (phase === 'canvas' && mode === 'study') {
-      hintsPanel.sync();
     }
 
     if (phase === 'requirements') {

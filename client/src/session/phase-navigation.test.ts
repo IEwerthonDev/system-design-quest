@@ -205,6 +205,16 @@ describe('phase navigation', () => {
           .querySelector('[data-testid="phase-back"]')
           ?.classList.contains('sdq-phase-back--with-palette'),
       ).toBe(true);
+      expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
+    });
+
+    it('does not mount hints-panel on study canvas phase', () => {
+      mountPhaseNavigation(container, { mode: 'study' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      expect(getSession()?.phase).toBe('canvas');
+      expect(document.querySelector('[data-testid="hints-panel"]')).toBeNull();
+      expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
     });
 
     it('restores requirements when going back from canvas', () => {
