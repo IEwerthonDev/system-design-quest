@@ -27,7 +27,10 @@ export default defineConfig(() => ({
     outDir: '../dist/client',
     emptyOutDir: true,
     rollupOptions: {
-      input: path.join(root, 'index.html'),
+      input: {
+        main: path.join(root, 'index.html'),
+        componentLab: path.join(root, 'component-lab.html'),
+      },
     },
   },
   test: {
