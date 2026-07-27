@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouco interativo, e feedback de qualidade é raro. Ferramentas como o [System Design Playground](https://system-design-playground.replit.app/) mostram que desenhar arquiteturas com feedback de IA funciona — mas falta a dimensão **gamificada** (speedrun, ranking), o **levantamento estruturado de requisitos**, e uma experiência **3D imersiva** com fluxo de dados visual.
+Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouco interativo, e feedback de qualidade é raro. Ferramentas como o [System Design Playground](https://system-design-playground.replit.app/) mostram que desenhar arquiteturas com feedback de IA funciona — mas iniciantes **travam** ao chegar no canvas sem tutorial ([análise do site](https://www.youtube.com/watch?v=nvZch2Z7eMM)). Falta a dimensão **gamificada** (speedrun, ranking), o **levantamento estruturado de requisitos**, experiência **3D imersiva**, e sobretudo um design **newbie-friendly** com guia passo a passo.
 
 ## Goals
 
@@ -10,6 +10,8 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 - [ ] Feedback de IA cobre: funciona/não funciona, gaps de requisitos, melhorias com justificativa
 - [ ] Modo Speedrun com ranking por categoria (problema), aceitando apenas soluções corretas
 - [ ] Canvas 3D com ≥ 25 tipos de componentes e conexões com animação de fluxo direcional
+- [ ] ≥ 70% dos iniciantes completam o tutorial guiado (URL Shortener) sem abandonar
+- [ ] Toda métrica do briefing e todo componente da paleta têm explicação acessível em 1 clique
 
 ## Out of Scope
 
@@ -32,7 +34,8 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 | Autenticação para ranking | GitHub OAuth (opcional) + nickname anônimo | Ranking precisa de identidade mínima | n |
 | Persistência de sessões | SQLite local (dev) / Postgres (prod) | Simples para MVP; nj-mmo usa SQLite | n |
 | Assets 3D | CC0 packs (KayKit, Kenney) + primitivos Three.js | AD-004 do nj-mmo | y |
-| Primeiro problema do MVP | YouTube Upload + Streaming + Likes/Comments | Pedido explícito do usuário | y |
+| Primeiro problema do MVP | URL Shortener como **tutorial guiado**; YouTube como 2º problema Hard | Newbie-friendly (vídeo nvZch2Z7eMM) + pedido original do usuário | y |
+| Tom do feedback para iniciantes | Resumo em linguagem simples + seção técnica expandível | Evita desânimo de feedback excessivamente técnico | y |
 | Critério "correto" para ranking | Score de consenso dos juízes ≥ 70% E zero blockers críticos | Evita ranking de designs quebrados | n |
 
 **Open questions:** confirmar provedor de IA e auth antes da Fase 2 (ai-judge) e Fase 4 (speedrun).
@@ -40,6 +43,69 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 ---
 
 ## User Stories
+
+### P1: Onboarding de Primeira Visita ⭐ MVP
+
+**User Story**: Como iniciante, quero entender o que é o jogo e como funciona antes de começar, para não me sentir perdido.
+
+**Why P1**: Crítica central do [vídeo de análise](https://www.youtube.com/watch?v=nvZch2Z7eMM) — usuários travam sem orientação inicial.
+
+**Acceptance Criteria**:
+
+1. WHEN o jogador acessa o jogo pela primeira vez THEN o sistema SHALL exibir onboarding de 3 telas (o que é SD, fluxo do jogo, escolha iniciante vs experiente)
+2. WHEN o jogador escolhe "Sou iniciante" THEN o sistema SHALL iniciar Modo Guiado no problema URL Shortener
+3. WHEN o jogador escolhe "Já sei o básico" THEN o sistema SHALL ir à home com biblioteca completa
+4. WHEN o jogador clica "Pular" no onboarding THEN o sistema SHALL registrar preferência e não exibir novamente (com opção em configurações para rever)
+
+**Independent Test**: Primeira visita → onboarding → escolher iniciante → cair no tutorial URL Shortener.
+
+---
+
+### P1: Modo Guiado (Tutorial URL Shortener) ⭐ MVP
+
+**User Story**: Como iniciante, quero um tutorial passo a passo que me mostra o que fazer em cada fase, para aprender fazendo sem travar.
+
+**Why P1**: Lucas Montano reconhece que "muita gente vai chegar e vai travar" sem tutorial ([fonte](https://www.youtube.com/watch?v=16IYx0CekVc)).
+
+**Acceptance Criteria**:
+
+1. WHEN o Modo Guiado está ativo THEN o sistema SHALL exibir highlights sequenciais indicando a próxima ação (briefing → requisitos → componente → conexão → submit)
+2. WHEN o jogador está no canvas guiado THEN o sistema SHALL sugerir ordem mínima: Client → Load Balancer → App Server → Cache → Database
+3. WHEN o jogador precisa conectar componentes THEN o sistema SHALL exibir tooltip com direção sugerida (ex: "Conecte Client → Load Balancer via HTTPS")
+4. WHEN o jogador completa o tutorial THEN o sistema SHALL exibir mensagem de conclusão e desbloquear biblioteca completa em Modo Livre
+5. WHEN o jogador ignora um hint THEN o sistema SHALL permitir continuar sem bloquear (hints não são gates)
+
+**Independent Test**: Completar URL Shortener guiado do zero ao submit em < 15 min.
+
+---
+
+### P1: Tooltips e Glossário ⭐ MVP
+
+**User Story**: Como iniciante, quero saber o que cada componente e métrica significa sem sair do jogo.
+
+**Acceptance Criteria**:
+
+1. WHEN o jogador passa o mouse sobre um componente na paleta THEN o sistema SHALL exibir tooltip com: nome, descrição (≤ 2 frases), "quando usar"
+2. WHEN o jogador clica no ícone `?` em uma métrica do briefing THEN o sistema SHALL exibir explicação em linguagem simples (ex: "RPS = requisições por segundo — quantas vezes o sistema é chamado a cada segundo")
+3. WHEN o jogador pressiona atalho `G` THEN o sistema SHALL abrir painel Glossário com termos do problema atual
+
+**Independent Test**: Hover em Load Balancer → ver tooltip; clicar `?` em RPS → ver explicação.
+
+---
+
+### P1: Requisitos Assistidos ⭐ MVP
+
+**User Story**: Como iniciante, quero exemplos de bons requisitos para aprender o formato antes de escrever os meus.
+
+**Acceptance Criteria**:
+
+1. WHEN o jogador está na fase de requisitos THEN o sistema SHALL exibir cards de sugestão clicáveis (≥ 3 FR + ≥ 2 NFR por problema)
+2. WHEN o jogador clica em uma sugestão THEN o sistema SHALL adicionar o texto à lista correspondente (editável após adicionar)
+3. WHEN o Modo Guiado está ativo THEN o sistema SHALL pré-selecionar sugestões mínimas e pedir confirmação/edição
+
+**Independent Test**: Clicar 3 sugestões FR → lista populada → editar uma → texto atualizado.
+
+---
 
 ### P1: Briefing do Problema ⭐ MVP
 
@@ -112,6 +178,42 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 ---
 
+### P2: Dicas Contextuais no Canvas
+
+**User Story**: Como estudante em Modo Study, quero dicas que me orientem sem entregar a resposta pronta.
+
+**Acceptance Criteria**:
+
+1. WHEN o jogador está no canvas em Modo Study THEN o sistema SHALL exibir painel "Dicas" com 2–3 sugestões baseadas no problema e no estado atual do grafo
+2. WHEN o jogador adiciona um componente que resolve uma dica THEN o sistema SHALL marcar a dica como resolvida
+3. WHEN o Modo Guiado está ativo THEN as dicas SHALL ser mais prescritivas; em Modo Livre, mais genéricas
+
+---
+
+### P2: Feedback em Camadas
+
+**User Story**: Como iniciante, quero entender o veredito em linguagem simples antes de mergulhar nos detalhes técnicos.
+
+**Acceptance Criteria**:
+
+1. WHEN o resultado é exibido THEN o sistema SHALL mostrar primeiro: resumo em 2–3 frases + "próximo passo sugerido"
+2. WHEN o jogador expande "Detalhes técnicos" THEN o sistema SHALL exibir seções completas (forças, problemas, melhorias, debate dos juízes)
+3. WHEN o jogador ativa toggle "Modo iniciante" no feedback THEN o sistema SHALL usar analogias e evitar jargão não explicado
+
+---
+
+### P2: Trilha de Progressão
+
+**User Story**: Como iniciante, quero saber por qual problema começar e qual vem depois.
+
+**Acceptance Criteria**:
+
+1. WHEN o jogador acessa a biblioteca THEN o sistema SHALL exibir ordem recomendada com badge "Iniciante" nos problemas Easy/Medium iniciais
+2. WHEN um problema Hard é selecionado sem ter completado URL Shortener THEN o sistema SHALL exibir aviso amigável (não bloqueante)
+3. WHEN o jogador completa um problema com PARTIAL+ em Study THEN o sistema SHALL marcar como concluído na trilha
+
+---
+
 ### P2: Modo Study vs Speedrun
 
 **User Story**: Como jogador competitivo, quero um modo com timer para speedrun; como estudante, quero modo sem pressão.
@@ -150,13 +252,13 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 
 ---
 
-### P3: Tutorial Interativo
+### P3: Tutorial Interativo (rever onboarding)
 
-**User Story**: Como iniciante, quero um tutorial que ensina os componentes e o fluxo do jogo.
+**User Story**: Como jogador que pulou o onboarding, quero poder refazer o tutorial a qualquer momento.
 
 **Acceptance Criteria**:
 
-1. WHEN primeiro acesso THEN o sistema SHALL oferecer tutorial opcional de 5 passos
+1. WHEN o jogador acessa Configurações THEN o sistema SHALL oferecer "Refazer tutorial" e "Rever onboarding"
 
 ---
 
@@ -182,9 +284,17 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 | PROD-07 | P2: Modos Study/Speedrun | speedrun | Pending |
 | PROD-08 | P2: Ranking | speedrun | Pending |
 | PROD-09 | P2: Biblioteca | problem-library | Pending |
-| PROD-10 | P3: Tutorial | polish | Pending |
+| PROD-10 | P3: Rever tutorial | polish | Pending |
+| PROD-11 | P1: Onboarding | mvp-canvas | Pending |
+| PROD-12 | P1: Modo Guiado | mvp-canvas | Pending |
+| PROD-13 | P1: Tooltips/glossário | mvp-canvas | Pending |
+| PROD-14 | P1: Métricas explicadas | mvp-canvas | Pending |
+| PROD-15 | P1: Requisitos assistidos | mvp-canvas | Pending |
+| PROD-16 | P2: Dicas no canvas | mvp-canvas | Pending |
+| PROD-17 | P2: Feedback em camadas | ai-judge | Pending |
+| PROD-18 | P2: Trilha de progressão | problem-library | Pending |
 
-**Coverage:** 10 total, 0 mapped to tasks, 10 unmapped ⚠️
+**Coverage:** 18 total, 0 mapped to tasks, 18 unmapped ⚠️
 
 ---
 
@@ -194,3 +304,4 @@ Aprender System Design para entrevistas técnicas é difícil: é abstrato, pouc
 - [ ] Feedback de IA menciona pelo menos 1 gap de requisito em designs incompletos (teste com golden submissions)
 - [ ] Canvas mantém 60 FPS com ≤ 30 componentes e ≤ 50 conexões em hardware médio
 - [ ] Speedrun ranking rejeita 100% de submissões FAIL em testes automatizados
+- [ ] ≥ 70% dos novos usuários completam tutorial URL Shortener guiado sem abandonar

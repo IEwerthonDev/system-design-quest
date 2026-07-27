@@ -1,8 +1,20 @@
 # System Design Quest
 
-Jogo educativo no browser para aprender **System Design** desenhando arquiteturas 3D. Resolva problemas reais (YouTube, Netflix, Uber, Ticketmaster…), levante requisitos, monte sua arquitetura com ícones 3D conectados por linhas animadas, e receba feedback detalhado de IA.
+Jogo educativo no browser para aprender **System Design** desenhando arquiteturas 3D — **newbie-friendly** com tutorial guiado, tooltips e feedback em linguagem simples.
+
+Resolva problemas reais (YouTube, Netflix, Uber, Ticketmaster…), levante requisitos, monte sua arquitetura com ícones 3D conectados por linhas animadas, e receba feedback detalhado de IA.
 
 **Inspirado por:** [System Design Playground](https://system-design-playground.replit.app/) · padrões 3D do [nj-mmo](https://github.com/IEwerthonDev/nj-mmo) · diagramas Hayk Simonyan
+
+## Para Iniciantes
+
+- **Onboarding** na primeira visita — escolha "Sou iniciante" para o tutorial guiado
+- **URL Shortener** como primeiro problema (Easy) com highlights passo a passo
+- **Tooltips** em cada componente e métrica — passe o mouse e aprenda
+- **Sugestões de requisitos** clicáveis — aprenda o formato antes de escrever os seus
+- **Feedback em camadas** — resumo simples primeiro, detalhes técnicos depois
+
+Detalhes em [docs/NEWBIE-FRIENDLY.md](docs/NEWBIE-FRIENDLY.md).
 
 ## Modos de Jogo
 
@@ -52,6 +64,7 @@ npm test           # todos os testes
 
 ## Documentação
 
+- [Newbie-Friendly](docs/NEWBIE-FRIENDLY.md) — princípios para iniciantes
 - [Roadmap](docs/ROADMAP.md) — fases e entregas
 - [Catálogo de Componentes 3D](docs/COMPONENT-CATALOG.md) — ícones e categorias
 - [Product Spec](.specs/features/product/spec.md) — requisitos completos

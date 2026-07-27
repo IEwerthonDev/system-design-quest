@@ -157,15 +157,42 @@ sequenceDiagram
 - **Implementation:** `TubeGeometry` + custom `ShaderMaterial` com `uTime` uniform; fragment shader desenha banda luminosa que se desloca ao longo do UV na direção da seta
 - **Dependencies:** Three.js
 
+### Client — Guided Mode (`client/src/guided/`)
+
+- **Purpose:** Tutorial passo a passo com highlights para iniciantes (URL Shortener)
+- **Location:** `client/src/guided/`
+- **Interfaces:**
+  - `startGuidedSession(problemId: string): GuidedState`
+  - `getCurrentHint(state: GuidedState): GuidedHint | null`
+  - `advanceHint(state: GuidedState, action: PlayerAction): void`
+  - `isGuidedComplete(state: GuidedState): boolean`
+- **Dependencies:** `@sdq/shared`, session store, UI overlay
+- **Behavior:** Overlay com spotlight no elemento alvo; hints não bloqueiam ações do jogador
+
+### Client — Glossary & Tooltips (`client/src/ui/glossary.ts`)
+
+- **Purpose:** Explicações acessíveis de componentes, métricas e termos
+- **Interfaces:**
+  - `getComponentTooltip(type: ComponentType): TooltipContent`
+  - `getMetricExplanation(metric: string): string`
+  - `openGlossaryPanel(problemId: string): HTMLElement`
+
+### Client — Requirement Suggestions (`client/src/ui/requirement-suggestions.ts`)
+
+- **Purpose:** Cards clicáveis de FR/NFR sugeridos por problema
+- **Interfaces:**
+  - `getSuggestions(problemId: string): { functional: string[]; nonFunctional: string[] }`
+  - `mountSuggestionCards(container: HTMLElement, onAdd: (text, type) => void): void`
+
 ### Client — UI Panels (`client/src/ui/`)
 
-- **Purpose:** Painéis DOM para briefing, requisitos, paleta, propriedades, resultado
+- **Purpose:** Painéis DOM para briefing, requisitos, paleta, propriedades, resultado (com camadas iniciante/técnico)
 - **Location:** `client/src/ui/`
 - **Interfaces:**
   - `mountBriefingPanel(problem: Problem): HTMLElement`
   - `mountRequirementsPanel(state: RequirementsState): HTMLElement`
   - `mountPalette(catalog: ComponentCatalog): HTMLElement`
-  - `mountResultPanel(result: JudgeResult): HTMLElement`
+  - `mountResultPanel(result: JudgeResult, options: { beginnerMode: boolean }): HTMLElement`
 - **Dependencies:** `@sdq/shared`, vanilla DOM
 
 ### Client — Session Store (`client/src/session/`)

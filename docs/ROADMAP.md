@@ -25,21 +25,39 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 
 ## Fase 1 — MVP Canvas (`feature/mvp-canvas`)
 
-**Objetivo:** Loop jogável com 1 problema (YouTube), sem IA ainda.
+**Objetivo:** Loop jogável com tutorial guiado (URL Shortener) + experiência newbie-friendly.
 
 | Entrega | Req IDs |
 | ------- | ------- |
-| Problema YouTube com briefing completo (RPS, DAU, storage) | PROD-01 |
+| Onboarding 3 telas (iniciante vs experiente) | PROD-11 |
+| Problema URL Shortener com briefing + tutorial guiado | PROD-12, PROD-01 |
+| Modo Guiado com highlights passo a passo | PROD-12 |
+| Tooltips em componentes + glossário de métricas (`?`) | PROD-13, PROD-14 |
+| Requisitos assistidos (sugestões clicáveis) | PROD-15 |
 | UI de briefing + navegação de fases | PROD-01 |
 | UI de requisitos (FR/NFR editáveis) | PROD-02 |
 | Paleta com ≥ 15 componentes 3D (primitivos) | PROD-03 |
 | Drag & drop + seleção + delete | PROD-03 |
 | Conexões com setas e animação de fluxo | PROD-04 |
+| Painel de dicas contextuais (Modo Study) | PROD-16 |
 | Serialização `ArchitectureGraph` JSON | PROD-03 |
 | Botão Submeter → validação local (não-vazio) | PROD-03 |
 | `component-lab.html` para iterar ícones | AD-009 |
 
-**Critério de done:** Jogador completa briefing → requisitos → canvas → submit com validação local.
+**Critério de done:** Iniciante completa onboarding → tutorial URL Shortener guiado → submit com validação local.
+
+---
+
+## Fase 1b — YouTube Hard (`feature/mvp-youtube`)
+
+**Objetivo:** Segundo problema (pedido original do usuário) após tutorial.
+
+| Entrega | Req IDs |
+| ------- | ------- |
+| Problema YouTube Upload/Stream/Likes com briefing completo | PROD-01 |
+| Briefing com links contextuais para conceitos (CDN, transcoding) | PROD-14 |
+
+**Critério de done:** Jogador que completou tutorial consegue iniciar problema YouTube em Modo Livre.
 
 ---
 
@@ -52,6 +70,7 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 | `POST /api/judge` endpoint | PROD-05 |
 | Dual-judge orchestration (rigor + pragmatismo → consenso) | PROD-05 |
 | UI de resultado com seções: veredito, forças, problemas, melhorias | PROD-05 |
+| **Feedback em camadas** (resumo simples + detalhes expandíveis) | PROD-17 |
 | Cobertura de requisitos declarados pelo jogador | PROD-06 |
 | Loading state com progresso do debate | PROD-05 |
 | Golden test submissions (3 designs: bom, médio, ruim) | PROD-05 |
@@ -79,6 +98,7 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 | Entrega | Req IDs |
 | ------- | ------- |
 | Tela de biblioteca com filtros | PROD-09 |
+| **Trilha de progressão** com ordem recomendada e badges | PROD-18 |
 | Cada problema com briefing + rubrica oculta para juiz | PROD-09 |
 | Home screen com seleção de problema | PROD-01 |
 
@@ -110,7 +130,7 @@ Fases ordenadas para desenvolvimento spec-driven. Cada fase = uma branch `featur
 | Entrega | Req IDs |
 | ------- | ------- |
 | Substituir primitivos por GLB icons (CC0) | AD-009 |
-| Tutorial interativo 5 passos | PROD-10 |
+| Opção "Refazer tutorial" em configurações | PROD-10 |
 | Sons sutis (place, connect, submit) | — |
 | Responsive layout (tablet) | — |
 | Export PNG do diagrama | Deferred |
@@ -139,10 +159,11 @@ Cada feature segue: **Specify → Design → Tasks → Execute → Verify** (TLC
 | Fase | Tasks estimadas | Complexidade |
 | ---- | --------------- | ------------ |
 | 0 Foundation | ~8 | Medium |
-| 1 MVP Canvas | ~15 | Large |
+| 1 MVP Canvas | ~20 | Large |
+| 1b YouTube | ~4 | Medium |
 | 2 AI Judge | ~10 | Large |
 | 3 Problem Library | ~8 | Medium |
 | 4 Speedrun | ~6 | Medium |
 | 5 Polish | ~8 | Medium |
 
-**Total:** ~55 tasks atômicas.
+**Total:** ~64 tasks atômicas.
