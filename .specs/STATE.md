@@ -22,14 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` merged to `main` + production READY |
-| **Próximo passo** | Smoke-test production (shortener graph on zoom → FAIL; scale narrative with LLM) |
-| **Feature ativa** | none (judge-realism shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `node-access-roles` shipping |
+| **Próximo passo** | Smoke: SQL/NoSQL paper config → Leitura/Escrita + locale on canvas |
+| **Feature ativa** | `node-access-roles` |
+| **Branch** | `feature/node-access-roles` → merge `main` |
 | **Bloqueios** | None |
-| **Verification** | Verifier PASS · PR #3 merged · hotfix `2421a61` for shared:build TS |
+| **Verification** | Gate 668 (shared 117 + client 411 + server 140); lint green |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_383dABW5AKocab51SpE7dHxWveDe` — READY (`2421a61` judge-realism + sim TS fix) |
+| **Deployment** | Pending this feature (prior judge hotfix `ef2a69d` / `dpl_LeU1Rp45bGMP8SjQW18FHvNzt4hd`) |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
 | **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
 | **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 `59a9c94` |
@@ -120,6 +120,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-026 | active | **Google OAuth identity** — guest play OK; durable sessions + leaderboard POST require Google session cookie + unique public nickname; nickname-alone is no longer ownership on Hobby APIs | User chose real OAuth over nickname surrogate; supersedes AD-021 auth surrogate for Hobby durable path |
 | AD-027 | active | **Judge structural-first (hybrid)** — deterministic per-problem structural rubric always runs before LLM; LLM cannot clear structural blockers; no cross-problem URL-shortener golden mock; Baseline 27 + Deep Core 13 | judge-realism Approach A; trustworthy learning bar |
 | AD-028 | active | **Scale-critical `ComponentConfig`** — cache, CDN(+TTL), SQL, MQ durability/partitions, WS fan-out, LB algorithm; configs affect simulation pressure and structural judge rules | Extends AD-019; judge-realism 2A/7B |
+| AD-029 | active | **DB access + topology roles** — `accessPattern` read\|write\|read_write and `topologyRole` primary\|replica\|standalone on sql_db + nosql_db; canvas badge + judge JSON; `sdq:localechange` refreshes canvas/config/palette chrome | Player CQRS intent + AD-024 full-system locale |
 
 ---
 
