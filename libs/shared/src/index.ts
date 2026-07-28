@@ -73,6 +73,11 @@ export {
   verdictToSessionStatus,
 } from './schema/design-session';
 export { applyVerdictRules, isBlocker } from './judge/apply-verdict';
+export { evaluateStructuralRubric } from './judge/evaluate-structural-rubric';
+export type {
+  EvaluateStructuralRubricInput,
+  StructuralReport,
+} from './judge/evaluate-structural-rubric';
 export { getGoldenGraph } from './judge/golden-graphs';
 export type { GoldenGraphTier } from './judge/golden-graphs';
 export {

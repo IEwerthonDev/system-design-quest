@@ -71,11 +71,11 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] `JudgeRubric` supports depth / antiPatterns / configRules / scaleChecklist
-- [ ] `JudgeResult.scaleNarrative: string` required in type
-- [ ] `CORE_REALISM_IDS` lists the 13 Core problems
-- [ ] Exports updated; shared tests compile
-- [ ] Commit: `feat(shared): structural rubric schema and scaleNarrative`
+- [x] `JudgeRubric` supports depth / antiPatterns / configRules / scaleChecklist
+- [x] `JudgeResult.scaleNarrative: string` required in type
+- [x] `CORE_REALISM_IDS` lists the 13 Core problems
+- [x] Exports updated; shared tests compile
+- [x] Commit: `feat(shared): structural rubric schema and scaleNarrative`
 
 **Tests:** unit (type/catalog smoke)  
 **Gate:** quick shared  
