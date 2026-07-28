@@ -123,4 +123,21 @@ describe('connection-intent-popover (CI-02 / CI-05)', () => {
 
     pop.destroy();
   });
+
+  it('calls onDelete when Delete connection is clicked', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    Object.defineProperty(window, 'innerHeight', { configurable: true, value: 800 });
+    const onDelete = vi.fn();
+    const pop = mountConnectionIntentPopover(host, {
+      onSelect: () => undefined,
+      onClose: () => undefined,
+      onDelete,
+    });
+    pop.open('edge-9', 'REQ');
+    const del = host.querySelector('[data-testid="connection-intent-delete"]') as HTMLButtonElement;
+    expect(del).toBeTruthy();
+    del.click();
+    expect(onDelete).toHaveBeenCalledWith('edge-9');
+    pop.destroy();
+  });
 });

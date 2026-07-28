@@ -165,7 +165,7 @@ export function hydrateFromDesignSession(
     experienceLevel: options.experienceLevel ?? null,
     startedAt: now(),
     submittedAt: null,
-    judgeResult: null,
+    judgeResult: record.judgeResult ? cloneJudgeResult(record.judgeResult) : null,
   };
   syncToGameState(activeSession, now);
   return activeSession;

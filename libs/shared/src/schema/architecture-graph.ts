@@ -228,7 +228,9 @@ export type FindingCode =
   | 'CACHE_OFF_PATH'
   | 'CONSISTENCY_RISK'
   | 'BOTTLENECK'
-  | 'OVERPROVISION';
+  | 'OVERPROVISION'
+  | 'HOT_PARTITION'
+  | 'QUEUE_BACKLOG';
 
 export type FindingSeverity = 'blocker' | 'major' | 'minor';
 

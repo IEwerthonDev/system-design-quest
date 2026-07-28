@@ -141,3 +141,8 @@ export {
 export type { CatalogTier } from './catalog/component-catalog';
 export { validateGraph } from './validation/validate-graph';
 export type { ValidationError, ValidationResult } from './validation/validate-graph';
+export { assessConnectionPair } from './validation/connection-pair';
+export type {
+  ConnectionPairAssessment,
+  ConnectionPairStatus,
+} from './validation/connection-pair';

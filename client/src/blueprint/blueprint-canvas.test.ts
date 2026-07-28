@@ -453,6 +453,24 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     canvas.destroy();
   });
 
+  it('touch Delete connection control removes the selected edge', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'sql_db', { x: 200, y: 0 });
+    connectForTest(canvas, a, b, 'DB');
+    const edgeId = canvas.getGraph().edges[0]!.id;
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    const del = document.querySelector(
+      '[data-testid="connection-intent-delete"]',
+    ) as HTMLButtonElement;
+    expect(del).toBeTruthy();
+    del.click();
+    expect(canvas.getGraph().edges).toHaveLength(0);
+    canvas.destroy();
+  });
+
   it('tap palette drop places a node near canvas center', () => {
     const host = document.createElement('div');
     document.body.append(host);
@@ -690,5 +708,62 @@ describe('config popover mount', () => {
     algo.dispatchEvent(new Event('change', { bubbles: true }));
     expect(changes.at(-1)).toEqual({ kind: 'lb', algorithm: 'least_conn' });
     popover.destroy();
+  });
+
+  it('tap-to-connect completes a link on second node select while linking', () => {
+    const host = document.createElement('div');
+    Object.defineProperty(host, 'getBoundingClientRect', {
+      value: () => ({ left: 0, top: 0, right: 800, bottom: 600, width: 800, height: 600 }),
+    });
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'client_web', { x: 40, y: 40 });
+    const b = placeComponentForTest(canvas, 'cdn', { x: 240, y: 40 });
+    const out = host.querySelector(
+      `[data-testid="blueprint-node-${a}"] [data-handle="out"]`,
+    ) as HTMLElement;
+    out.dispatchEvent(createPointerEvent('pointerdown', { clientX: 100, clientY: 60 }));
+    window.dispatchEvent(createPointerEvent('pointerup', { clientX: 100, clientY: 60 }));
+    expect(window.__GAME_STATE__.canvasInteraction.linkingFromId).toBe(a);
+    expect(host.querySelector('[data-testid="edge-preview"]')).toBeTruthy();
+
+    const target = host.querySelector(`[data-testid="blueprint-node-${b}"]`) as HTMLElement;
+    target.dispatchEvent(createPointerEvent('pointerdown', { clientX: 280, clientY: 60 }));
+    expect(canvas.getGraph().edges).toHaveLength(1);
+    expect(canvas.getGraph().edges[0]).toMatchObject({ from: a, to: b });
+    expect(window.__GAME_STATE__.canvasInteraction.linkingFromId).toBeNull();
+    canvas.destroy();
+  });
+
+  it('rejects invalid pair links and keeps linking armed', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'sql_db', { x: 40, y: 40 });
+    const b = placeComponentForTest(canvas, 'client_web', { x: 240, y: 40 });
+    const out = host.querySelector(
+      `[data-testid="blueprint-node-${a}"] [data-handle="out"]`,
+    ) as HTMLElement;
+    out.dispatchEvent(createPointerEvent('pointerdown', { clientX: 80, clientY: 50 }));
+    window.dispatchEvent(createPointerEvent('pointerup', { clientX: 80, clientY: 50 }));
+    const target = host.querySelector(`[data-testid="blueprint-node-${b}"]`) as HTMLElement;
+    target.dispatchEvent(createPointerEvent('pointerdown', { clientX: 280, clientY: 50 }));
+    expect(canvas.getGraph().edges).toHaveLength(0);
+    expect(window.__GAME_STATE__.canvasInteraction.linkingFromId).toBe(a);
+    canvas.destroy();
+  });
+
+  it('renders warn stroke for client → DB edges', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const client = placeComponentForTest(canvas, 'client_web', { x: 10, y: 10 });
+    const db = placeComponentForTest(canvas, 'sql_db', { x: 200, y: 10 });
+    connectForTest(canvas, client, db);
+    const edgeG = host.querySelector('g[data-pair-status="warn"]');
+    expect(edgeG).toBeTruthy();
+    const path = edgeG?.querySelector('path');
+    expect(path?.getAttribute('stroke')).toBe('#fbbf24');
+    canvas.destroy();
   });
 });

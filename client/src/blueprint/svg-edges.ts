@@ -1,4 +1,4 @@
-import type { ConnectionEdge } from '@sdq/shared';
+import type { ConnectionEdge, ConnectionPairStatus } from '@sdq/shared';
 import { SDQ_COLORS } from '../theme/tokens';
 
 export interface EdgeEndpoints {
@@ -8,9 +8,19 @@ export interface EdgeEndpoints {
 
 export interface SvgEdgeLayer {
   svg: SVGSVGElement;
-  sync(edges: ConnectionEdge[], endpoints: Record<string, EdgeEndpoints>, running: boolean, speed: number): void;
+  sync(
+    edges: ConnectionEdge[],
+    endpoints: Record<string, EdgeEndpoints>,
+    running: boolean,
+    speed: number,
+    pairStatus?: Record<string, ConnectionPairStatus>,
+  ): void;
   setSelected(edgeId: string | null): void;
-  setPreview(from: { x: number; y: number } | null, to?: { x: number; y: number } | null): void;
+  setPreview(
+    from: { x: number; y: number } | null,
+    to?: { x: number; y: number } | null,
+    status?: ConnectionPairStatus,
+  ): void;
   destroy(): void;
 }
 
@@ -59,6 +69,22 @@ export function curvePath(from: { x: number; y: number }, to: { x: number; y: nu
   return `M ${p0.x} ${p0.y} C ${p1.x} ${p1.y}, ${p2.x} ${p2.y}, ${p3.x} ${p3.y}`;
 }
 
+export function strokeForPairStatus(
+  status: ConnectionPairStatus | undefined,
+  selected: boolean,
+): string {
+  if (selected) {
+    return SDQ_COLORS.accent;
+  }
+  if (status === 'warn') {
+    return SDQ_COLORS.warning;
+  }
+  if (status === 'invalid') {
+    return SDQ_COLORS.danger;
+  }
+  return SDQ_COLORS.edgeStroke;
+}
+
 export interface SvgEdgeLayerOptions {
   onEdgeActivate?: (edgeId: string) => void;
 }
@@ -85,6 +111,11 @@ export function createSvgEdgeLayer(
   let animFrame = 0;
   const packetEls: SVGCircleElement[] = [];
   let previewEl: SVGPathElement | null = null;
+  let lastPreview: {
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    status: ConnectionPairStatus;
+  } | null = null;
 
   // Delegation survives sync's innerHTML clear (listeners on the SVG root).
   svg.addEventListener('pointerdown', (ev) => {
@@ -103,23 +134,35 @@ export function createSvgEdgeLayer(
     previewEl = null;
   };
 
-  const setPreview = (
-    from: { x: number; y: number } | null,
-    to?: { x: number; y: number } | null,
-  ): void => {
+  const paintPreview = (): void => {
     clearPreview();
-    if (!from || !to) {
+    if (!lastPreview) {
       return;
     }
     previewEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    previewEl.setAttribute('d', curvePath(from, to));
+    previewEl.setAttribute('d', curvePath(lastPreview.from, lastPreview.to));
     previewEl.setAttribute('fill', 'none');
-    previewEl.setAttribute('stroke', SDQ_COLORS.accent);
+    previewEl.setAttribute('stroke', strokeForPairStatus(lastPreview.status, false));
     previewEl.setAttribute('stroke-width', '1.5');
     previewEl.setAttribute('stroke-dasharray', '6 4');
     previewEl.setAttribute('data-testid', 'edge-preview');
+    previewEl.setAttribute('data-pair-status', lastPreview.status);
     previewEl.style.pointerEvents = 'none';
     svg.append(previewEl);
+  };
+
+  const setPreview = (
+    from: { x: number; y: number } | null,
+    to?: { x: number; y: number } | null,
+    status: ConnectionPairStatus = 'ok',
+  ): void => {
+    if (!from || !to) {
+      lastPreview = null;
+      clearPreview();
+      return;
+    }
+    lastPreview = { from, to, status };
+    paintPreview();
   };
 
   const sync = (
@@ -127,9 +170,11 @@ export function createSvgEdgeLayer(
     endpoints: Record<string, EdgeEndpoints>,
     running: boolean,
     speed: number,
+    pairStatus: Record<string, ConnectionPairStatus> = {},
   ): void => {
     svg.innerHTML = '';
     packetEls.length = 0;
+    previewEl = null;
 
     for (const edge of edges) {
       const ep = endpoints[edge.id];
@@ -138,12 +183,17 @@ export function createSvgEdgeLayer(
       }
       const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
       g.dataset.edgeId = edge.id;
+      const status = pairStatus[edge.id];
+      if (status) {
+        g.dataset.pairStatus = status;
+      }
 
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', curvePath(ep.from, ep.to));
       path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', selectedId === edge.id ? SDQ_COLORS.accent : SDQ_COLORS.edgeStroke);
-      path.setAttribute('stroke-width', selectedId === edge.id ? '2.5' : '1.5');
+      const selected = selectedId === edge.id;
+      path.setAttribute('stroke', strokeForPairStatus(status, selected));
+      path.setAttribute('stroke-width', selected ? '2.5' : '1.5');
       path.style.pointerEvents = 'stroke';
       path.style.cursor = 'pointer';
 
@@ -153,7 +203,6 @@ export function createSvgEdgeLayer(
         const mid = pointOnEdgeCurve(ep.from, ep.to, 0.5);
         const midX = mid.x;
         const midY = mid.y - 10;
-        const selected = selectedId === edge.id;
         const pill = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         pill.setAttribute('data-testid', 'edge-label');
         pill.setAttribute('data-edge-id', edge.id);
@@ -205,6 +254,9 @@ export function createSvgEdgeLayer(
       svg.append(g);
     }
 
+    // Re-apply live linking preview after sync clears SVG children.
+    paintPreview();
+
     cancelAnimationFrame(animFrame);
     if (running && packetEls.length > 0) {
       const start = performance.now();
@@ -236,6 +288,7 @@ export function createSvgEdgeLayer(
     setPreview,
     destroy() {
       cancelAnimationFrame(animFrame);
+      lastPreview = null;
       clearPreview();
       svg.remove();
     },

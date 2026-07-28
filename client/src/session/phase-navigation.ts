@@ -392,11 +392,7 @@ export function mountPhaseNavigation(
 
   const refreshFindings = (): void => {
     const g = getGraph();
-    if (!g.simulation?.running) {
-      latestFindings = [];
-      findingsPanel.sync([]);
-      return;
-    }
+    // Always evaluate topology (structural + pressure) so Study Mode mentor works without Start.
     latestFindings = analyzeTopology(g);
     findingsPanel.sync(latestFindings);
   };
@@ -475,6 +471,13 @@ export function mountPhaseNavigation(
   let guidedOverlay: ReturnType<typeof mountGuidedOverlay> | null = null;
   let unsubscribeGraphChanges: (() => void) | null = null;
 
+  unsubscribeGraphChanges = subscribeGraphChanges(() => {
+    refreshFindings();
+    if (guidedMode) {
+      sync();
+    }
+  });
+
   if (guidedMode) {
     guidedOverlay = mountGuidedOverlay(shell, problemId, {
       onComplete: () => {
@@ -483,9 +486,6 @@ export function mountPhaseNavigation(
       onStepChange: (stepId) => {
         setGuidedStep(stepId);
       },
-    });
-    unsubscribeGraphChanges = subscribeGraphChanges(() => {
-      sync();
     });
   }
 

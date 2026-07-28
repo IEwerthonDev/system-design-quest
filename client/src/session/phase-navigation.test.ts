@@ -687,5 +687,25 @@ describe('phase navigation', () => {
       expect(submitLeaderboardScoreFn).not.toHaveBeenCalled();
       expect(container.querySelector('[data-testid="speedrun-auth-notice"]')).not.toBeNull();
     });
+
+    it('shows topology findings on canvas even when simulation is not running', () => {
+      mountPhaseNavigation(container, { mode: 'study' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph({
+        ...sampleGraph,
+        simulation: {
+          running: false,
+          speed: 1,
+          traffic: 1,
+          readRatio: 90,
+          rps: 50_000,
+          targetAvailability: 99.9,
+        },
+      });
+      const list = container.querySelector('[data-testid="findings-list"]');
+      expect(list).toBeTruthy();
+      expect(list!.textContent).toMatch(/SPOF|BOTTLENECK|SINGLE_PRIMARY|MISSING/i);
+    });
   });
 });

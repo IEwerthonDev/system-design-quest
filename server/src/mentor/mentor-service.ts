@@ -80,7 +80,11 @@ export function buildMockMentorResult(input: MentorInput): MentorResult {
   }
 
   const byCode = (code: string) => findings.filter((f) => f.code === code);
-  const bottlenecks = byCode('BOTTLENECK');
+  const bottlenecks = [
+    ...byCode('BOTTLENECK'),
+    ...byCode('QUEUE_BACKLOG'),
+    ...byCode('HOT_PARTITION'),
+  ];
   const spofs = byCode('SPOF');
   const missing = findings.filter((f) =>
     ['MISSING_CACHE', 'MISSING_MQ', 'NO_LB', 'SINGLE_PRIMARY'].includes(f.code),
@@ -92,9 +96,9 @@ export function buildMockMentorResult(input: MentorInput): MentorResult {
       body =
         bottlenecks.length === 0
           ? locale === 'en'
-            ? 'No hot bottlenecks under the current workload. Raise RPS / growth factor or reduce replicas to stress-test.'
-            : 'Nenhum gargalo hot sob a carga atual. Aumente RPS / growth factor ou reduza réplicas para estressar.'
-          : bottlenecks.map((f) => `• ${reason(f, locale)}`).join('\n');
+            ? 'No hot bottlenecks or queueing under the current workload. Raise RPS / growth factor or reduce replicas to stress-test.'
+            : 'Nenhum gargalo hot ou queueing sob a carga atual. Aumente RPS / growth factor ou reduza réplicas para estressar.'
+          : bottlenecks.map((f) => `• [${f.code}] ${reason(f, locale)}`).join('\n');
       break;
     case 'hint': {
       const tip = missing[0] ?? spofs[0] ?? findings[0];
