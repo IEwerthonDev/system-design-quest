@@ -76,7 +76,7 @@ export async function registerLeaderboardRoutes(
       });
     }
 
-    const result = service.submit(parsed.input);
+    const result = await service.submit(parsed.input);
     if (!result.ok) {
       if (result.code === 'NOT_QUALIFYING') {
         return reply.code(422).send({
@@ -121,7 +121,7 @@ export async function registerLeaderboardRoutes(
         limit = Math.min(Math.floor(parsedLimit), LEADERBOARD_DEFAULT_LIMIT);
       }
 
-      const entries = service.list(problemId, limit);
+      const entries = await service.list(problemId, limit);
       return reply.code(200).send({ problemId, entries });
     },
   );

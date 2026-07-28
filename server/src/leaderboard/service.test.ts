@@ -7,11 +7,11 @@ describe('createLeaderboardService', () => {
     resetLeaderboardEntryCounterForTests();
   });
 
-  it('persists qualifying PASS submissions', () => {
+  it('persists qualifying PASS submissions', async () => {
     const store = new InMemoryLeaderboardStore();
     const service = createLeaderboardService(store);
 
-    const result = service.submit(
+    const result = await service.submit(
       {
         problemId: 'url-shortener',
         playerNickname: 'speed_runner',
@@ -27,14 +27,14 @@ describe('createLeaderboardService', () => {
       expect(result.entry.playerNickname).toBe('speed_runner');
       expect(result.entry.elapsedMs).toBe(120000);
     }
-    expect(service.list('url-shortener')).toHaveLength(1);
+    expect(await service.list('url-shortener')).toHaveLength(1);
   });
 
-  it('rejects FAIL submissions', () => {
+  it('rejects FAIL submissions', async () => {
     const store = new InMemoryLeaderboardStore();
     const service = createLeaderboardService(store);
 
-    const result = service.submit({
+    const result = await service.submit({
       problemId: 'url-shortener',
       playerNickname: 'player',
       elapsedMs: 1000,
@@ -49,11 +49,11 @@ describe('createLeaderboardService', () => {
     });
   });
 
-  it('rejects invalid nicknames', () => {
+  it('rejects invalid nicknames', async () => {
     const store = new InMemoryLeaderboardStore();
     const service = createLeaderboardService(store);
 
-    const result = service.submit({
+    const result = await service.submit({
       problemId: 'url-shortener',
       playerNickname: 'ab',
       elapsedMs: 1000,

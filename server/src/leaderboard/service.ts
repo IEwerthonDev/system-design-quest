@@ -33,13 +33,13 @@ export interface SubmitLeaderboardError {
 export type SubmitLeaderboardOutcome = SubmitLeaderboardResult | SubmitLeaderboardError;
 
 export interface LeaderboardService {
-  submit(input: LeaderboardSubmitInput, now?: () => string): SubmitLeaderboardOutcome;
-  list(problemId: string, limit?: number): LeaderboardEntry[];
+  submit(input: LeaderboardSubmitInput, now?: () => string): Promise<SubmitLeaderboardOutcome>;
+  list(problemId: string, limit?: number): Promise<LeaderboardEntry[]>;
 }
 
 export function createLeaderboardService(store: LeaderboardStore): LeaderboardService {
   return {
-    submit(input, now = () => new Date().toISOString()) {
+    async submit(input, now = () => new Date().toISOString()) {
       const nickname = normalizeNickname(input.playerNickname);
       if (!/^[a-zA-Z0-9_-]{3,20}$/.test(nickname)) {
         return {
@@ -76,11 +76,11 @@ export function createLeaderboardService(store: LeaderboardStore): LeaderboardSe
         createdAt: now(),
       };
 
-      store.add(entry);
+      await store.add(entry);
       return { ok: true, entry };
     },
 
-    list(problemId, limit = LEADERBOARD_DEFAULT_LIMIT) {
+    async list(problemId, limit = LEADERBOARD_DEFAULT_LIMIT) {
       return store.listByProblem(problemId, limit);
     },
   };
