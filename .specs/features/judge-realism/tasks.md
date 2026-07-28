@@ -172,9 +172,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] `createMockLlmClient` either unused on HTTP mock path or refuses non-shortener golden mapping
-- [ ] Existing shortener golden unit tests still pass via explicit fixtures
-- [ ] Commit: `fix(server): isolate URL-shortener golden mock from other problems`
+- [x] `createMockLlmClient` either unused on HTTP mock path or refuses non-shortener golden mapping
+- [x] Existing shortener golden unit tests still pass via explicit fixtures
+- [x] Commit: `fix(server): isolate URL-shortener golden mock from other problems`
 
 **Tests:** unit  
 **Gate:** quick server  
@@ -191,9 +191,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Coverage defaults no longer depend on shortener golden tier for arbitrary problems
-- [ ] Tests updated; no regressions on declared-req merging
-- [ ] Commit: `fix(server): decouple requirement coverage from shortener golden tiers`
+- [x] Coverage defaults no longer depend on shortener golden tier for arbitrary problems
+- [x] Tests updated; no regressions on declared-req merging
+- [x] Commit: `fix(server): decouple requirement coverage from shortener golden tiers`
 
 **Tests:** unit  
 **Gate:** quick server  

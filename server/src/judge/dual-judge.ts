@@ -3,7 +3,6 @@ import {
   evaluateStructuralRubric,
   getProblem,
   type FeedbackItem,
-  type GoldenGraphTier,
   type JudgeInput,
   type JudgePartialResult,
   type JudgeResult,
@@ -13,7 +12,6 @@ import {
   type Verdict,
 } from '@sdq/shared';
 import type { LlmClient } from './mock-llm-client';
-import { resolveGraphTier } from './mock-llm-client';
 import { resolveJudgeLocale } from './locale';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 
@@ -47,13 +45,8 @@ function mergeReqCoverageItems(items: ReqCoverageItem[]): ReqCoverageItem[] {
   return [...byRequirement.values()];
 }
 
-function defaultCoverageStatus(tier: GoldenGraphTier, index: number): ReqCoverageItem['status'] {
-  if (tier === 'good') {
-    return 'covered';
-  }
-  if (tier === 'medium') {
-    return index % 2 === 0 ? 'partial' : 'missing';
-  }
+/** Conservative gap fill — never invent "covered" from URL-shortener golden tiers (JR-02). */
+function defaultGapCoverageStatus(): ReqCoverageItem['status'] {
   return 'missing';
 }
 
@@ -91,7 +84,6 @@ export function buildRequirementCoverage(
   rigorous: JudgePartialResult,
   pragmatic: JudgePartialResult,
 ): ReqCoverageItem[] {
-  const tier = resolveGraphTier(input.graph);
   const locale = resolveJudgeLocale(input);
   const merged = mergeReqCoverageItems([
     ...rigorous.requirementCoverage,
@@ -100,14 +92,13 @@ export function buildRequirementCoverage(
   const byRequirement = new Map(merged.map((item) => [item.requirement, item]));
 
   const declared: ReqCoverageItem[] = [];
-  let index = 0;
 
   for (const requirement of input.requirements.functional) {
     const existing = byRequirement.get(requirement);
     if (existing) {
       declared.push(existing);
     } else {
-      const status = defaultCoverageStatus(tier, index++);
+      const status = defaultGapCoverageStatus();
       declared.push({
         requirement,
         type: 'functional',
@@ -122,7 +113,7 @@ export function buildRequirementCoverage(
     if (existing) {
       declared.push(existing);
     } else {
-      const status = defaultCoverageStatus(tier, index++);
+      const status = defaultGapCoverageStatus();
       declared.push({
         requirement,
         type: 'nonFunctional',

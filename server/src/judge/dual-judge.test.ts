@@ -78,15 +78,43 @@ describe('buildRequirementCoverage', () => {
       'Redirect HTTP 302',
       '100k read RPS',
     ]);
-    expect(coverage.every((item) => ['covered', 'partial', 'missing'].includes(item.status))).toBe(
-      true,
-    );
-    expect(coverage.some((item) => item.status === 'partial' && item.explanation.length > 0)).toBe(
-      true,
-    );
-    expect(coverage.some((item) => item.status === 'missing' && item.explanation.length > 0)).toBe(
-      true,
-    );
+    expect(coverage.every((item) => item.status === 'missing')).toBe(true);
+    expect(coverage.every((item) => item.explanation.length > 0)).toBe(true);
+  });
+
+  it('merges LLM-provided coverage and does not invent covered from golden tiers', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const withLlmCoverage: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Encurtar URL',
+          type: 'functional',
+          status: 'covered',
+          explanation: 'LLM found shorten path',
+        },
+      ],
+    };
+    const input = makeInput(graph, {
+      functional: ['Encurtar URL', 'Redirect HTTP 302'],
+      nonFunctional: [],
+    });
+
+    const coverage = buildRequirementCoverage(input, withLlmCoverage, pragmatic);
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        requirement: 'Encurtar URL',
+        status: 'covered',
+        explanation: 'LLM found shorten path',
+      }),
+      expect.objectContaining({
+        requirement: 'Redirect HTTP 302',
+        status: 'missing',
+      }),
+    ]);
   });
 
   it('returns empty array when no requirements were declared', async () => {
@@ -191,12 +219,12 @@ describe('judgeSubmission', () => {
       expect.objectContaining({
         requirement: 'Gerar link curto',
         type: 'functional',
-        status: 'covered',
+        status: 'missing',
       }),
       expect.objectContaining({
         requirement: 'Alta disponibilidade',
         type: 'nonFunctional',
-        status: 'covered',
+        status: 'missing',
       }),
     ]);
   });
