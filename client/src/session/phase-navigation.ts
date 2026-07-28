@@ -224,11 +224,14 @@ export function mountPhaseNavigation(
       return;
     }
     const status = verdictToSessionStatus(judgeResult.verdict);
-    const ok = await persistDesignSession(status);
-    if (!ok) {
-      return;
+    // Pending confirm → same upsert as Confirmar, then open; already confirmed → open only
+    if (confirmModal) {
+      const ok = await persistDesignSession(status);
+      if (!ok) {
+        return;
+      }
+      destroyConfirmModal();
     }
-    destroyConfirmModal();
     options.onOpenSessions?.(status);
   };
 

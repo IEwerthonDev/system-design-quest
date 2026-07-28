@@ -457,6 +457,97 @@ describe('phase navigation', () => {
       }
     });
 
+    it('Ver em Minhas sessões auto-confirms pending upsert, closes modal, opens dashboard', async () => {
+      const upsertSessionFn = vi.fn().mockResolvedValue({ id: 's', status: 'partial' });
+      const onOpenSessions = vi.fn();
+
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn,
+        getNickname: () => 'tester',
+        onOpenSessions,
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+      expect(container.querySelector('[data-testid="session-confirm-modal"]')).not.toBeNull();
+
+      container.querySelector<HTMLButtonElement>('[data-testid="result-details-toggle"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="result-open-sessions"]')!.click();
+
+      await vi.waitFor(() => expect(onOpenSessions).toHaveBeenCalledWith('partial'));
+      expect(upsertSessionFn).toHaveBeenCalledWith(
+        expect.objectContaining({ status: 'partial', playerNickname: 'tester' }),
+      );
+      expect(container.querySelector('[data-testid="session-confirm-modal"]')).toBeNull();
+    });
+
+    it('Ver em Minhas sessões without pending confirm opens dashboard only', async () => {
+      const upsertSessionFn = vi.fn().mockResolvedValue({ id: 's', status: 'partial' });
+      const onOpenSessions = vi.fn();
+
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn,
+        getNickname: () => 'tester',
+        onOpenSessions,
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      container.querySelector<HTMLButtonElement>('[data-testid="session-confirm-confirm"]')!.click();
+      await vi.waitFor(() =>
+        expect(container.querySelector('[data-testid="session-confirm-modal"]')).toBeNull(),
+      );
+      const upsertCountAfterConfirm = upsertSessionFn.mock.calls.length;
+
+      container.querySelector<HTMLButtonElement>('[data-testid="result-details-toggle"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="result-open-sessions"]')!.click();
+
+      await vi.waitFor(() => expect(onOpenSessions).toHaveBeenCalledWith('partial'));
+      expect(upsertSessionFn.mock.calls.length).toBe(upsertCountAfterConfirm);
+    });
+
+    it('Ver em Minhas sessões upsert failure shows error without stuck modal over dashboard', async () => {
+      const { SessionsApiError } = await import('../sessions/sessions-api');
+      const upsertSessionFn = vi
+        .fn()
+        .mockRejectedValue(new SessionsApiError('save failed', 500));
+      const onOpenSessions = vi.fn();
+
+      mountPhaseNavigation(container, {
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+        upsertSessionFn,
+        getNickname: () => 'tester',
+        onOpenSessions,
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      container.querySelector<HTMLButtonElement>('[data-testid="result-details-toggle"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="result-open-sessions"]')!.click();
+
+      await vi.waitFor(() =>
+        expect(container.querySelector('[data-testid="session-confirm-error"]')?.textContent).toBe(
+          'save failed',
+        ),
+      );
+      expect(onOpenSessions).not.toHaveBeenCalled();
+      // Modal may remain with error, but must not cover an opened dashboard
+      expect(container.querySelector('[data-testid="sessions-dashboard"]')).toBeNull();
+    });
+
     it('POST /api/judge includes locale from getLocale()', async () => {
       const fetchMock = vi.fn().mockResolvedValue(
         new Response(
