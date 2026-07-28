@@ -67,6 +67,45 @@ describe('svg-edges curvePath', () => {
     expect(world.querySelector('[data-testid="edge-preview"]')).toBeNull();
     layer.destroy();
   });
+
+  it('colors preview by pair status and survives sync', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    layer.setPreview({ x: 0, y: 0 }, { x: 80, y: 40 }, 'warn');
+    expect(world.querySelector('[data-testid="edge-preview"]')?.getAttribute('stroke')).toBe(
+      '#fbbf24',
+    );
+    expect(
+      world.querySelector('[data-testid="edge-preview"]')?.getAttribute('data-pair-status'),
+    ).toBe('warn');
+    layer.sync([], {}, false, 1);
+    const preview = world.querySelector('[data-testid="edge-preview"]');
+    expect(preview).toBeTruthy();
+    expect(preview?.getAttribute('data-pair-status')).toBe('warn');
+    layer.setPreview({ x: 0, y: 0 }, { x: 80, y: 40 }, 'invalid');
+    expect(world.querySelector('[data-testid="edge-preview"]')?.getAttribute('stroke')).toBe(
+      '#f87171',
+    );
+    layer.destroy();
+  });
+
+  it('applies warn pair status stroke on committed edges', () => {
+    const world = document.createElement('div');
+    document.body.append(world);
+    const layer = createSvgEdgeLayer(world);
+    layer.sync(
+      [{ id: 'e1', from: 'a', to: 'b', direction: 'forward', label: 'DB' }],
+      { e1: { from: { x: 0, y: 0 }, to: { x: 100, y: 0 } } },
+      false,
+      1,
+      { e1: 'warn' },
+    );
+    const g = world.querySelector('g[data-edge-id="e1"]');
+    expect(g?.getAttribute('data-pair-status')).toBe('warn');
+    expect(g?.querySelector('path')?.getAttribute('stroke')).toBe('#fbbf24');
+    layer.destroy();
+  });
 });
 
 describe('svg-edges packet animation along Bezier (PP-04 AC3)', () => {

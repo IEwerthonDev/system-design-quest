@@ -1,4 +1,5 @@
 import {
+  assessConnectionPair,
   DEFAULT_SIMULATION,
   evaluateSimulation,
   normalizeGraph,
@@ -7,6 +8,7 @@ import {
   type ComponentNode,
   type ComponentType,
   type ConnectionEdge,
+  type ConnectionPairStatus,
   type PressureLevel,
   type SimulationSettings,
 } from '@sdq/shared';
@@ -20,6 +22,7 @@ import { buildNewNode, createNodeCard, type NodeCardHandle } from './node-card';
 import { mountConfigPopover } from './config-popover';
 import { mountConnectionIntentPopover } from './connection-intent-popover';
 import {
+  clearDbIntentRole,
   defaultLabelForDestination,
   rememberDbIntentRole,
   shortLabelForIntentId,
@@ -213,6 +216,18 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     onSelect: (edgeId, intentId) => {
       applyIntent(edgeId, intentId);
     },
+    onDelete: (edgeId) => {
+      clearDbIntentRole(edgeId);
+      graph = {
+        ...graph,
+        edges: graph.edges.filter((e) => e.id !== edgeId),
+      };
+      if (selectedEdgeId === edgeId) {
+        selectedEdgeId = null;
+      }
+      intentPopover.close();
+      persist({ recordHistory: true });
+    },
   });
 
   const activateEdge = (edgeId: string): void => {
@@ -223,7 +238,18 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     }
     popover.close();
     const edge = graph.edges.find((e) => e.id === edgeId);
-    intentPopover.open(edgeId, edge?.label);
+    const fromCard = cards.get(edge?.from ?? '')?.root;
+    const toCard = cards.get(edge?.to ?? '')?.root;
+    let anchor: { x: number; y: number } | undefined;
+    if (fromCard && toCard) {
+      const a = fromCard.getBoundingClientRect();
+      const b = toCard.getBoundingClientRect();
+      anchor = {
+        x: (a.right + b.left) / 2,
+        y: (a.top + a.bottom + b.top + b.bottom) / 4,
+      };
+    }
+    intentPopover.open(edgeId, edge?.label, anchor);
     renderEdges();
     publishInteraction();
   };
@@ -266,6 +292,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     linkHint.hidden = !fromId;
     if (!fromId) {
       linkGesture = null;
+      edgeLayer.setPreview(null);
     }
     publishInteraction();
   };
@@ -428,6 +455,8 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
 
   const renderEdges = (): void => {
     const endpoints: Record<string, EdgeEndpoints> = {};
+    const pairStatus: Record<string, ConnectionPairStatus> = {};
+    const byId = new Map(graph.nodes.map((n) => [n.id, n]));
     for (const edge of graph.edges) {
       const fromCard = cards.get(edge.from)?.root;
       const toCard = cards.get(edge.to)?.root;
@@ -437,10 +466,15 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       const a = cardAnchor(fromCard);
       const b = cardAnchor(toCard);
       endpoints[edge.id] = { from: a.out, to: b.in };
+      const fromNode = byId.get(edge.from);
+      const toNode = byId.get(edge.to);
+      if (fromNode && toNode) {
+        pairStatus[edge.id] = assessConnectionPair(fromNode.type, toNode.type).status;
+      }
     }
     const sim = graph.simulation ?? DEFAULT_SIMULATION;
     edgeLayer.setSelected(selectedEdgeId);
-    edgeLayer.sync(graph.edges, endpoints, sim.running, sim.speed);
+    edgeLayer.sync(graph.edges, endpoints, sim.running, sim.speed, pairStatus);
   };
 
   const remountCards = (): void => {
@@ -474,6 +508,10 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   const addCard = (node: ComponentNode): void => {
     const card = createNodeCard(node, {
       onSelect: (id) => {
+        if (linkingFrom && linkingFrom !== id) {
+          completeLinkTo(id);
+          return;
+        }
         selectedNodeId = id;
         selectedEdgeId = null;
         intentPopover.close();
@@ -491,6 +529,9 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         updateNode(id, (n) => ({ ...n, replicas }));
       },
       onDragStart: (id, ev) => {
+        if (linkingFrom) {
+          return;
+        }
         dragNodeId = id;
         const n = graph.nodes.find((x) => x.id === id);
         if (!n) {
@@ -515,6 +556,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
           y: ev.clientY,
           moved: false,
         };
+        updateLinkPreview(ev.clientX, ev.clientY);
       },
       onDelete: (id) => {
         graph = {
@@ -542,7 +584,74 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (from === to) {
       return false;
     }
-    return !graph.edges.some((e) => e.from === from && e.to === to);
+    if (graph.edges.some((e) => e.from === from && e.to === to)) {
+      return false;
+    }
+    const fromNode = graph.nodes.find((n) => n.id === from);
+    const toNode = graph.nodes.find((n) => n.id === to);
+    if (!fromNode || !toNode) {
+      return false;
+    }
+    return assessConnectionPair(fromNode.type, toNode.type).status !== 'invalid';
+  };
+
+  const clientToWorld = (clientX: number, clientY: number): { x: number; y: number } => {
+    const rect = root.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left - panX) / scale,
+      y: (clientY - rect.top - panY) / scale,
+    };
+  };
+
+  const updateLinkPreview = (clientX: number, clientY: number): void => {
+    if (!linkingFrom) {
+      edgeLayer.setPreview(null);
+      return;
+    }
+    const fromCard = cards.get(linkingFrom)?.root;
+    if (!fromCard) {
+      edgeLayer.setPreview(null);
+      return;
+    }
+    const from = cardAnchor(fromCard).out;
+    const el =
+      typeof document.elementFromPoint === 'function'
+        ? (document.elementFromPoint(clientX, clientY) as HTMLElement | null)
+        : null;
+    const targetNode = el?.closest('.sdq-node') as HTMLElement | null;
+    const toId = targetNode?.dataset.nodeId;
+    if (toId && toId !== linkingFrom) {
+      const toCard = cards.get(toId)?.root;
+      const fromNode = graph.nodes.find((n) => n.id === linkingFrom);
+      const toNode = graph.nodes.find((n) => n.id === toId);
+      if (toCard && fromNode && toNode) {
+        let status = assessConnectionPair(fromNode.type, toNode.type).status;
+        if (graph.edges.some((e) => e.from === linkingFrom && e.to === toId)) {
+          status = 'invalid';
+        }
+        edgeLayer.setPreview(from, cardAnchor(toCard).in, status);
+        return;
+      }
+    }
+    edgeLayer.setPreview(from, clientToWorld(clientX, clientY), 'ok');
+  };
+
+  const completeLinkTo = (toId: string): boolean => {
+    if (!linkingFrom || !canConnect(linkingFrom, toId)) {
+      return false;
+    }
+    const toNode = graph.nodes.find((n) => n.id === toId);
+    const edge: ConnectionEdge = {
+      id: nextId('edge'),
+      from: linkingFrom,
+      to: toId,
+      direction: 'forward',
+      label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
+    };
+    graph = { ...graph, edges: [...graph.edges, edge] };
+    persist({ recordHistory: true });
+    setLinking(null);
+    return true;
   };
 
   const onPointerMove = (ev: PointerEvent): void => {
@@ -552,6 +661,9 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       if (dx * dx + dy * dy > 100) {
         linkGesture.moved = true;
       }
+    }
+    if (linkingFrom) {
+      updateLinkPreview(ev.clientX, ev.clientY);
     }
     if (dragNodeId) {
       wasDragging = true;
@@ -579,22 +691,14 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (!linkingFrom) {
       return false;
     }
-    const el = document.elementFromPoint(clientX, clientY) as HTMLElement | null;
+    const el =
+      typeof document.elementFromPoint === 'function'
+        ? (document.elementFromPoint(clientX, clientY) as HTMLElement | null)
+        : null;
     const targetNode = el?.closest('.sdq-node') as HTMLElement | null;
     const toId = targetNode?.dataset.nodeId;
-    if (toId && canConnect(linkingFrom, toId)) {
-      const toNode = graph.nodes.find((n) => n.id === toId);
-      const edge: ConnectionEdge = {
-        id: nextId('edge'),
-        from: linkingFrom,
-        to: toId,
-        direction: 'forward',
-        label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
-      };
-      graph = { ...graph, edges: [...graph.edges, edge] };
-      persist({ recordHistory: true });
-      setLinking(null);
-      return true;
+    if (toId) {
+      return completeLinkTo(toId);
     }
     return false;
   };
@@ -603,12 +707,15 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (linkingFrom && linkGesture && ev.pointerId === linkGesture.pointerId) {
       if (linkGesture.moved) {
         tryCompleteLink(ev.clientX, ev.clientY);
+        // Keep linking armed on failed drop so the player can retry or Esc.
+        linkGesture = null;
         if (linkingFrom) {
-          setLinking(null);
+          updateLinkPreview(ev.clientX, ev.clientY);
         }
       } else {
         // Tap on out-handle: keep armed for a second tap on the target node.
         linkGesture = null;
+        updateLinkPreview(ev.clientX, ev.clientY);
       }
       if (wasDragging) {
         history.push(graph);
@@ -621,9 +728,8 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     }
 
     if (linkingFrom) {
-      if (!tryCompleteLink(ev.clientX, ev.clientY)) {
-        setLinking(null);
-      }
+      // Second-tap completion is handled in onSelect via completeLinkTo.
+      tryCompleteLink(ev.clientX, ev.clientY);
     }
     if (wasDragging) {
       history.push(graph);
@@ -668,9 +774,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       intentPopover.close();
       selectedNodeId = null;
       selectedEdgeId = null;
-      if (linkingFrom) {
-        setLinking(null);
-      }
+      // Do not clear linking on background pan — Esc cancels (mobile miss-tap safe).
       for (const c of cards.values()) {
         c.setSelected(false);
       }
@@ -722,6 +826,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       }
       if (selectedEdgeId) {
         const removedId = selectedEdgeId;
+        clearDbIntentRole(removedId);
         graph = {
           ...graph,
           edges: graph.edges.filter((e) => e.id !== removedId),

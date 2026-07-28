@@ -7,6 +7,7 @@ import {
 export interface ConnectionIntentPopoverCallbacks {
   onSelect(edgeId: string, intentId: ConnectionIntentId): void;
   onClose(): void;
+  onDelete?(edgeId: string): void;
 }
 
 export interface ConnectionIntentAnchor {
@@ -87,6 +88,12 @@ function injectStyles(): void {
     .sdq-connection-intent__short { font-weight: 700; color: var(--sdq-text); }
     .sdq-connection-intent__option-role { color: var(--sdq-text-muted); font-size: 10px; letter-spacing: 0.05em; }
     .sdq-connection-intent__option-desc { color: var(--sdq-text-muted); line-height: 1.35; font-size: 11px; }
+    .sdq-connection-intent__delete {
+      display: block; width: 100%; margin-top: 10px; min-height: 44px;
+      background: transparent; border: 1px solid var(--sdq-danger, #f87171);
+      color: var(--sdq-danger, #f87171); font: inherit; border-radius: var(--sdq-radius-sm);
+      padding: 10px 12px; cursor: pointer; font-weight: 700;
+    }
   `;
   document.head.append(style);
 }
@@ -175,6 +182,19 @@ export function mountConnectionIntentPopover(
         callbacks.onSelect(currentEdgeId, intent.id);
       });
       root.append(btn);
+    }
+
+    if (callbacks.onDelete) {
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'sdq-connection-intent__delete';
+      del.setAttribute('data-testid', 'connection-intent-delete');
+      del.textContent = 'Delete connection';
+      del.addEventListener('click', () => {
+        if (!currentEdgeId || !callbacks.onDelete) return;
+        callbacks.onDelete(currentEdgeId);
+      });
+      root.append(del);
     }
   };
 
