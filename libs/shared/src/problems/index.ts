@@ -4,7 +4,9 @@ import { PROBLEM_COPY_EN } from './copy-en';
 import { EASY_PROBLEMS } from './easy';
 import { HARD_PROBLEMS } from './hard';
 import { MEDIUM_PROBLEMS } from './medium';
+import { SANDBOX_PROBLEM } from './sandbox';
 import { URL_SHORTENER as URL_SHORTENER_DEF } from './url-shortener';
+import { SANDBOX_PROBLEM_ID } from '../schema/normalize-graph';
 
 export type ProblemFilter = {
   difficulty?: Difficulty | 'all';
@@ -33,6 +35,9 @@ const PROBLEMS_BY_ID: Record<string, Problem> = Object.fromEntries(
 );
 
 export function getProblem(id: string): Problem | undefined {
+  if (id === SANDBOX_PROBLEM_ID) {
+    return SANDBOX_PROBLEM;
+  }
   return PROBLEMS_BY_ID[id];
 }
 
@@ -74,3 +79,5 @@ export function countByDifficulty(): Record<Difficulty, number> {
 }
 
 export { URL_SHORTENER_ID } from './url-shortener';
+export { SANDBOX_PROBLEM } from './sandbox';
+export { SANDBOX_PROBLEM_ID } from '../schema/normalize-graph';

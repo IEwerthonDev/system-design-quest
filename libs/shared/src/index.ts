@@ -85,6 +85,9 @@ export type {
   ReqCoverageItem,
   Verdict,
 } from './schema/judge';
+export type { MentorAction, MentorInput, MentorResult } from './schema/mentor';
+export { MENTOR_ACTIONS } from './schema/mentor';
+export { SANDBOX_PROBLEM } from './problems/index';
 export type { LeaderboardEntry, LeaderboardSubmitInput } from './schema/leaderboard';
 export {
   isQualifyingForLeaderboard,

@@ -16,7 +16,7 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function isGameMode(value: unknown): value is GameMode {
-  return value === 'study' || value === 'speedrun';
+  return value === 'study' || value === 'speedrun' || value === 'sandbox';
 }
 
 function isLocale(value: unknown): value is Locale {
@@ -70,7 +70,7 @@ export function parseJudgeRequestBody(body: unknown): ParseResult {
   }
 
   if (!isGameMode(mode)) {
-    return { ok: false, message: 'mode must be "study" or "speedrun"' };
+    return { ok: false, message: 'mode must be "study", "speedrun", or "sandbox"' };
   }
 
   if (localeRaw !== undefined && !isLocale(localeRaw)) {

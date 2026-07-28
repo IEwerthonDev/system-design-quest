@@ -22,28 +22,26 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `config-depth` merged to `main` + production READY |
-| **Próximo passo** | Smoke: paper-icon Advanced on cache/SQL/Kafka/rate_limiter; rich notes → higher score |
-| **Feature ativa** | none (`config-depth` shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `study-mode` implementado — gate lint+test green |
+| **Próximo passo** | Merge PR + smoke Study Mode CTA + mentor buttons on production |
+| **Feature ativa** | `study-mode` |
+| **Branch** | `feature/study-mode` |
 | **Bloqueios** | None |
-| **Decisões** | 1B·2B·3B·4A; AD-030 detailBonus cap 15 |
-| **Gate** | lint+test green pre-merge |
-| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/4 (squash `4d65deb`) |
+| **Decisões** | AD-031·032·033 |
+| **Gate** | `npx nx run-many -t lint test` green |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_DSCfQWXFmk6tteVWkom4KNZypWaL` READY |
 
-### Context Checkpoint (2026-07-28 config-depth ship)
+### Context Checkpoint (2026-07-28 study-mode)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — epic shipped this session |
-| Uncommitted | none after docs commit |
+| Chat length | AMBER — large epic |
+| Uncommitted | shipping |
 | Spec drift | GREEN |
 | Gate confidence | GREEN |
-| Task clarity | GREEN — done |
+| Task clarity | GREEN |
 
-**Veredito:** GREEN — shipped
+**Veredito:** GREEN — ship
 
 ### Deploy note (Hobby)
 
@@ -107,6 +105,9 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-028 | active | **Scale-critical `ComponentConfig`** — cache, CDN(+TTL), SQL, MQ durability/partitions, WS fan-out, LB algorithm; configs affect simulation pressure and structural judge rules | Extends AD-019; judge-realism 2A/7B |
 | AD-029 | active | **DB access + topology roles** — `accessPattern` read\|write\|read_write and `topologyRole` primary\|replica\|standalone on sql_db + nosql_db; canvas badge + judge JSON; `sdq:localechange` refreshes canvas/config/palette chrome | Player CQRS intent + AD-024 full-system locale |
 | AD-030 | active | **Config depth + detailBonus** — expanded ComponentConfig (rate limiter, gateway, object storage, search, auth, compute, worker, notification; deepen cache/SQL/NoSQL/MQ; kafka kind); Advanced toggle; structural detailBonus ≤15 when no blockers; LLM prompts reward trade-off detail | Extends AD-028/029; config-depth 1B·2B·3B·4A |
+| AD-031 | active | **Sim v2** — absolute workload fields on `SimulationSettings`; path-aware RPS mode when absolute set; traffic 1–5 back-compat; edge intent weights; topology findings via `analyzeTopology` | Extends AD-020; study-mode realism |
+| AD-032 | active | **Sandbox Study Mode** — `GameMode` += `sandbox`; `__sandbox__` sentinel problem; library CTA; skip briefing/requirements; Practice rename for problem `study` | Freeform lab; AD-005 extended |
+| AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
 
 ---
 

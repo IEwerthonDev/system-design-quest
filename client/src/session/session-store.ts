@@ -1,4 +1,5 @@
 import type { ArchitectureGraph, DesignSessionRecord, JudgeResult } from '@sdq/shared';
+import { DEFAULT_SIMULATION, SANDBOX_PROBLEM_ID } from '@sdq/shared';
 import type { ExperienceLevel } from '../storage/preferences';
 import type { GameMode, GamePhase } from '../test-hook';
 import { initGameState } from '../test-hook';
@@ -103,13 +104,33 @@ export function createSession(
   now: () => number = Date.now,
 ): Session {
   sessionIdCounter += 1;
+  const isSandbox = mode === 'sandbox' || problemId === SANDBOX_PROBLEM_ID;
   activeSession = {
     id: `session-${sessionIdCounter}`,
-    problemId,
-    mode,
-    phase: 'briefing',
+    problemId: isSandbox ? SANDBOX_PROBLEM_ID : problemId,
+    mode: isSandbox ? 'sandbox' : mode,
+    phase: isSandbox ? 'canvas' : 'briefing',
     requirements: { functional: [], nonFunctional: [] },
-    graph: { nodes: [], edges: [] },
+    graph: isSandbox
+      ? {
+          nodes: [],
+          edges: [],
+          simulation: {
+            ...DEFAULT_SIMULATION,
+            rps: 1_000,
+            readRps: 800,
+            writeRps: 200,
+            concurrentUsers: 5_000,
+            targetAvailability: 99.9,
+            growthFactor: 1,
+            networkLatencyMs: 20,
+            bandwidthMbps: 1000,
+            avgObjectKb: 64,
+            avgResponseKb: 16,
+            dailyDataGb: 10,
+          },
+        }
+      : { nodes: [], edges: [] },
     guidedMode: options.guidedMode ?? false,
     experienceLevel: options.experienceLevel ?? null,
     startedAt: now(),

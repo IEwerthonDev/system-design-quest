@@ -74,7 +74,7 @@ export function parseSessionUpsertBody(body: unknown, pathId: string): ParseUpse
   if (record.judgeResult !== undefined) {
     input.judgeResult = record.judgeResult as DesignSessionUpsertInput['judgeResult'];
   }
-  if (record.mode === 'study' || record.mode === 'speedrun') {
+  if (record.mode === 'study' || record.mode === 'speedrun' || record.mode === 'sandbox') {
     input.mode = record.mode;
   }
 

@@ -1,6 +1,19 @@
 import type { AuthMeResponse } from '@sdq/shared';
-import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
-import type { DesignSessionRecord, DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
+import {
+  analyzeTopology,
+  DEFAULT_SIMULATION,
+  getProblem,
+  normalizeGraph,
+  SANDBOX_PROBLEM_ID,
+  URL_SHORTENER_ID,
+  verdictToSessionStatus,
+} from '@sdq/shared';
+import type {
+  ArchitectureFinding,
+  DesignSessionRecord,
+  DesignSessionStatus,
+  DesignSessionUpsertInput,
+} from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
 import { fetchMe } from '../auth/auth-api';
 import { getLocale } from '../i18n/locale';
@@ -30,6 +43,9 @@ import { mountSessionHeader } from '../ui/session-header';
 import { mountSettingsPanel } from '../ui/settings-panel';
 import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
+import { mountFindingsPanel } from '../ui/findings-panel';
+import { mountWorkloadPanel } from '../ui/workload-panel';
+import { mountMentorPanel } from '../ui/mentor-panel';
 import { t } from '../i18n/t';
 import { shareDesign } from '../share/share-design';
 import { bindAbandonTracking, track } from '../analytics/track';
@@ -137,9 +153,10 @@ export function mountPhaseNavigation(
 ): PhaseNavigation {
   const problemId = options.problemId ?? URL_SHORTENER_ID;
   const mode = options.mode ?? 'study';
+  const isSandbox = mode === 'sandbox' || problemId === SANDBOX_PROBLEM_ID;
   const guidedMode = options.guidedMode ?? false;
   const experienceLevel = options.experienceLevel ?? null;
-  const problem = getProblem(problemId);
+  const problem = getProblem(isSandbox ? SANDBOX_PROBLEM_ID : problemId);
   if (!problem) {
     throw new Error(`Unknown problem: ${problemId}`);
   }
@@ -153,8 +170,15 @@ export function mountPhaseNavigation(
       now,
     );
   } else {
-    createSession(problemId, mode, { guidedMode, experienceLevel }, now);
+    createSession(
+      isSandbox ? SANDBOX_PROBLEM_ID : problemId,
+      isSandbox ? 'sandbox' : mode,
+      { guidedMode, experienceLevel },
+      now,
+    );
   }
+
+  let latestFindings: ArchitectureFinding[] = [];
 
   // Blueprint host survives library ↔ session transitions; always sync so a new
   // challenge never shows the previous problem's drawing.
@@ -362,26 +386,58 @@ export function mountPhaseNavigation(
   ).__BLUEPRINT__;
 
   const simControlsRef: { current: ReturnType<typeof mountSimControls> | null } = { current: null };
+
+  const findingsPanel = mountFindingsPanel(shell);
+  let workloadPanel: ReturnType<typeof mountWorkloadPanel> | null = null;
+
+  const refreshFindings = (): void => {
+    const g = getGraph();
+    if (!g.simulation?.running) {
+      latestFindings = [];
+      findingsPanel.sync([]);
+      return;
+    }
+    latestFindings = analyzeTopology(g);
+    findingsPanel.sync(latestFindings);
+  };
+
+  const applySimPartial = (partial: Partial<import('@sdq/shared').SimulationSettings>): void => {
+    if (blueprint) {
+      blueprint.updateSimulation(partial);
+    } else {
+      const g = getGraph();
+      setGraph({
+        ...g,
+        simulation: { ...(g.simulation ?? DEFAULT_SIMULATION), ...partial },
+      });
+    }
+    simControlsRef.current?.sync(getGraph().simulation ?? DEFAULT_SIMULATION);
+    workloadPanel?.sync(getGraph().simulation ?? DEFAULT_SIMULATION);
+    refreshFindings();
+  };
+
   const simControls = mountSimControls(sessionHeader.controlsSlot, {
     getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
-    onChange: (partial) => {
-      if (blueprint) {
-        blueprint.updateSimulation(partial);
-      } else {
-        const g = getGraph();
-        setGraph({
-          ...g,
-          simulation: { ...(g.simulation ?? DEFAULT_SIMULATION), ...partial },
-        });
-      }
-      simControlsRef.current?.sync(getGraph().simulation ?? DEFAULT_SIMULATION);
-    },
+    onChange: applySimPartial,
   });
   simControlsRef.current = simControls;
 
-  const problemDrawer = mountProblemDrawer(shell, problem);
+  const problemDrawer = isSandbox ? null : mountProblemDrawer(shell, problem);
 
-  const glossaryPanel = openGlossaryPanel(problemId, shell);
+  workloadPanel = isSandbox
+    ? mountWorkloadPanel(shell, {
+        getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
+        onChange: applySimPartial,
+      })
+    : null;
+
+  const mentorPanel = isSandbox
+    ? mountMentorPanel(shell, {
+        getFindings: () => latestFindings,
+      })
+    : null;
+
+  const glossaryPanel = openGlossaryPanel(isSandbox ? URL_SHORTENER_ID : problemId, shell);
   const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
 
   const timerPanel = mountTimerPanel(shell, {
@@ -389,30 +445,32 @@ export function mountPhaseNavigation(
     now,
   });
 
-  const submitPanel = mountSubmitPanel(shell, {
-    getGraph,
-    buildJudgeInput: (graph) => ({
-      problemId,
-      requirements: getRequirements(),
-      graph: normalizeGraph(graph),
-      mode,
-      locale: getLocale(),
-    }),
-    onSubmitStart: () => {
-      if (mode === 'speedrun') {
-        markSubmitted(now);
-        timerPanel.sync();
-      }
-    },
-    onJudgeSuccess: (result) => {
-      setGraph(getGraph());
-      setJudgeResult(result);
-      advancePhase();
-      sync();
-    },
-    submitForJudging: options.submitForJudging,
-    retryLastJudging: options.retryLastJudging,
-  });
+  const submitPanel = isSandbox
+    ? null
+    : mountSubmitPanel(shell, {
+        getGraph,
+        buildJudgeInput: (graph) => ({
+          problemId,
+          requirements: getRequirements(),
+          graph: normalizeGraph(graph),
+          mode,
+          locale: getLocale(),
+        }),
+        onSubmitStart: () => {
+          if (mode === 'speedrun') {
+            markSubmitted(now);
+            timerPanel.sync();
+          }
+        },
+        onJudgeSuccess: (result) => {
+          setGraph(getGraph());
+          setJudgeResult(result);
+          advancePhase();
+          sync();
+        },
+        submitForJudging: options.submitForJudging,
+        retryLastJudging: options.retryLastJudging,
+      });
 
   let guidedOverlay: ReturnType<typeof mountGuidedOverlay> | null = null;
   let unsubscribeGraphChanges: (() => void) | null = null;
@@ -499,16 +557,30 @@ export function mountPhaseNavigation(
       }
     }
 
-    briefingPanel.root.hidden = !visibility.briefing;
-    requirementsPanel.root.hidden = !visibility.requirements;
+    briefingPanel.root.hidden = !visibility.briefing || isSandbox;
+    requirementsPanel.root.hidden = !visibility.requirements || isSandbox;
     palette.setVisible(visibility.palette);
-    submitPanel.root.hidden = !visibility.submit;
+    if (submitPanel) {
+      submitPanel.root.hidden = !visibility.submit;
+    }
+    if (findingsPanel.root) {
+      findingsPanel.root.hidden = phase !== 'canvas';
+      if (phase === 'canvas') {
+        refreshFindings();
+      }
+    }
+    if (workloadPanel) {
+      workloadPanel.root.hidden = phase !== 'canvas';
+    }
+    if (mentorPanel) {
+      mentorPanel.root.hidden = phase !== 'canvas';
+    }
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);
     sessionHeader.setVisible(phase === 'canvas');
     settingsPanel.setVisible(phase === 'canvas');
     if (phase !== 'canvas') {
-      problemDrawer.close();
+      problemDrawer?.close();
     }
 
     if (phase === 'requirements') {
@@ -590,7 +662,11 @@ export function mountPhaseNavigation(
       simControls.destroy();
       settingsPanel.root.remove();
       sessionHeader.destroy();
-      problemDrawer.destroy();
+      problemDrawer?.destroy();
+      findingsPanel.destroy();
+      workloadPanel?.destroy();
+      mentorPanel?.destroy();
+      submitPanel?.root.remove();
       destroyConfirmModal();
     },
   };

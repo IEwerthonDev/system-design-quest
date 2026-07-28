@@ -2,7 +2,7 @@ import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
 import type { ExperienceLevel } from './storage/preferences';
 
 export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
-export type GameMode = 'study' | 'speedrun';
+export type GameMode = 'study' | 'speedrun' | 'sandbox';
 export type JudgingStep = 'analyzing' | 'rigorous' | 'pragmatic' | 'consensus';
 
 export interface GameRequirements {

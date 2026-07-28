@@ -147,6 +147,18 @@ describe('problem library UI', () => {
     });
   });
 
+  it('opens Study Mode sandbox from library CTA', () => {
+    const onSelect = vi.fn();
+    mountProblemLibrary(container, { onSelect, skipAuthUi: true }, storage);
+
+    container.querySelector<HTMLButtonElement>('[data-testid="library-sandbox-cta"]')!.click();
+
+    expect(onSelect).toHaveBeenCalledWith({
+      problemId: '__sandbox__',
+      mode: 'sandbox',
+    });
+  });
+
   it('opens ranking panel when ranking button clicked', async () => {
     const fetchLeaderboard = vi.fn().mockResolvedValue({
       problemId: 'url-shortener',
