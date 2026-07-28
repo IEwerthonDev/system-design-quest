@@ -22,28 +22,28 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `link-validity-sim-realism` merged to `main` + production READY |
-| **Próximo passo** | Smoke UI: link preview colors + Study Mode findings without Start |
-| **Feature ativa** | none (`link-validity-sim-realism` shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `sandbox-panel-drawers` — Execute T1–T7 |
+| **Próximo passo** | Implement Workload/Mentor FAB drawers (SPD-01–05) |
+| **Feature ativa** | `sandbox-panel-drawers` |
+| **Branch** | `feature/sandbox-panel-drawers` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034 |
-| **Gate** | lint+test green pre-merge |
-| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/6 (squash `736d155`) |
+| **Decisões** | AD-031·032·033·034·**035** |
+| **Gate** | `nx run-many -t lint test` |
+| **PR** | pending |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_8XTES2vo299ESnRtqbr8BfLuSXJB` READY |
 
-### Context Checkpoint (2026-07-28 link-validity ship)
+### Context Checkpoint (2026-07-28 sandbox-panel-drawers)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — shipped |
-| Uncommitted | docs commit |
+| Chat length | GREEN — fresh session |
+| Uncommitted | GREEN — feature branch start |
 | Spec drift | GREEN |
-| Gate confidence | GREEN |
-| Task clarity | GREEN — done |
+| Gate confidence | GREEN — last ship green |
+| Task clarity | GREEN — T1→T7 |
 
-**Veredito:** GREEN — shipped
+**Veredito:** GREEN
 
 ### Deploy note (Hobby)
 
@@ -112,6 +112,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-032 | active | **Sandbox Study Mode** — `GameMode` += `sandbox`; `__sandbox__` sentinel problem; library CTA; skip briefing/requirements; Practice rename for problem `study` | Freeform lab; AD-005 extended |
 | AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
 | AD-034 | active | **Link validity + sim realism** — `assessConnectionPair` ok/warn/invalid; live preview colors; invalid blocked; warn yellow edges; findings always-on; async MQ write relief; primary write concentration; `QUEUE_BACKLOG` + `HOT_PARTITION` | Pedagogue canvas + interview-realistic bottlenecks without discrete-event sim |
+| AD-035 | active | **Sandbox Workload + Mentor FAB/drawer** — both panels collapsed by default on all viewports; FAB chip opens; collapse button + backdrop/outside click closes; opening one closes the other; Componentes palette stays independent (AD-023) | Canvas-first Study Mode; mirrors Componentes phone FAB pattern on desktop too |
 
 ---
 
