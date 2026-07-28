@@ -22,13 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` Execute — Batch 1 (T1–T7 / P1+P2) **complete** |
-| **Próximo passo** | Batch 2 (T8–T13 / P3+P4) → Batch 3 (T14–T19) → Verifier |
+| **Fase atual** | `judge-realism` Execute — Batch 2 (T8–T13 / P3+P4) **complete** |
+| **Próximo passo** | Batch 3 (T14–T19 / P5+P6) → Verifier |
 | **Feature ativa** | `judge-realism` (Complex) |
 | **Branch** | `feature/judge-realism` |
-| **Bloqueios** | None for Batch 1 — structural-first path kills cross-problem golden reuse on mock/no-key |
+| **Bloqueios** | None for Batch 2 — hard-gate + scale PASS gate + scale-critical configs wired |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
-| **Gate** | `npx nx run-many -t test -p shared,server` — shared 95 + server 131 passed |
+| **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
+| **Gate** | shared 99 + server 137 + client 406 passed (0 failed) |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** + AD-027/028 |
@@ -40,25 +41,26 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Bugfix** | Canvas cleared on new challenge; Stop contrast; Share styles; paper config icon; header gap |
 | **UI fix** | Voltar in header; palette minimizable; Stop/Share/config chrome |
 | **Neon** | Deferred (NEON-01) |
+| **Note** | Tier-2 catalog now 26 types (+`websocket_gateway` for AD-028 ws config) |
 
-### Context Checkpoint (2026-07-28 Batch 1)
+### Context Checkpoint (2026-07-28 Batch 2)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — fresh Batch 1 worker, T1–T7 only |
-| Uncommitted | GREEN — all T1–T7 committed |
-| Spec drift | GREEN — Approach A / AD-027 structural-first |
-| Gate confidence | GREEN — shared 95 + server 131 |
-| Task clarity | GREEN — next = Batch 2 T8–T13 |
+| Chat length | GREEN — Batch 2 worker T8–T13 only |
+| Uncommitted | GREEN — T8–T13 committed; docs handoff pending this commit |
+| Spec drift | GREEN — Approach A hard-gate + AD-028 configs |
+| Gate confidence | GREEN — shared 99 + server 137 + client 406 |
+| Task clarity | GREEN — next = Batch 3 T14–T19 |
 
-**Veredito:** GREEN for starting Batch 2 in a fresh worker.
+**Veredito:** GREEN for starting Batch 3 in a fresh worker.
 
-**Prompt para Batch 2:**
+**Prompt para Batch 3:**
 ```
-Branch feature/judge-realism. Batch 1 (T1–T7) complete.
-Read .specs/STATE.md Handoff + .specs/features/judge-realism/tasks.md T8–T13.
-Execute Batch 2 only (Phases 3+4 = T8→T13). One atomic commit per task. Do not push. Do not spawn sub-agents.
-Gate: npx nx test shared / server / client per task.
+Branch feature/judge-realism. Batch 2 (T8–T13) complete.
+Read .specs/STATE.md Handoff + .specs/features/judge-realism/tasks.md T14–T19.
+Execute Batch 3 only (Phases 5+6 = T14→T19). One atomic commit per task. Do not push. Do not spawn sub-agents.
+Gate: npx nx test shared / client / full per task.
 ```
 
 ### Deploy note (Hobby)

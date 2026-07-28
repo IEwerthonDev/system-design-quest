@@ -210,9 +210,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Stub LLM returns PASS-shaped partials + structural blockers ⇒ final FAIL
-- [ ] No blockers ⇒ LLM narrative fields preserved
-- [ ] Commit: `feat(server): structural hard-gate over dual-LLM consensus`
+- [x] Stub LLM returns PASS-shaped partials + structural blockers ⇒ final FAIL
+- [x] No blockers ⇒ LLM narrative fields preserved
+- [x] Commit: `feat(server): structural hard-gate over dual-LLM consensus`
 
 **Tests:** unit  
 **Gate:** quick server  
@@ -229,9 +229,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] LLM consensus with score≥80, no blockers, empty scale ⇒ not PASS
-- [ ] Non-empty scale allows PASS when AD-016 otherwise met
-- [ ] Commit: `feat(server): block PASS without scale narrative`
+- [x] LLM consensus with score≥80, no blockers, empty scale ⇒ not PASS
+- [x] Non-empty scale allows PASS when AD-016 otherwise met
+- [x] Commit: `feat(server): block PASS without scale narrative`
 
 **Tests:** unit  
 **Gate:** quick server  
@@ -248,10 +248,10 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Prompts include must-have gaps / blockers from structural report
-- [ ] Instruct model to populate scale analysis (QPS/storage/fan-out as relevant)
-- [ ] Core Hard prompt mentions consistency/durability/coordination
-- [ ] Commit: `feat(server): problem-structural and scale-aware judge prompts`
+- [x] Prompts include must-have gaps / blockers from structural report
+- [x] Instruct model to populate scale analysis (QPS/storage/fan-out as relevant)
+- [x] Core Hard prompt mentions consistency/durability/coordination
+- [x] Commit: `feat(server): problem-structural and scale-aware judge prompts`
 
 **Tests:** unit (string contains assertions)  
 **Gate:** quick server  
@@ -268,9 +268,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] `defaultConfigForType` covers scale-critical types
-- [ ] Out-of-range values clamped
-- [ ] Commit: `feat(shared): scale-critical component config kinds`
+- [x] `defaultConfigForType` covers scale-critical types
+- [x] Out-of-range values clamped
+- [x] Commit: `feat(shared): scale-critical component config kinds`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -287,8 +287,8 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Deterministic tests: low TTL / memory MQ / low fan-out increase pressure vs defaults
-- [ ] Commit: `feat(shared): simulation pressure for scale-critical configs`
+- [x] Deterministic tests: low TTL / memory MQ / low fan-out increase pressure vs defaults
+- [x] Commit: `feat(shared): simulation pressure for scale-critical configs`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -305,9 +305,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Fields render per config kind; changes call `onConfigChange`
-- [ ] Unit/DOM tests cover new controls
-- [ ] Commit: `feat(client): config popover scale-critical fields`
+- [x] Fields render per config kind; changes call `onConfigChange`
+- [x] Unit/DOM tests cover new controls
+- [x] Commit: `feat(client): config popover scale-critical fields`
 
 **Tests:** unit  
 **Gate:** quick client  
