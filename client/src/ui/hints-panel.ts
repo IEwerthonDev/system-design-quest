@@ -83,11 +83,11 @@ function injectHintsStyles(root: HTMLElement): void {
       left: 236px;
       z-index: 12;
       width: min(320px, calc(100vw - 252px));
-      border-radius: 10px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: rgba(30, 41, 59, 0.94);
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      border-radius: var(--sdq-radius);
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       box-shadow: 0 10px 24px rgba(2, 6, 23, 0.35);
     }
     .sdq-hints__title {
@@ -95,7 +95,7 @@ function injectHintsStyles(root: HTMLElement): void {
       padding: 12px 14px 8px;
       font-size: 13px;
       font-weight: 700;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-hints__list {
       list-style: none;
@@ -109,14 +109,14 @@ function injectHintsStyles(root: HTMLElement): void {
       padding: 8px 6px;
       font-size: 12px;
       line-height: 1.45;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
       border-top: 1px solid rgba(148, 163, 184, 0.12);
     }
     .sdq-hints__item:first-child {
       border-top: none;
     }
     .sdq-hints__item--resolved {
-      color: #64748b;
+      color: var(--sdq-text-subtle);
       text-decoration: line-through;
     }
     .sdq-hints__check {

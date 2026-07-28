@@ -36,10 +36,10 @@ function injectStyles(): void {
       width: 300px;
       max-height: min(70vh, 100%);
       overflow-y: auto;
-      background: rgba(15, 30, 60, 0.98);
+      background: var(--sdq-bg-elevated);
       border: 1px solid rgba(148,163,184,0.35);
-      border-radius: 10px;
-      color: #e2e8f0;
+      border-radius: var(--sdq-radius);
+      color: var(--sdq-text);
       font-family: ui-monospace, Menlo, monospace;
       font-size: 12px;
       padding: 12px 14px 14px;
@@ -54,7 +54,7 @@ function injectStyles(): void {
       top: auto !important;
       width: 100% !important;
       max-width: 100%;
-      border-radius: 12px 12px 0 0;
+      border-radius: var(--sdq-radius-lg) 12px 0 0;
       max-height: min(70vh, calc(100% - 8px));
     }
     .sdq-connection-intent__header {
@@ -65,28 +65,28 @@ function injectStyles(): void {
       font-weight: 700; letter-spacing: 0.04em; display: block;
     }
     .sdq-connection-intent__role {
-      color: #94a3b8; font-size: 10px; letter-spacing: 0.06em; margin-top: 2px;
+      color: var(--sdq-text-muted); font-size: 10px; letter-spacing: 0.06em; margin-top: 2px;
     }
     .sdq-connection-intent__close {
-      background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;
+      background: transparent; border: none; color: var(--sdq-text-muted); cursor: pointer; font-size: 16px;
     }
     .sdq-connection-intent__option {
       display: block; width: 100%; text-align: left;
       background: rgba(0,0,0,0.25); border: 1px solid rgba(148,163,184,0.25);
-      color: inherit; font: inherit; border-radius: 8px; padding: 10px 12px;
+      color: inherit; font: inherit; border-radius: var(--sdq-radius-sm); padding: 10px 12px;
       margin-bottom: 8px; cursor: pointer;
     }
     .sdq-connection-intent__option:last-child { margin-bottom: 0; }
     .sdq-connection-intent__option.is-selected,
     .sdq-connection-intent__option[aria-selected="true"] {
-      border-color: #38bdf8; background: rgba(14, 165, 233, 0.15);
+      border-color: var(--sdq-accent); background: var(--sdq-accent-muted);
     }
     .sdq-connection-intent__option-codes {
       display: flex; gap: 8px; align-items: baseline; margin-bottom: 4px;
     }
-    .sdq-connection-intent__short { font-weight: 700; color: #f8fafc; }
-    .sdq-connection-intent__option-role { color: #94a3b8; font-size: 10px; letter-spacing: 0.05em; }
-    .sdq-connection-intent__option-desc { color: #cbd5e1; line-height: 1.35; font-size: 11px; }
+    .sdq-connection-intent__short { font-weight: 700; color: var(--sdq-text); }
+    .sdq-connection-intent__option-role { color: var(--sdq-text-muted); font-size: 10px; letter-spacing: 0.05em; }
+    .sdq-connection-intent__option-desc { color: var(--sdq-text-muted); line-height: 1.35; font-size: 11px; }
   `;
   document.head.append(style);
 }

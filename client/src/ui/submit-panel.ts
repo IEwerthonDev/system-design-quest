@@ -69,10 +69,10 @@ function injectSubmitStyles(root: HTMLElement): void {
       z-index: 10;
     }
     .sdq-submit-bar__button {
-      border: 1px solid rgba(96, 165, 250, 0.5);
-      background: rgba(30, 64, 175, 0.85);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-focus-ring);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 10px 20px;
       font: 600 14px system-ui, sans-serif;
       cursor: pointer;
@@ -87,12 +87,12 @@ function injectSubmitStyles(root: HTMLElement): void {
     .sdq-submit-bar__error {
       max-width: 320px;
       text-align: center;
-      color: #fecaca;
+      color: var(--sdq-danger);
       background: rgba(127, 29, 29, 0.85);
       border: 1px solid rgba(248, 113, 113, 0.45);
-      border-radius: 6px;
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 12px;
-      font: 13px system-ui, sans-serif;
+      font: 13px var(--sdq-font);
     }
   `;
   root.append(style);

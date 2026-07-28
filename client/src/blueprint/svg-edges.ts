@@ -1,4 +1,5 @@
 import type { ConnectionEdge } from '@sdq/shared';
+import { SDQ_COLORS } from '../theme/tokens';
 
 export interface EdgeEndpoints {
   from: { x: number; y: number };
@@ -113,7 +114,7 @@ export function createSvgEdgeLayer(
     previewEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
     previewEl.setAttribute('d', curvePath(from, to));
     previewEl.setAttribute('fill', 'none');
-    previewEl.setAttribute('stroke', '#38bdf8');
+    previewEl.setAttribute('stroke', SDQ_COLORS.accent);
     previewEl.setAttribute('stroke-width', '1.5');
     previewEl.setAttribute('stroke-dasharray', '6 4');
     previewEl.setAttribute('data-testid', 'edge-preview');
@@ -141,7 +142,7 @@ export function createSvgEdgeLayer(
       const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
       path.setAttribute('d', curvePath(ep.from, ep.to));
       path.setAttribute('fill', 'none');
-      path.setAttribute('stroke', selectedId === edge.id ? '#38bdf8' : '#e2e8f0');
+      path.setAttribute('stroke', selectedId === edge.id ? SDQ_COLORS.accent : SDQ_COLORS.edgeStroke);
       path.setAttribute('stroke-width', selectedId === edge.id ? '2.5' : '1.5');
       path.style.pointerEvents = 'stroke';
       path.style.cursor = 'pointer';
@@ -174,15 +175,15 @@ export function createSvgEdgeLayer(
         rect.setAttribute('height', String(h));
         rect.setAttribute('rx', '8');
         rect.setAttribute('ry', '8');
-        rect.setAttribute('fill', selected ? '#0ea5e9' : '#1e293b');
-        rect.setAttribute('stroke', selected ? '#38bdf8' : '#64748b');
+        rect.setAttribute('fill', selected ? SDQ_COLORS.accent : SDQ_COLORS.bgSurface);
+        rect.setAttribute('stroke', selected ? SDQ_COLORS.accent : SDQ_COLORS.textSubtle);
         rect.setAttribute('stroke-width', '1');
 
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttribute('x', String(midX));
         text.setAttribute('y', String(midY + 3.5));
         text.setAttribute('text-anchor', 'middle');
-        text.setAttribute('fill', '#f8fafc');
+        text.setAttribute('fill', selected ? SDQ_COLORS.bg : SDQ_COLORS.text);
         text.setAttribute('font-size', '10');
         text.setAttribute('font-family', 'ui-monospace, monospace');
         text.style.pointerEvents = 'none';
@@ -195,7 +196,7 @@ export function createSvgEdgeLayer(
       if (running) {
         const packet = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         packet.setAttribute('r', '4');
-        packet.setAttribute('fill', '#38bdf8');
+        packet.setAttribute('fill', SDQ_COLORS.accent);
         packet.dataset.edgeId = edge.id;
         g.append(packet);
         packetEls.push(packet);

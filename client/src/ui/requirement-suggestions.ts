@@ -49,7 +49,7 @@ function injectSuggestionStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-bottom: 10px;
     }
     .sdq-suggestions__group {
@@ -58,7 +58,7 @@ function injectSuggestionStyles(root: HTMLElement): void {
     .sdq-suggestions__group-label {
       font-size: 12px;
       font-weight: 600;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
       margin-bottom: 8px;
     }
     .sdq-suggestions__cards {
@@ -67,7 +67,7 @@ function injectSuggestionStyles(root: HTMLElement): void {
       gap: 8px;
     }
     .sdq-suggestions__card {
-      border: 1px solid rgba(96, 165, 250, 0.35);
+      border: 1px solid var(--sdq-accent-border);
       background: rgba(30, 64, 175, 0.25);
       color: #bfdbfe;
       border-radius: 999px;
@@ -79,15 +79,15 @@ function injectSuggestionStyles(root: HTMLElement): void {
     }
     .sdq-suggestions__card:hover:not(:disabled) {
       background: rgba(37, 99, 235, 0.45);
-      color: #e2e8f0;
+      color: var(--sdq-text);
     }
     .sdq-suggestions__card--used,
     .sdq-suggestions__card:disabled {
       opacity: 0.45;
       cursor: default;
-      border-color: rgba(148, 163, 184, 0.25);
+      border-color: var(--sdq-border);
       background: rgba(51, 65, 85, 0.35);
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
   `;
   root.append(style);

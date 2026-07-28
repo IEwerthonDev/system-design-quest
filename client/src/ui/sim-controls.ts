@@ -23,22 +23,23 @@ function injectStyles(): void {
       display: flex;
       align-items: center;
       gap: 12px;
-      background: #f8fafc;
-      color: #0f172a;
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      border: 1px solid var(--sdq-border);
       border-radius: 999px;
       padding: 6px 14px 6px 8px;
-      font-family: ui-monospace, Menlo, monospace;
+      font-family: var(--sdq-font-mono);
       font-size: 11px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      box-shadow: var(--sdq-shadow);
     }
     .sdq-sim-controls__top,
     .sdq-sim-controls__meters {
       display: contents;
     }
     .sdq-sim-controls__start {
-      background: #2563eb;
-      color: white;
-      border: none;
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-accent);
+      border: 1px solid var(--sdq-accent-border);
       border-radius: 999px;
       padding: 6px 14px;
       font-weight: 700;
@@ -47,7 +48,7 @@ function injectStyles(): void {
       touch-action: manipulation;
     }
     .sdq-sim-controls__start[data-running="true"] {
-      background: #dc2626;
+      background: var(--sdq-danger);
     }
     .sdq-sim-controls__field {
       display: flex;
@@ -64,11 +65,11 @@ function injectStyles(): void {
     }
     .sdq-sim-controls input[type="range"] {
       width: 100%;
-      accent-color: #38bdf8;
+      accent-color: var(--sdq-accent);
     }
     .sdq-sim-controls__hint {
       font-size: 10px;
-      color: #64748b;
+      color: var(--sdq-text-subtle);
       max-width: 110px;
       line-height: 1.2;
     }
@@ -81,9 +82,9 @@ function injectStyles(): void {
         width: 100%;
         border-radius: 14px;
         padding: 0;
-        background: rgba(8, 20, 38, 0.96);
-        border: 1px solid rgba(56, 120, 180, 0.35);
-        color: #e2e8f0;
+        background: var(--sdq-bg-elevated);
+        border: 1px solid var(--sdq-border-strong);
+        color: var(--sdq-text);
         box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
         overflow: hidden;
       }
@@ -93,8 +94,8 @@ function injectStyles(): void {
         justify-content: space-between;
         gap: 10px;
         padding: 10px 12px;
-        background: rgba(15, 40, 72, 0.55);
-        border-bottom: 1px solid rgba(56, 120, 180, 0.2);
+        background: var(--sdq-bg-surface);
+        border-bottom: 1px solid var(--sdq-border);
       }
       .sdq-sim-controls__meters {
         display: flex;
@@ -106,7 +107,7 @@ function injectStyles(): void {
         flex-shrink: 0;
         min-height: 40px;
         min-width: 84px;
-        border-radius: 10px;
+        border-radius: var(--sdq-radius);
         font-size: 12px;
         letter-spacing: 0.04em;
       }
@@ -118,15 +119,15 @@ function injectStyles(): void {
         font-size: 9px;
         letter-spacing: 0.08em;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: var(--sdq-text-muted);
       }
       .sdq-sim-controls__field label span:last-child {
-        color: #7dd3fc;
+        color: var(--sdq-accent);
         font-weight: 700;
       }
       .sdq-sim-controls input[type="range"] {
         min-height: 24px;
-        accent-color: #38bdf8;
+        accent-color: var(--sdq-accent);
       }
       .sdq-sim-controls__hint {
         display: block;
@@ -135,7 +136,7 @@ function injectStyles(): void {
         max-width: none;
         font-size: 10px;
         line-height: 1.3;
-        color: #94a3b8;
+        color: var(--sdq-text-muted);
         text-align: right;
       }
     }

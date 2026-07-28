@@ -53,17 +53,17 @@ function injectStyles(): void {
       align-items: flex-start;
       justify-content: center;
       padding: 24px;
-      background: rgba(15, 20, 25, 0.96);
+      background: var(--sdq-bg-overlay);
       z-index: 20;
       overflow-y: auto;
-      font-family: system-ui, sans-serif;
-      color: #e2e8f0;
+      font-family: var(--sdq-font);
+      color: var(--sdq-text);
     }
     .sdq-sessions__card {
       width: min(840px, 100%);
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-lg);
       padding: 24px 26px 28px;
     }
     .sdq-sessions__header {
@@ -78,21 +78,21 @@ function injectStyles(): void {
       margin: 0;
       font-size: 24px;
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--sdq-text);
     }
     .sdq-sessions__nickname {
       margin: 4px 0 0;
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-sessions__back {
-      border: 1px solid rgba(148, 163, 184, 0.35);
+      border: 1px solid var(--sdq-border-strong);
       background: rgba(51, 65, 85, 0.9);
-      color: #e2e8f0;
-      border-radius: 8px;
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 6px 12px;
       cursor: pointer;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
     }
     .sdq-sessions__tabs {
       display: flex;
@@ -101,16 +101,16 @@ function injectStyles(): void {
       margin: 16px 0;
     }
     .sdq-sessions__tab {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.65);
-      color: #e2e8f0;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
       border-radius: 999px;
       padding: 6px 14px;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
     }
     .sdq-sessions__tab--active {
-      background: rgba(56, 189, 248, 0.2);
+      background: var(--sdq-accent-muted);
       border-color: rgba(56, 189, 248, 0.55);
     }
     .sdq-sessions__list {
@@ -119,9 +119,9 @@ function injectStyles(): void {
       gap: 10px;
     }
     .sdq-sessions__item {
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.55);
-      border-radius: 10px;
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
+      border-radius: var(--sdq-radius);
       padding: 12px 14px;
       cursor: pointer;
       text-align: left;
@@ -136,21 +136,21 @@ function injectStyles(): void {
       margin: 0 0 4px;
       font-size: 15px;
       font-weight: 600;
-      color: #f8fafc;
+      color: var(--sdq-text);
     }
     .sdq-sessions__item-meta {
       margin: 0;
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-sessions__empty {
       margin: 8px 0 0;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       font-size: 14px;
     }
     .sdq-sessions__error {
       margin: 8px 0 0;
-      color: #fca5a5;
+      color: var(--sdq-danger);
       font-size: 14px;
     }
   `;

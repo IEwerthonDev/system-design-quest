@@ -221,7 +221,7 @@ describe('svg-edges pill labels + edge activation (CI-01 / CI-02)', () => {
     );
     const path = world.querySelector('path');
     const pill = world.querySelector('[data-testid="edge-label"]');
-    expect(path!.getAttribute('stroke')).toBe('#38bdf8');
+    expect(path!.getAttribute('stroke')).toBe('#c9a962');
     expect(path!.getAttribute('stroke-width')).toBe('2.5');
     expect(pill!.classList.contains('is-selected') || pill!.getAttribute('data-selected') === 'true').toBe(
       true,

@@ -158,11 +158,11 @@ function injectGlossaryPanelStyles(root: HTMLElement): void {
       max-height: calc(100vh - 32px);
       display: flex;
       flex-direction: column;
-      border-radius: 12px;
+      border-radius: var(--sdq-radius-lg);
       border: 1px solid rgba(56, 189, 248, 0.35);
-      background: rgba(15, 23, 42, 0.98);
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       box-shadow: 0 16px 40px rgba(2, 6, 23, 0.55);
     }
     .sdq-glossary-panel[hidden] {
@@ -174,30 +174,30 @@ function injectGlossaryPanelStyles(root: HTMLElement): void {
       justify-content: space-between;
       gap: 12px;
       padding: 14px 16px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      border-bottom: 1px solid var(--sdq-border);
     }
     .sdq-glossary-panel__title {
       margin: 0;
       font-size: 15px;
       font-weight: 700;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-glossary-panel__shortcut {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-glossary-panel__close {
       border: none;
       background: transparent;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       font-size: 20px;
       line-height: 1;
       cursor: pointer;
       padding: 2px 6px;
-      border-radius: 6px;
+      border-radius: var(--sdq-radius-sm);
     }
     .sdq-glossary-panel__close:hover {
-      color: #e2e8f0;
+      color: var(--sdq-text);
       background: rgba(51, 65, 85, 0.6);
     }
     .sdq-glossary-panel__body {
@@ -220,12 +220,12 @@ function injectGlossaryPanelStyles(root: HTMLElement): void {
       margin: 0;
       font-size: 12px;
       line-height: 1.5;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-glossary-panel__empty {
       margin: 0;
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
   `;
   root.append(style);
@@ -360,11 +360,11 @@ function injectGlossaryStyles(root: HTMLElement): void {
       z-index: 50;
       width: min(280px, calc(100vw - 24px));
       padding: 12px 14px;
-      border-radius: 10px;
+      border-radius: var(--sdq-radius);
       border: 1px solid rgba(56, 189, 248, 0.35);
-      background: rgba(15, 23, 42, 0.98);
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       font-size: 12px;
       line-height: 1.45;
       box-shadow: 0 10px 30px rgba(2, 6, 23, 0.45);
@@ -374,15 +374,15 @@ function injectGlossaryStyles(root: HTMLElement): void {
       margin: 0 0 6px;
       font-size: 13px;
       font-weight: 700;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-component-tooltip__description {
       margin: 0 0 8px;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-component-tooltip__when {
       margin: 0;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       font-size: 11px;
     }
     .sdq-component-tooltip__when strong {
@@ -391,7 +391,7 @@ function injectGlossaryStyles(root: HTMLElement): void {
     }
     .sdq-palette__item--tooltip-active {
       border-color: rgba(56, 189, 248, 0.55);
-      background: rgba(30, 41, 59, 0.95);
+      background: var(--sdq-bg-elevated);
     }
   `;
   root.append(style);

@@ -38,7 +38,7 @@ function injectGuidedStyles(root: HTMLElement): void {
     }
     .sdq-guided-spotlight {
       position: fixed;
-      border-radius: 10px;
+      border-radius: var(--sdq-radius);
       box-shadow: 0 0 0 9999px rgba(2, 6, 23, 0.62);
       outline: 2px solid rgba(56, 189, 248, 0.95);
       outline-offset: 2px;
@@ -51,12 +51,12 @@ function injectGuidedStyles(root: HTMLElement): void {
       bottom: 24px;
       transform: translateX(-50%);
       width: min(520px, calc(100% - 32px));
-      background: rgba(15, 23, 42, 0.96);
+      background: var(--sdq-bg-overlay);
       border: 1px solid rgba(56, 189, 248, 0.35);
-      border-radius: 12px;
+      border-radius: var(--sdq-radius-lg);
       padding: 16px 18px 14px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       pointer-events: auto;
       box-shadow: 0 12px 40px rgba(2, 6, 23, 0.45);
     }
@@ -64,13 +64,13 @@ function injectGuidedStyles(root: HTMLElement): void {
       margin: 0 0 8px;
       font-size: 15px;
       font-weight: 700;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-guided-hint__body {
       margin: 0 0 14px;
       font-size: 13px;
       line-height: 1.5;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
       white-space: pre-line;
     }
     .sdq-guided-hint__actions {
@@ -79,12 +79,12 @@ function injectGuidedStyles(root: HTMLElement): void {
       gap: 8px;
     }
     .sdq-guided-hint__dismiss {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.9);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 7px 12px;
-      font: 600 12px system-ui, sans-serif;
+      font: 600 12px var(--sdq-font);
       cursor: pointer;
     }
     .sdq-guided-hint__dismiss:hover {

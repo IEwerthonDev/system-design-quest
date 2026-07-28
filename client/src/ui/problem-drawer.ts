@@ -23,8 +23,8 @@ function injectStyles(): void {
       transform: translateY(-50%) rotate(-90deg);
       transform-origin: left center;
       z-index: 22;
-      background: rgba(15, 30, 55, 0.95);
-      color: #e2e8f0;
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
       border: 1px solid rgba(148,163,184,0.35);
       border-radius: 0 0 8px 8px;
       padding: 8px 14px;
@@ -39,9 +39,9 @@ function injectStyles(): void {
       width: min(340px, 90vw);
       height: 100%;
       z-index: 21;
-      background: rgba(10, 25, 48, 0.97);
+      background: var(--sdq-bg-elevated);
       border-right: 1px solid rgba(148,163,184,0.3);
-      color: #e2e8f0;
+      color: var(--sdq-text);
       font-family: ui-monospace, Menlo, monospace;
       font-size: 12px;
       padding: 56px 16px 24px;
@@ -56,14 +56,14 @@ function injectStyles(): void {
       font-size: 13px;
       letter-spacing: 0.1em;
       margin-bottom: 8px;
-      color: #93c5fd;
+      color: var(--sdq-accent);
     }
     .sdq-problem-drawer h3 {
       font-size: 14px;
       margin: 0 0 10px;
     }
-    .sdq-problem-drawer p { line-height: 1.45; color: #cbd5e1; margin-bottom: 12px; }
-    .sdq-problem-drawer ul { padding-left: 18px; color: #94a3b8; }
+    .sdq-problem-drawer p { line-height: 1.45; color: var(--sdq-text-muted); margin-bottom: 12px; }
+    .sdq-problem-drawer ul { padding-left: 18px; color: var(--sdq-text-muted); }
     .sdq-problem-drawer li { margin-bottom: 6px; }
   `;
   document.head.append(style);

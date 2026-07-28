@@ -57,8 +57,8 @@ function injectResultStyles(root: HTMLElement): void {
       align-items: stretch;
       justify-content: flex-start;
       padding: 0;
-      background: rgba(15, 20, 25, 0.96);
-      border-left: 1px solid rgba(148, 163, 184, 0.25);
+      background: var(--sdq-bg-overlay);
+      border-left: 1px solid var(--sdq-border);
       z-index: 15;
       overflow: hidden;
       box-shadow: -8px 0 24px rgba(0, 0, 0, 0.35);
@@ -67,12 +67,12 @@ function injectResultStyles(root: HTMLElement): void {
       width: 100%;
       height: 100%;
       overflow-y: auto;
-      background: rgba(30, 41, 59, 0.96);
+      background: var(--sdq-bg-elevated);
       border: none;
       border-radius: 0;
       padding: 20px 18px 28px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
     }
     .sdq-result__header {
       display: flex;
@@ -93,27 +93,27 @@ function injectResultStyles(root: HTMLElement): void {
     }
     .sdq-result__badge--pass {
       background: rgba(34, 197, 94, 0.18);
-      color: #86efac;
+      color: var(--sdq-success);
       border: 1px solid rgba(34, 197, 94, 0.45);
     }
     .sdq-result__badge--partial {
       background: rgba(234, 179, 8, 0.18);
-      color: #fde047;
+      color: var(--sdq-warning);
       border: 1px solid rgba(234, 179, 8, 0.45);
     }
     .sdq-result__badge--fail {
       background: rgba(239, 68, 68, 0.18);
-      color: #fca5a5;
+      color: var(--sdq-danger);
       border: 1px solid rgba(239, 68, 68, 0.45);
     }
     .sdq-result__score {
       font-size: 28px;
       font-weight: 700;
-      color: #f8fafc;
+      color: var(--sdq-text);
     }
     .sdq-result__score-label {
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-left: 4px;
     }
     .sdq-result__controls {
@@ -122,23 +122,23 @@ function injectResultStyles(root: HTMLElement): void {
       align-items: center;
       gap: 8px;
       font-size: 13px;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-result__toggle {
-      accent-color: #38bdf8;
+      accent-color: var(--sdq-accent);
     }
     .sdq-result__summary {
       margin: 0 0 12px;
       font-size: 15px;
       line-height: 1.55;
-      color: #e2e8f0;
+      color: var(--sdq-text);
     }
     .sdq-result__next-step {
       margin: 0 0 18px;
       padding: 12px 14px;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--sdq-radius-sm);
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-accent-muted);
       font-size: 14px;
       line-height: 1.5;
     }
@@ -148,25 +148,25 @@ function injectResultStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
       margin-bottom: 6px;
     }
     .sdq-result__details-toggle {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.65);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 14px;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
       margin-bottom: 14px;
     }
     .sdq-result__details-toggle:hover {
-      background: rgba(30, 41, 59, 0.95);
+      background: var(--sdq-bg-elevated);
     }
     .sdq-result__details {
       display: none;
-      border-top: 1px solid rgba(148, 163, 184, 0.2);
+      border-top: 1px solid var(--sdq-border);
       padding-top: 16px;
     }
     .sdq-result__details--expanded {
@@ -181,32 +181,32 @@ function injectResultStyles(root: HTMLElement): void {
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-result__item {
       margin-bottom: 10px;
       padding: 10px 12px;
-      border-radius: 8px;
-      background: rgba(15, 20, 25, 0.55);
-      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: var(--sdq-radius-sm);
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
     }
     .sdq-result__item-title {
       margin: 0 0 6px;
       font-size: 14px;
       font-weight: 600;
-      color: #f8fafc;
+      color: var(--sdq-text);
     }
     .sdq-result__item-body {
       margin: 0;
       font-size: 13px;
       line-height: 1.45;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-result__item-meta {
       margin: 6px 0 0;
       font-size: 12px;
       line-height: 1.45;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-result__coverage {
       width: 100%;
@@ -215,14 +215,14 @@ function injectResultStyles(root: HTMLElement): void {
     }
     .sdq-result__coverage th,
     .sdq-result__coverage td {
-      border: 1px solid rgba(148, 163, 184, 0.2);
+      border: 1px solid var(--sdq-border);
       padding: 8px 10px;
       text-align: left;
       vertical-align: top;
     }
     .sdq-result__coverage th {
-      background: rgba(15, 23, 42, 0.75);
-      color: #94a3b8;
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text-muted);
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -230,9 +230,9 @@ function injectResultStyles(root: HTMLElement): void {
     .sdq-result__debate-block {
       margin-bottom: 10px;
       padding: 10px 12px;
-      border-radius: 8px;
-      background: rgba(15, 20, 25, 0.55);
-      border: 1px solid rgba(148, 163, 184, 0.15);
+      border-radius: var(--sdq-radius-sm);
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
     }
     .sdq-result__debate-label {
       display: block;
@@ -241,12 +241,12 @@ function injectResultStyles(root: HTMLElement): void {
       font-weight: 700;
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-result__empty {
       margin: 0;
       font-size: 13px;
-      color: #64748b;
+      color: var(--sdq-text-subtle);
       font-style: italic;
     }
   `;

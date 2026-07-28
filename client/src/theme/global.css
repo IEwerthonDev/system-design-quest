@@ -22,6 +22,11 @@
   --sdq-font: 'Inter', system-ui, -apple-system, sans-serif;
   --sdq-font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
   --sdq-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --sdq-canvas-bg: #0e0e11;
+  --sdq-canvas-grid: rgba(201, 169, 98, 0.07);
+  --sdq-focus-ring: rgba(201, 169, 98, 0.45);
+  --sdq-edge-stroke: rgba(255, 255, 255, 0.55);
+  --sdq-hover-bg: #222226;
 }
 
 html,
@@ -69,7 +74,7 @@ body,
 }
 
 .sdq-btn:hover {
-  background: #222226;
+  background: var(--sdq-hover-bg);
   border-color: rgba(255, 255, 255, 0.2);
 }
 
@@ -129,4 +134,23 @@ body,
   flex-shrink: 0;
   min-height: 36px;
   padding: 6px 12px;
+}
+
+/* ── Shared form + panel patterns (used across injected component styles) ── */
+[class*="sdq-"] input[type="text"],
+[class*="sdq-"] input[type="number"],
+[class*="sdq-"] textarea,
+[class*="sdq-"] select {
+  font-family: var(--sdq-font);
+}
+
+[class*="sdq-"] input[type="range"] {
+  accent-color: var(--sdq-accent);
+}
+
+[class*="sdq-"] input:focus-visible,
+[class*="sdq-"] textarea:focus-visible,
+[class*="sdq-"] button:focus-visible {
+  outline: 2px solid var(--sdq-focus-ring);
+  outline-offset: 2px;
 }

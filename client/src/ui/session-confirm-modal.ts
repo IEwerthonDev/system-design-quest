@@ -55,11 +55,11 @@ function injectStyles(): void {
       max-height: min(90dvh, 100%);
       display: flex;
       flex-direction: column;
-      background: rgba(30, 41, 59, 0.98);
+      background: var(--sdq-bg-elevated);
       border: 1px solid rgba(148, 163, 184, 0.3);
-      border-radius: 12px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      border-radius: var(--sdq-radius-lg);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       overflow: hidden;
       box-sizing: border-box;
     }
@@ -78,11 +78,11 @@ function injectStyles(): void {
       margin: 0;
       font-size: 14px;
       line-height: 1.5;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-session-confirm__error {
       margin: 12px 0 0;
-      color: #fca5a5;
+      color: var(--sdq-danger);
       font-size: 13px;
     }
     .sdq-session-confirm__actions {
@@ -92,21 +92,21 @@ function injectStyles(): void {
       gap: 8px;
       justify-content: flex-end;
       padding: 12px 18px 16px;
-      border-top: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.85);
+      border-top: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
     }
     .sdq-session-confirm__btn {
-      border-radius: 8px;
+      border-radius: var(--sdq-radius-sm);
       padding: 10px 14px;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.95);
-      color: #e2e8f0;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
     }
     .sdq-session-confirm__btn--primary {
-      background: #2563eb;
-      border-color: #2563eb;
+      background: var(--sdq-accent);
+      border-color: var(--sdq-accent);
       color: #fff;
     }
   `;

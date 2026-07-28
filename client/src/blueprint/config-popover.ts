@@ -31,10 +31,10 @@ function injectStyles(): void {
       position: fixed;
       width: 300px;
       z-index: 40;
-      background: rgba(15, 30, 60, 0.98);
+      background: var(--sdq-bg-elevated);
       border: 1px solid rgba(148,163,184,0.35);
-      border-radius: 10px;
-      color: #e2e8f0;
+      border-radius: var(--sdq-radius);
+      color: var(--sdq-text);
       font-family: ui-monospace, Menlo, monospace;
       font-size: 12px;
       padding: 12px 14px 14px;
@@ -49,9 +49,9 @@ function injectStyles(): void {
     }
     .sdq-config-popover__title { font-weight: 700; flex: 1; }
     .sdq-config-popover__close {
-      background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 16px;
+      background: transparent; border: none; color: var(--sdq-text-muted); cursor: pointer; font-size: 16px;
     }
-    .sdq-config-popover__desc { color: #94a3b8; margin-bottom: 12px; line-height: 1.4; }
+    .sdq-config-popover__desc { color: var(--sdq-text-muted); margin-bottom: 12px; line-height: 1.4; }
     .sdq-config-popover__field { margin-bottom: 10px; }
     .sdq-config-popover__field label {
       display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.04em;
@@ -59,11 +59,11 @@ function injectStyles(): void {
     .sdq-config-popover input[type="range"] { width: 100%; }
     .sdq-config-popover select, .sdq-config-popover input[type="text"], .sdq-config-popover textarea {
       width: 100%; background: rgba(0,0,0,0.35); border: 1px solid rgba(148,163,184,0.3);
-      color: #e2e8f0; border-radius: 6px; padding: 6px 8px; font: inherit;
+      color: var(--sdq-text); border-radius: var(--sdq-radius-sm); padding: 6px 8px; font: inherit;
     }
     .sdq-config-popover textarea { min-height: 64px; resize: vertical; }
     .sdq-config-popover__notes-title { font-size: 11px; margin: 12px 0 6px; letter-spacing: 0.04em; }
-    .sdq-config-popover__hint { font-size: 10px; color: #64748b; margin-top: 8px; }
+    .sdq-config-popover__hint { font-size: 10px; color: var(--sdq-text-subtle); margin-top: 8px; }
   `;
   document.head.append(style);
 }

@@ -53,10 +53,10 @@ function injectPropertiesStyles(root: HTMLElement): void {
       width: 260px;
       height: 100%;
       overflow-y: auto;
-      background: rgba(15, 20, 25, 0.92);
-      border-left: 1px solid rgba(148, 163, 184, 0.2);
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      background: var(--sdq-bg-overlay);
+      border-left: 1px solid var(--sdq-border);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       font-size: 13px;
       z-index: 10;
       padding: 16px 14px 24px;
@@ -70,7 +70,7 @@ function injectPropertiesStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-bottom: 14px;
     }
     .sdq-properties__field {
@@ -82,15 +82,15 @@ function injectPropertiesStyles(root: HTMLElement): void {
     .sdq-properties__label {
       font-size: 11px;
       font-weight: 600;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-properties__input,
     .sdq-properties__textarea {
       width: 100%;
-      border-radius: 6px;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: rgba(30, 41, 59, 0.8);
-      color: #e2e8f0;
+      border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
       padding: 8px 10px;
       font: inherit;
       box-sizing: border-box;
@@ -103,7 +103,7 @@ function injectPropertiesStyles(root: HTMLElement): void {
     .sdq-properties__action {
       width: 100%;
       margin-top: 8px;
-      border-radius: 6px;
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 10px;
       font: inherit;
       cursor: pointer;
@@ -111,15 +111,15 @@ function injectPropertiesStyles(root: HTMLElement): void {
     .sdq-properties__delete {
       border: 1px solid rgba(248, 113, 113, 0.45);
       background: rgba(127, 29, 29, 0.35);
-      color: #fecaca;
+      color: var(--sdq-danger);
     }
     .sdq-properties__delete:hover {
       background: rgba(153, 27, 27, 0.5);
     }
     .sdq-properties__action {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.8);
-      color: #e2e8f0;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
     }
     .sdq-properties__action:hover {
       background: rgba(51, 65, 85, 0.9);

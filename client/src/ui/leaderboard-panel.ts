@@ -28,7 +28,7 @@ function injectLeaderboardStyles(root: HTMLElement): void {
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: rgba(15, 20, 25, 0.92);
+      background: var(--sdq-bg-overlay);
       z-index: 30;
     }
     /* Author display:flex otherwise wins over the UA [hidden] rule. */
@@ -37,12 +37,12 @@ function injectLeaderboardStyles(root: HTMLElement): void {
     }
     .sdq-leaderboard__card {
       width: min(640px, 100%);
-      background: rgba(30, 41, 59, 0.96);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-lg);
       padding: 20px 22px 24px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
     }
     .sdq-leaderboard__header {
       display: flex;
@@ -56,13 +56,13 @@ function injectLeaderboardStyles(root: HTMLElement): void {
       font-size: 20px;
     }
     .sdq-leaderboard__close {
-      border: 1px solid rgba(148, 163, 184, 0.35);
+      border: 1px solid var(--sdq-border-strong);
       background: rgba(51, 65, 85, 0.9);
-      color: #e2e8f0;
-      border-radius: 8px;
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 6px 12px;
       cursor: pointer;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
     }
     .sdq-leaderboard__table {
       width: 100%;
@@ -72,11 +72,11 @@ function injectLeaderboardStyles(root: HTMLElement): void {
     .sdq-leaderboard__table th,
     .sdq-leaderboard__table td {
       padding: 8px 10px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+      border-bottom: 1px solid var(--sdq-border);
       text-align: left;
     }
     .sdq-leaderboard__empty {
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       font-size: 14px;
       margin: 0;
     }

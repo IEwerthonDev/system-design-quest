@@ -161,19 +161,19 @@ function injectBriefingStyles(root: HTMLElement): void {
       margin-bottom: 12px;
     }
     .sdq-briefing__badge--easy {
-      background: rgba(34, 197, 94, 0.2);
-      color: #86efac;
-      border: 1px solid rgba(34, 197, 94, 0.45);
+      background: rgba(74, 222, 128, 0.12);
+      color: var(--sdq-success);
+      border: 1px solid rgba(74, 222, 128, 0.35);
     }
     .sdq-briefing__badge--medium {
-      background: rgba(234, 179, 8, 0.2);
-      color: #fde047;
-      border: 1px solid rgba(234, 179, 8, 0.45);
+      background: rgba(251, 191, 36, 0.12);
+      color: var(--sdq-warning);
+      border: 1px solid rgba(251, 191, 36, 0.35);
     }
     .sdq-briefing__badge--hard {
-      background: rgba(248, 113, 113, 0.2);
-      color: #fecaca;
-      border: 1px solid rgba(248, 113, 113, 0.45);
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--sdq-danger);
+      border: 1px solid rgba(248, 113, 113, 0.35);
     }
     .sdq-briefing__title {
       font-size: clamp(1.35rem, 4vw, 1.65rem);
@@ -193,7 +193,7 @@ function injectBriefingStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-bottom: 10px;
     }
     .sdq-briefing__metrics {
@@ -203,9 +203,9 @@ function injectBriefingStyles(root: HTMLElement): void {
       margin-bottom: 18px;
     }
     .sdq-briefing__metric {
-      background: rgba(15, 20, 25, 0.65);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 8px;
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-sm);
       padding: 10px 12px;
     }
     .sdq-briefing__metric-label-row {
@@ -216,17 +216,17 @@ function injectBriefingStyles(root: HTMLElement): void {
     }
     .sdq-briefing__metric-label {
       font-size: 11px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-briefing__metric-help {
       width: 18px;
       height: 18px;
       padding: 0;
       border-radius: 999px;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.9);
-      color: #7dd3fc;
-      font: 700 11px system-ui, sans-serif;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-accent);
+      font: 700 11px var(--sdq-font);
       line-height: 1;
       cursor: pointer;
     }
@@ -238,7 +238,7 @@ function injectBriefingStyles(root: HTMLElement): void {
       margin: 0 0 8px;
       font-size: 11px;
       line-height: 1.45;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
     }
     .sdq-briefing__metric-value {
       font-size: 15px;
@@ -254,9 +254,9 @@ function injectBriefingStyles(root: HTMLElement): void {
       font-size: 12px;
       padding: 4px 10px;
       border-radius: 999px;
-      background: rgba(96, 165, 250, 0.15);
-      color: #93c5fd;
-      border: 1px solid rgba(96, 165, 250, 0.35);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-accent);
+      border: 1px solid var(--sdq-accent-border);
     }
     .sdq-briefing__start {
       width: 100%;

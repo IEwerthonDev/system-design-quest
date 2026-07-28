@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { getComponentMeta, type ComponentCategory, type ComponentType } from '@sdq/shared';
+import { SDQ_COLORS } from '../theme/tokens';
 import {
   findPrimaryMesh,
   loadComponentModel,
@@ -93,9 +94,9 @@ function createLabelSprite(text: string): THREE.Sprite {
   canvas.height = fontSize + 16;
 
   context.font = `600 ${fontSize}px system-ui, sans-serif`;
-  context.fillStyle = 'rgba(15, 20, 25, 0.85)';
+  context.fillStyle = SDQ_COLORS.bgElevated;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = '#e2e8f0';
+  context.fillStyle = SDQ_COLORS.text;
   context.textBaseline = 'middle';
   context.fillText(text, 12, canvas.height / 2);
 

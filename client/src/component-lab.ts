@@ -16,22 +16,22 @@ function injectLabStyles(): void {
     body {
       margin: 0;
       background: #0f1419;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
     }
     .sdq-lab-header {
       padding: 16px 20px;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      border-bottom: 1px solid var(--sdq-border);
     }
     .sdq-lab-header h1 {
       margin: 0 0 6px;
       font-size: 20px;
-      color: #7dd3fc;
+      color: var(--sdq-accent);
     }
     .sdq-lab-header p {
       margin: 0;
       font-size: 13px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-lab-grid {
       display: grid;
@@ -40,9 +40,9 @@ function injectLabStyles(): void {
       padding: 16px;
     }
     .sdq-lab-card {
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 10px;
-      background: rgba(30, 41, 59, 0.7);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius);
+      background: var(--sdq-bg-surface);
       overflow: hidden;
     }
     .sdq-lab-card canvas {
@@ -57,7 +57,7 @@ function injectLabStyles(): void {
     .sdq-lab-card__type {
       margin: 0 0 4px;
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       font-family: ui-monospace, monospace;
     }
     .sdq-lab-card__label {

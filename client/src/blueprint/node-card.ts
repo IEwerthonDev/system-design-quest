@@ -43,13 +43,13 @@ function injectNodeCardStyles(): void {
     .sdq-node {
       position: absolute;
       min-width: 140px;
-      background: rgba(15, 30, 55, 0.92);
-      border: 2px solid #64748b;
-      border-radius: 8px;
-      color: #e2e8f0;
-      font-family: ui-monospace, "Cascadia Code", "SF Mono", Menlo, monospace;
+      background: var(--sdq-bg-elevated);
+      border: 2px solid var(--sdq-text-subtle);
+      border-radius: var(--sdq-radius-sm);
+      color: var(--sdq-text);
+      font-family: var(--sdq-font-mono);
       font-size: 12px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.35);
+      box-shadow: var(--sdq-shadow);
       cursor: grab;
       user-select: none;
       -webkit-user-select: none;
@@ -57,12 +57,12 @@ function injectNodeCardStyles(): void {
       z-index: 2;
     }
     .sdq-node--selected {
-      box-shadow: 0 0 0 2px #fff, 0 0 18px rgba(255,255,255,0.25);
+      box-shadow: 0 0 0 2px var(--sdq-accent), 0 0 18px var(--sdq-accent-muted);
     }
-    .sdq-node--pressure-warn { outline: 2px solid #FBBF24; }
-    .sdq-node--pressure-hot { outline: 2px solid #F87171; animation: sdq-pulse 1s ease-in-out infinite; }
+    .sdq-node--pressure-warn { outline: 2px solid var(--sdq-warning); }
+    .sdq-node--pressure-hot { outline: 2px solid var(--sdq-danger); animation: sdq-pulse 1s ease-in-out infinite; }
     @keyframes sdq-pulse {
-      50% { outline-color: #ef4444; }
+      50% { outline-color: var(--sdq-danger); }
     }
     .sdq-node__load-label {
       font-size: 9px;
@@ -71,15 +71,15 @@ function injectNodeCardStyles(): void {
       text-align: center;
       padding: 2px 6px 0;
     }
-    .sdq-node__load-label--hot { color: #F87171; }
-    .sdq-node__load-label--warn { color: #FBBF24; }
+    .sdq-node__load-label--hot { color: var(--sdq-danger); }
+    .sdq-node__load-label--warn { color: var(--sdq-warning); }
     .sdq-node__load-reason {
       font-size: 9px;
       font-weight: 500;
       letter-spacing: 0;
       text-align: center;
       padding: 0 8px 2px;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       line-height: 1.25;
     }
     .sdq-node__ms-bar {
@@ -91,11 +91,11 @@ function injectNodeCardStyles(): void {
       font-weight: 700;
       line-height: 14px;
       text-align: center;
-      color: #0f172a;
+      color: var(--sdq-bg);
     }
-    .sdq-node__ms-bar--ok { background: #34D399; }
-    .sdq-node__ms-bar--warn { background: #FBBF24; }
-    .sdq-node__ms-bar--hot { background: #F87171; color: #1e1030; }
+    .sdq-node__ms-bar--ok { background: var(--sdq-success); }
+    .sdq-node__ms-bar--warn { background: var(--sdq-warning); }
+    .sdq-node__ms-bar--hot { background: var(--sdq-danger); color: var(--sdq-bg); }
     .sdq-node__body { padding: 10px 12px 6px; display: flex; gap: 8px; align-items: flex-start; }
     .sdq-node__label { font-weight: 700; flex: 1; }
     .sdq-node__badge {
@@ -103,15 +103,15 @@ function injectNodeCardStyles(): void {
     }
     .sdq-node__footer {
       display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 6px 8px 8px; border-top: 1px solid rgba(148,163,184,0.2);
+      padding: 6px 8px 8px; border-top: 1px solid var(--sdq-border);
     }
     .sdq-node__rep-btn {
-      width: 22px; height: 22px; border-radius: 4px; border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(30,41,59,0.9); color: #e2e8f0; cursor: pointer; font-weight: 700;
+      width: 22px; height: 22px; border-radius: 4px; border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface); color: var(--sdq-text); cursor: pointer; font-weight: 700;
     }
     .sdq-node__handle {
       position: absolute; width: 12px; height: 12px; border-radius: 50%;
-      background: #e2e8f0; border: 2px solid #0f1e37; top: 50%; transform: translateY(-50%);
+      background: var(--sdq-accent); border: 2px solid var(--sdq-bg); top: 50%; transform: translateY(-50%);
       z-index: 3;
       touch-action: none;
     }
@@ -129,10 +129,10 @@ function injectNodeCardStyles(): void {
       min-width: 36px;
       min-height: 36px;
       margin-left: 4px;
-      border-radius: 6px;
-      border: 1px solid rgba(248, 113, 113, 0.45);
-      background: rgba(127, 29, 29, 0.55);
-      color: #fecaca;
+      border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-danger);
+      background: rgba(248, 113, 113, 0.12);
+      color: var(--sdq-danger);
       cursor: pointer;
       font-size: 14px;
       font-weight: 700;
@@ -147,7 +147,7 @@ function injectNodeCardStyles(): void {
 export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks): NodeCardHandle {
   injectNodeCardStyles();
   const meta = getComponentMeta(node.type);
-  const border = CATEGORY_BORDER[meta.category] ?? '#64748b';
+  const border = CATEGORY_BORDER[meta.category] ?? 'var(--sdq-text-subtle)';
 
   const root = document.createElement('div');
   root.className = 'sdq-node';

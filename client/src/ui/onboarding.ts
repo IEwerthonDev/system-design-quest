@@ -63,18 +63,18 @@ function injectOnboardingStyles(root: HTMLElement): void {
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: rgba(15, 20, 25, 0.96);
+      background: var(--sdq-bg-overlay);
       z-index: 30;
       overflow-y: auto;
     }
     .sdq-onboarding__card {
       width: min(560px, 100%);
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-lg);
       padding: 24px 26px 28px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
     }
     .sdq-onboarding__header {
       display: flex;
@@ -87,17 +87,17 @@ function injectOnboardingStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
     }
     .sdq-onboarding__skip {
       border: none;
       background: transparent;
-      color: #94a3b8;
-      font: 600 13px system-ui, sans-serif;
+      color: var(--sdq-text-muted);
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
     }
     .sdq-onboarding__skip:hover {
-      color: #e2e8f0;
+      color: var(--sdq-text);
     }
     .sdq-onboarding__title {
       font-size: 26px;
@@ -108,7 +108,7 @@ function injectOnboardingStyles(root: HTMLElement): void {
     .sdq-onboarding__body {
       font-size: 14px;
       line-height: 1.6;
-      color: #cbd5e1;
+      color: var(--sdq-text-muted);
       margin: 0 0 22px;
       white-space: pre-line;
     }
@@ -120,18 +120,18 @@ function injectOnboardingStyles(root: HTMLElement): void {
     .sdq-onboarding__next,
     .sdq-onboarding__choice {
       width: 100%;
-      border: 1px solid rgba(96, 165, 250, 0.5);
-      background: rgba(30, 64, 175, 0.85);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-focus-ring);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 12px 16px;
-      font: 600 15px system-ui, sans-serif;
+      font: 600 15px var(--sdq-font);
       cursor: pointer;
       text-align: left;
     }
     .sdq-onboarding__choice--secondary {
       background: rgba(51, 65, 85, 0.85);
-      border-color: rgba(148, 163, 184, 0.35);
+      border-color: var(--sdq-border-strong);
     }
     .sdq-onboarding__next:hover,
     .sdq-onboarding__choice:hover {
@@ -144,7 +144,7 @@ function injectOnboardingStyles(root: HTMLElement): void {
       display: block;
       font-size: 12px;
       font-weight: 400;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-top: 4px;
     }
   `;

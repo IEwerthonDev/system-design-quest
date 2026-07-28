@@ -50,10 +50,10 @@ function injectBlueprintStyles(): void {
       inset: 0;
       overflow: hidden;
       touch-action: none;
-      background-color: #0a2744;
+      background-color: var(--sdq-canvas-bg);
       background-image:
-        linear-gradient(rgba(56, 120, 180, 0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(56, 120, 180, 0.18) 1px, transparent 1px);
+        linear-gradient(var(--sdq-canvas-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--sdq-canvas-grid) 1px, transparent 1px);
       background-size: 24px 24px;
       z-index: 0;
     }
@@ -75,9 +75,9 @@ function injectBlueprintStyles(): void {
       gap: 4px;
     }
     .sdq-blueprint-zoom button {
-      width: 32px; height: 32px; border-radius: 6px;
-      border: 1px solid rgba(148,163,184,0.4);
-      background: rgba(15,30,55,0.92); color: #e2e8f0; cursor: pointer; font-weight: 700;
+      width: 32px; height: 32px; border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-elevated); color: var(--sdq-text); cursor: pointer; font-weight: 700;
       touch-action: manipulation;
     }
     .sdq-blueprint-link-hint {
@@ -88,11 +88,11 @@ function injectBlueprintStyles(): void {
       z-index: 21;
       max-width: min(92vw, 420px);
       padding: 10px 14px;
-      border-radius: 10px;
-      background: rgba(30, 58, 95, 0.95);
-      border: 1px solid rgba(96, 165, 250, 0.45);
-      color: #e2e8f0;
-      font: 600 13px system-ui, sans-serif;
+      border-radius: var(--sdq-radius);
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-accent-border);
+      color: var(--sdq-text);
+      font: 600 13px var(--sdq-font);
       text-align: center;
       box-shadow: 0 8px 24px rgba(0,0,0,0.35);
       pointer-events: none;

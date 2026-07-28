@@ -23,16 +23,17 @@ function injectTimerStyles(root: HTMLElement): void {
   style.textContent = `
     .sdq-timer {
       position: fixed;
-      top: 16px;
-      right: 16px;
+      top: max(12px, env(safe-area-inset-top));
+      right: 12px;
       z-index: 25;
-      border: 1px solid rgba(248, 113, 113, 0.45);
-      background: rgba(127, 29, 29, 0.85);
-      color: #fecaca;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-accent-border);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-accent);
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 14px;
-      font: 700 14px ui-monospace, monospace;
+      font: 700 14px var(--sdq-font-mono);
       letter-spacing: 0.04em;
+      box-shadow: var(--sdq-shadow);
     }
   `;
   root.append(style);

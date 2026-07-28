@@ -57,18 +57,18 @@ function injectRequirementsStyles(root: HTMLElement): void {
       align-items: center;
       justify-content: center;
       padding: 24px;
-      background: rgba(15, 20, 25, 0.92);
+      background: var(--sdq-bg-overlay);
       z-index: 15;
       overflow-y: auto;
     }
     .sdq-requirements__card {
       width: min(720px, 100%);
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-lg);
       padding: 24px 26px 28px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
     }
     .sdq-requirements__title {
       font-size: 24px;
@@ -78,7 +78,7 @@ function injectRequirementsStyles(root: HTMLElement): void {
     .sdq-requirements__subtitle {
       font-size: 14px;
       line-height: 1.5;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin: 0 0 20px;
     }
     .sdq-requirements__columns {
@@ -92,7 +92,7 @@ function injectRequirementsStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-bottom: 10px;
     }
     .sdq-requirements__list {
@@ -106,16 +106,16 @@ function injectRequirementsStyles(root: HTMLElement): void {
       display: flex;
       gap: 8px;
       align-items: flex-start;
-      background: rgba(15, 20, 25, 0.65);
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      border-radius: 8px;
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 10px;
     }
     .sdq-requirements__item-text {
       flex: 1;
       font-size: 13px;
       line-height: 1.45;
-      color: #e2e8f0;
+      color: var(--sdq-text);
       border: none;
       background: transparent;
       resize: vertical;
@@ -123,13 +123,13 @@ function injectRequirementsStyles(root: HTMLElement): void {
       font-family: inherit;
     }
     .sdq-requirements__item-text:focus {
-      outline: 1px solid rgba(96, 165, 250, 0.5);
+      outline: 1px solid var(--sdq-focus-ring);
       border-radius: 4px;
     }
     .sdq-requirements__remove {
       border: none;
       background: transparent;
-      color: #f87171;
+      color: var(--sdq-danger);
       cursor: pointer;
       font-size: 18px;
       line-height: 1;
@@ -141,45 +141,45 @@ function injectRequirementsStyles(root: HTMLElement): void {
     }
     .sdq-requirements__input {
       flex: 1;
-      border: 1px solid rgba(148, 163, 184, 0.25);
-      background: rgba(15, 20, 25, 0.65);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 10px;
-      font: 13px system-ui, sans-serif;
+      font: 13px var(--sdq-font);
     }
     .sdq-requirements__add {
-      border: 1px solid rgba(96, 165, 250, 0.45);
-      background: rgba(30, 64, 175, 0.75);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-accent-border);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 12px;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
       white-space: nowrap;
     }
     .sdq-requirements__field-error {
       font-size: 12px;
-      color: #fecaca;
+      color: var(--sdq-danger);
       margin-top: 6px;
     }
     .sdq-requirements__warning {
       font-size: 13px;
-      color: #fde047;
+      color: var(--sdq-warning);
       background: rgba(234, 179, 8, 0.12);
       border: 1px solid rgba(234, 179, 8, 0.35);
-      border-radius: 8px;
+      border-radius: var(--sdq-radius-sm);
       padding: 10px 12px;
       margin-bottom: 16px;
     }
     .sdq-requirements__advance {
       width: 100%;
-      border: 1px solid rgba(96, 165, 250, 0.5);
-      background: rgba(30, 64, 175, 0.85);
-      color: #e2e8f0;
-      border-radius: 8px;
+      border: 1px solid var(--sdq-focus-ring);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 12px 16px;
-      font: 600 15px system-ui, sans-serif;
+      font: 600 15px var(--sdq-font);
       cursor: pointer;
     }
     .sdq-requirements__advance:hover {

@@ -37,7 +37,7 @@ function injectJudgingStyles(root: HTMLElement): void {
       display: none;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 20, 25, 0.9);
+      background: var(--sdq-bg-overlay);
       z-index: 30;
       padding: 24px;
     }
@@ -46,12 +46,12 @@ function injectJudgingStyles(root: HTMLElement): void {
     }
     .sdq-judging-card {
       width: min(440px, 100%);
-      background: rgba(15, 23, 42, 0.96);
-      border: 1px solid rgba(96, 165, 250, 0.35);
-      border-radius: 12px;
+      background: var(--sdq-bg-overlay);
+      border: 1px solid var(--sdq-accent-border);
+      border-radius: var(--sdq-radius-lg);
       padding: 24px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      color: var(--sdq-text);
+      font-family: var(--sdq-font);
       box-shadow: 0 12px 40px rgba(2, 6, 23, 0.45);
     }
     .sdq-judging-card__title {
@@ -73,14 +73,14 @@ function injectJudgingStyles(root: HTMLElement): void {
       align-items: center;
       gap: 10px;
       font-size: 14px;
-      color: #64748b;
+      color: var(--sdq-text-subtle);
     }
     .sdq-judging-step--active {
-      color: #e2e8f0;
+      color: var(--sdq-text);
       font-weight: 600;
     }
     .sdq-judging-step--done {
-      color: #86efac;
+      color: var(--sdq-success);
     }
     .sdq-judging-step__marker {
       width: 10px;
@@ -90,9 +90,9 @@ function injectJudgingStyles(root: HTMLElement): void {
       flex-shrink: 0;
     }
     .sdq-judging-step--active .sdq-judging-step__marker {
-      background: #38bdf8;
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25);
+      background: var(--sdq-accent);
+      border-color: var(--sdq-accent);
+      box-shadow: 0 0 0 3px var(--sdq-accent-muted);
     }
     .sdq-judging-step--done .sdq-judging-step__marker {
       background: #22c55e;
@@ -112,15 +112,15 @@ function injectJudgingStyles(root: HTMLElement): void {
       margin: 0 0 12px;
       font-size: 14px;
       line-height: 1.5;
-      color: #fecaca;
+      color: var(--sdq-danger);
     }
     .sdq-judging-error__retry {
       border: 1px solid rgba(248, 113, 113, 0.5);
       background: rgba(127, 29, 29, 0.85);
       color: #fee2e2;
-      border-radius: 8px;
+      border-radius: var(--sdq-radius-sm);
       padding: 8px 16px;
-      font: 600 13px system-ui, sans-serif;
+      font: 600 13px var(--sdq-font);
       cursor: pointer;
     }
     .sdq-judging-error__retry:hover {

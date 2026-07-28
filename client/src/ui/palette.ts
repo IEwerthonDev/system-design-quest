@@ -138,23 +138,23 @@ function injectPaletteStyles(root: HTMLElement): void {
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94a3b8;
+      color: var(--sdq-text-muted);
       margin-bottom: 0;
       flex: 1;
       min-width: 0;
     }
     .sdq-palette__collapse {
       flex-shrink: 0;
-      border: 1px solid #475569;
-      background: #1e293b;
-      color: #e2e8f0;
-      border-radius: 6px;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text);
+      border-radius: var(--sdq-radius-sm);
       padding: 4px 8px;
       cursor: pointer;
       font: 600 11px system-ui, sans-serif;
     }
     .sdq-palette__collapse:hover {
-      background: #334155;
+      background: var(--sdq-hover-bg);
     }
     .sdq-palette__section {
       margin-bottom: 14px;
@@ -174,9 +174,9 @@ function injectPaletteStyles(root: HTMLElement): void {
     }
     .sdq-palette__item {
       padding: 6px 8px;
-      border-radius: 6px;
-      border: 1px solid rgba(148, 163, 184, 0.15);
-      background: rgba(30, 41, 59, 0.6);
+      border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
       cursor: grab;
       user-select: none;
       -webkit-user-select: none;
@@ -190,7 +190,7 @@ function injectPaletteStyles(root: HTMLElement): void {
     .sdq-palette__hint {
       display: none;
       font-size: 11px;
-      color: #64748b;
+      color: var(--sdq-text-subtle);
       margin: -4px 0 10px;
       line-height: 1.35;
     }

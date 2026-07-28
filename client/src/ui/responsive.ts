@@ -35,7 +35,7 @@ function injectResponsiveStyles(): void {
       height: auto;
       max-height: 40vh;
       border-right: none;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+      border-bottom: 1px solid var(--sdq-border);
     }
     .sdq-layout--tablet .sdq-palette.sdq-palette--collapsed {
       width: 100%;
@@ -141,7 +141,7 @@ function injectResponsiveStyles(): void {
     .sdq-layout--phone .sdq-palette__hint {
       display: block;
       font-size: 12px;
-      color: #64748b;
+      color: var(--sdq-text-subtle);
       margin-bottom: 12px;
       line-height: 1.4;
     }
