@@ -1,7 +1,13 @@
 import { normalizeGraph } from '../schema/normalize-graph';
-import type { ArchitectureGraph } from '../schema/architecture-graph';
+import type { ArchitectureGraph, ComponentNode } from '../schema/architecture-graph';
 import type { FeedbackItem } from '../schema/judge';
-import type { Locale, Problem, StructuralDepth } from '../schema/problem';
+import type {
+  Locale,
+  Problem,
+  StructuralAntiPattern,
+  StructuralConfigRule,
+  StructuralDepth,
+} from '../schema/problem';
 import { isCoreRealismProblem } from '../problems/structural-depth';
 
 export interface StructuralReport {
@@ -72,6 +78,162 @@ function presentComponentStrength(type: string, locale: Locale): FeedbackItem {
   };
 }
 
+function feedbackFromMessageKey(
+  messageKey: string,
+  severity: 'blocker' | 'major',
+  related: string[],
+  locale: Locale,
+): FeedbackItem {
+  const title =
+    locale === 'en'
+      ? messageKey.replace(/\./g, ' · ').replace(/_/g, ' ')
+      : messageKey.replace(/\./g, ' · ').replace(/_/g, ' ');
+  if (locale === 'en') {
+    return {
+      title,
+      explanation: `Structural rule "${messageKey}" was triggered for this problem.`,
+      howToImprove: 'Adjust components or scale-critical configs to satisfy the Deep rubric.',
+      whyItMatters: 'Deep anti-patterns and config rules catch designs that look complete but fail at problem scale.',
+      severity,
+      relatedComponents: related,
+    };
+  }
+  return {
+    title,
+    explanation: `A regra estrutural "${messageKey}" foi acionada para este problema.`,
+    howToImprove: 'Ajuste componentes ou configs críticas de escala para satisfazer a rubrica Deep.',
+    whyItMatters: 'Anti-padrões e regras de config Deep pegam designs que parecem completos mas falham na escala do problema.',
+    severity,
+    relatedComponents: related,
+  };
+}
+
+function antiPatternFires(pattern: StructuralAntiPattern, types: Set<string>, graphNonEmpty: boolean): boolean {
+  if (pattern.unlessAnyOf?.some((t) => types.has(t))) {
+    return false;
+  }
+
+  if (pattern.forbiddenType && types.has(pattern.forbiddenType)) {
+    return true;
+  }
+
+  if (pattern.requiredAnyOf && pattern.requiredAnyOf.length > 0) {
+    if (!graphNonEmpty) {
+      return false;
+    }
+    return !pattern.requiredAnyOf.some((t) => types.has(t));
+  }
+
+  return false;
+}
+
+function relatedForAntiPattern(pattern: StructuralAntiPattern): string[] {
+  if (pattern.forbiddenType) {
+    return [pattern.forbiddenType];
+  }
+  return pattern.requiredAnyOf ?? [];
+}
+
+function evaluateAntiPatterns(
+  patterns: StructuralAntiPattern[] | undefined,
+  types: Set<string>,
+  graphNonEmpty: boolean,
+  locale: Locale,
+): { items: FeedbackItem[]; codes: string[] } {
+  const items: FeedbackItem[] = [];
+  const codes: string[] = [];
+  if (!patterns) {
+    return { items, codes };
+  }
+
+  for (const pattern of patterns) {
+    if (!antiPatternFires(pattern, types, graphNonEmpty)) {
+      continue;
+    }
+    codes.push(pattern.code);
+    items.push(
+      feedbackFromMessageKey(pattern.messageKey, pattern.severity, relatedForAntiPattern(pattern), locale),
+    );
+  }
+  return { items, codes };
+}
+
+function nodesOfType(graph: ArchitectureGraph, componentType: string): ComponentNode[] {
+  return graph.nodes.filter((n) => n.type === componentType);
+}
+
+function configRuleViolated(rule: StructuralConfigRule, node: ComponentNode): boolean {
+  const config = node.config;
+  if (!config) {
+    return false;
+  }
+
+  if (rule.minHitRate != null) {
+    if (config.kind === 'cache' || config.kind === 'cdn') {
+      if (config.hitRate < rule.minHitRate) {
+        return true;
+      }
+    }
+  }
+
+  if (rule.minShardCount != null && config.kind === 'sql_db') {
+    if (config.shardCount < rule.minShardCount) {
+      return true;
+    }
+  }
+
+  if (rule.minTtlSeconds != null && config.kind === 'cdn') {
+    if (config.ttlSeconds < rule.minTtlSeconds) {
+      return true;
+    }
+  }
+
+  if (rule.minPartitionCount != null && config.kind === 'mq') {
+    if (config.partitionCount < rule.minPartitionCount) {
+      return true;
+    }
+  }
+
+  if (rule.minFanOutLimit != null && config.kind === 'ws') {
+    if (config.fanOutLimit < rule.minFanOutLimit) {
+      return true;
+    }
+  }
+
+  if (rule.requireMqDurability != null && config.kind === 'mq') {
+    if (config.durability !== rule.requireMqDurability) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function evaluateConfigRules(
+  rules: StructuralConfigRule[] | undefined,
+  graph: ArchitectureGraph,
+  locale: Locale,
+): { items: FeedbackItem[]; codes: string[] } {
+  const items: FeedbackItem[] = [];
+  const codes: string[] = [];
+  if (!rules) {
+    return { items, codes };
+  }
+
+  for (const rule of rules) {
+    const nodes = nodesOfType(graph, rule.componentType);
+    const violated = nodes.some((n) => configRuleViolated(rule, n));
+    if (!violated) {
+      continue;
+    }
+    codes.push(rule.code);
+    items.push(
+      feedbackFromMessageKey(rule.messageKey, rule.severity, [rule.componentType], locale),
+    );
+  }
+  return { items, codes };
+}
+
 function deriveScaleChecklist(problem: Problem, locale: Locale): string[] {
   const explicit = problem.rubric.scaleChecklist?.[locale];
   if (explicit && explicit.length > 0) {
@@ -132,21 +294,31 @@ function deriveScaleChecklist(problem: Problem, locale: Locale): string[] {
   return lines;
 }
 
-function scoreFromCoverage(presentCount: number, expectedCount: number, blockerCount: number): number {
+function scoreFromCoverage(
+  presentCount: number,
+  expectedCount: number,
+  blockerCount: number,
+  majorCount: number,
+): number {
   if (expectedCount === 0) {
-    return blockerCount > 0 ? 40 : 80;
+    return blockerCount > 0 ? 40 : majorCount > 0 ? 60 : 80;
   }
   const ratio = presentCount / expectedCount;
-  const base = Math.round(ratio * 100);
+  let base = Math.round(ratio * 100);
   if (blockerCount > 0) {
     return Math.min(base, 55);
+  }
+  if (majorCount > 0) {
+    base = Math.min(base, 75);
+    return Math.max(55, base - majorCount * 5);
   }
   return Math.max(70, Math.min(100, base));
 }
 
 /**
  * Deterministic structural evaluation bound to a problem (Approach A / AD-027).
- * Baseline: must-have components + scale checklist. Deep fields evaluated in later tasks.
+ * Baseline: must-have components + scale checklist.
+ * Deep: anti-patterns + config adequacy rules.
  */
 export function evaluateStructuralRubric(input: EvaluateStructuralRubricInput): StructuralReport {
   const graph = normalizeGraph(input.graph);
@@ -155,6 +327,7 @@ export function evaluateStructuralRubric(input: EvaluateStructuralRubricInput): 
   const depth = resolveDepth(problem);
   const types = presentTypes(graph);
   const expected = problem.rubric.expectedComponents;
+  const graphNonEmpty = graph.nodes.length > 0;
 
   const blockers: FeedbackItem[] = [];
   const majors: FeedbackItem[] = [];
@@ -174,8 +347,38 @@ export function evaluateStructuralRubric(input: EvaluateStructuralRubricInput): 
     }
   }
 
+  if (depth === 'deep') {
+    const anti = evaluateAntiPatterns(problem.rubric.antiPatterns, types, graphNonEmpty, locale);
+    for (const item of anti.items) {
+      if (item.severity === 'blocker') {
+        blockers.push(item);
+      } else {
+        majors.push(item);
+      }
+    }
+    for (const code of anti.codes) {
+      if (!codes.includes(code)) {
+        codes.push(code);
+      }
+    }
+
+    const config = evaluateConfigRules(problem.rubric.configRules, graph, locale);
+    for (const item of config.items) {
+      if (item.severity === 'blocker') {
+        blockers.push(item);
+      } else {
+        majors.push(item);
+      }
+    }
+    for (const code of config.codes) {
+      if (!codes.includes(code)) {
+        codes.push(code);
+      }
+    }
+  }
+
   const scaleChecklistLines = deriveScaleChecklist(problem, locale);
-  const scoreHint = scoreFromCoverage(presentCount, expected.length, blockers.length);
+  const scoreHint = scoreFromCoverage(presentCount, expected.length, blockers.length, majors.length);
 
   return {
     problemId: problem.id,

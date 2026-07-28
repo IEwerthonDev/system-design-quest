@@ -106,3 +106,107 @@ describe('evaluateStructuralRubric (Baseline)', () => {
     ).toBe(true);
   });
 });
+
+describe('evaluateStructuralRubric (Deep antiPatterns + configRules)', () => {
+  it('fires sql-without-cache anti-pattern when sql_db present without cache_redis', () => {
+    const problem = getProblem('url-shortener');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: graphWithTypes('client_web', 'load_balancer', 'app_server', 'sql_db'),
+      locale: 'en',
+    });
+
+    expect(report.depth).toBe('deep');
+    expect(report.codes).toContain('sql-without-cache');
+    expect(
+      report.blockers.some(
+        (b) => b.severity === 'blocker' && b.relatedComponents?.includes('sql_db'),
+      ),
+    ).toBe(true);
+  });
+
+  it('does not fire sql-without-cache when cache_redis is present', () => {
+    const problem = getProblem('url-shortener');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: graphWithTypes(...problem.rubric.expectedComponents),
+      locale: 'en',
+    });
+
+    expect(report.codes).not.toContain('sql-without-cache');
+  });
+
+  it('hitRate-too-low on url-shortener changes structural outcome vs adequate hitRate', () => {
+    const problem = getProblem('url-shortener');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const types = problem.rubric.expectedComponents;
+    const lowHit = normalizeGraph({
+      nodes: types.map((type, i) => ({
+        id: `n${i}`,
+        type: type as ArchitectureGraph['nodes'][number]['type'],
+        label: type,
+        position: { x: i * 2, y: 0, z: 0 },
+        ...(type === 'cache_redis' ? { config: { kind: 'cache' as const, hitRate: 10 } } : {}),
+      })),
+      edges: [],
+    });
+    const highHit = normalizeGraph({
+      nodes: types.map((type, i) => ({
+        id: `n${i}`,
+        type: type as ArchitectureGraph['nodes'][number]['type'],
+        label: type,
+        position: { x: i * 2, y: 0, z: 0 },
+        ...(type === 'cache_redis' ? { config: { kind: 'cache' as const, hitRate: 95 } } : {}),
+      })),
+      edges: [],
+    });
+
+    const lowReport = evaluateStructuralRubric({ problem, graph: lowHit, locale: 'en' });
+    const highReport = evaluateStructuralRubric({ problem, graph: highHit, locale: 'en' });
+
+    expect(lowReport.codes).toContain('hitRate-too-low');
+    expect(highReport.codes).not.toContain('hitRate-too-low');
+    expect(lowReport.majors.length + lowReport.blockers.length).toBeGreaterThan(
+      highReport.majors.length + highReport.blockers.length,
+    );
+    expect(lowReport.scoreHint).toBeLessThan(highReport.scoreHint);
+  });
+
+  it('fires auto-increment-db-ids major when unique-id-gen graph includes sql_db', () => {
+    const problem = getProblem('unique-id-gen');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: graphWithTypes('app_server', 'sql_db'),
+      locale: 'en',
+    });
+
+    expect(report.codes).toContain('auto-increment-db-ids');
+    expect(report.majors.some((m) => m.severity === 'major')).toBe(true);
+  });
+
+  it('skips Deep antiPatterns on empty graph for requiredAnyOf rules', () => {
+    const problem = getProblem('rate-limiter');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: emptyGraph(),
+      locale: 'en',
+    });
+
+    expect(report.codes).not.toContain('in-memory-only-counter');
+    expect(report.codes).toContain('missing_component');
+  });
+});
