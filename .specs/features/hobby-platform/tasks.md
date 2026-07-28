@@ -10,13 +10,15 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design**: `.specs/features/hobby-platform/design.md`  
 **Spec**: `.specs/features/hobby-platform/spec.md`  
-**Status**: In Progress (Execute Batch 4 — Phase 1–3 T1–T15 done)
+**Status**: Execute complete (T1–T20) — awaiting Verifier
 
 **Batch 1 results:** T1 `ba6f3e1`, T2 `5d96a3d`, T3 `3aa6c44`, T4 `9d74d52`, T5 `480e4d7` — 506 tests passed, 0 failed.
 
 **Batch 2 results:** T6 `de2dcad`, T7 `ed78ef6`, T8 `dd1fff9`, T9 `1504459`, T10 `8165ba4` — 448 tests passed, 0 failed.
 
 **Batch 3 results:** T11 `a03c959`, T12 `e2cc913`, T13 `361ff93`, T14 `7f3d1b5`, T15 `c9a3618` — 366 tests passed, 0 failed.
+
+**Batch 4 results:** T16–T20 — see git log on `feature/hobby-platform` (export, edge flags, cron, analytics, STATE/env + Neon deferred).
 
 **Branch at Execute start:** `feature/hobby-platform` from `main`
 

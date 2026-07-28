@@ -22,25 +22,27 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Execute — Batch 4 (Phase 4 T16–T20) in progress via sub-agent |
-| **Próximo passo** | Await Batch 4 summary → automatic Verifier |
+| **Fase atual** | Execute — Batch 4 (Phase 4 T16–T20) complete; awaiting Verifier |
+| **Próximo passo** | Automatic Verifier (author ≠ verifier) → merge to `main` on PASS |
 | **Feature ativa** | `hobby-platform` |
 | **Branch** | `feature/hobby-platform` |
-| **Bloqueios** | Vercel KV/Blob/Edge/Cron env for durable path in prod |
+| **Bloqueios** | Vercel env checklist for prod: see `.env.example` (KV/Blob/Edge/Cron/LLM) |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
+| **Neon** | Deferred (NEON-01): KV sufficient for session history, leaderboard, progress %, daily stats |
 
 ### Deploy note (Hobby)
 
 - **Serves:** Vite client `dist/client` + serverless `api/*.js` (judge, sessions, leaderboard, cron, optional export) via esbuild from `server/src/vercel/`
 - **Sessions / leaderboard on Hobby:** Vercel KV primary (AD-025); client `localStorage` fallback when remote missing/fails; optional `VITE_SESSIONS_MODE=local`
 - **Mobile:** tap-to-add when `(pointer: coarse)` or width ≤768; HTML5 DnD remains desktop path
-- **Env:** `KV_*`, optional `BLOB_READ_WRITE_TOKEN`, `EDGE_CONFIG`, `CRON_SECRET`; optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock
-- **Build:** esbuild api bundles then `client:build`; quality gate `nx run-many -t lint test`
+- **Env:** Documented in `.env.example` — `KV_*`, optional `BLOB_READ_WRITE_TOKEN`, `EDGE_CONFIG` / `VITE_EDGE_CONFIG`, `CRON_SECRET`; optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock
+- **Build:** esbuild api bundles (judge/sessions/leaderboard/cron) then `client:build`; quality gate `nx run-many -t lint test`
 - **Production:** https://system-design-quest.vercel.app
+- **Cron:** `vercel.json` schedules `GET/POST /api/cron` daily (`0 6 * * *`); auth via `Authorization: Bearer CRON_SECRET`
 
 ### AD-022 (superseded by AD-025)
 

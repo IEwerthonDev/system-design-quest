@@ -285,6 +285,18 @@ interface EdgeFlags {
 
 **Neon:** Not in architecture. Progress % derived from `sdq-progress` (+ optional session statuses). Revisit only if a documented query gap appears (NEON-01).
 
+### NEON-01 checklist (T20 — confirmed)
+
+| Query / capability | Covered by | Neon needed? |
+| ------------------ | ---------- | ------------ |
+| Session history by nickname | `KvSessionStore` (`sess:` / `sessidx:`) + client localStorage fallback | No |
+| Leaderboard by problem | `KvLeaderboardStore` | No |
+| Library progress % | Client `sdq-progress` | No |
+| Daily usage aggregate | Cron `stats:daily:{yyyy-mm-dd}` KV key | No |
+| Cross-device continue / LWW | Sessions API + `updatedAt` | No |
+
+**Confirmation:** Neon was **not** introduced in this feature. KV + client storage satisfy the listed history/stats queries. A thin Neon `/api/stats` is deferred until a verified gap is documented in Risks.
+
 ---
 
 ## Error Handling Strategy
