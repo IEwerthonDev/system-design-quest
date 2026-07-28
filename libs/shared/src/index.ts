@@ -5,11 +5,16 @@ export type {
   ComponentConfig,
   ComponentNode,
   ConnectionEdge,
+  LbAlgorithm,
+  LbConfig,
+  MqConfig,
+  MqDurability,
   PartitioningStrategy,
   PressureLevel,
   SimulationSettings,
   SqlDbConfig,
   Vec2,
+  WsConfig,
 } from './schema/architecture-graph';
 export {
   DEFAULT_SIMULATION,

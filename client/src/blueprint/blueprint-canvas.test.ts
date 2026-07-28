@@ -548,6 +548,18 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
 });
 
 describe('config popover mount', () => {
+  const anchor = {
+    bottom: 100,
+    left: 20,
+    top: 0,
+    right: 100,
+    width: 80,
+    height: 40,
+    x: 20,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect;
+
   it('shows judge footer copy when opened', () => {
     const host = document.createElement('div');
     document.body.append(host);
@@ -563,22 +575,109 @@ describe('config popover mount', () => {
         label: 'CDN',
         replicas: 1,
         position: { x: 0, y: 0 },
-        config: { kind: 'cdn', hitRate: 99 },
+        config: { kind: 'cdn', hitRate: 99, ttlSeconds: 3600 },
       },
-      {
-        bottom: 100,
-        left: 20,
-        top: 0,
-        right: 100,
-        width: 80,
-        height: 40,
-        x: 20,
-        y: 0,
-        toJSON: () => ({}),
-      },
+      anchor,
     );
     expect(popover.root.hidden).toBe(false);
     expect(popover.root.textContent).toMatch(/AI judges read these notes/i);
+    popover.destroy();
+  });
+
+  it('exposes CDN TTL and calls onConfigChange (JR-18)', () => {
+    const changes: unknown[] = [];
+    const host = document.createElement('div');
+    document.body.append(host);
+    const popover = mountConfigPopover(host, {
+      onClose: () => undefined,
+      onNotesChange: () => undefined,
+      onConfigChange: (_id, config) => {
+        changes.push(config);
+      },
+    });
+    popover.open(
+      {
+        id: 'cdn1',
+        type: 'cdn',
+        label: 'CDN',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+        config: { kind: 'cdn', hitRate: 99, ttlSeconds: 3600 },
+      },
+      anchor,
+    );
+    const ttl = popover.root.querySelector('[data-testid="config-cdn-ttl"]') as HTMLInputElement;
+    expect(ttl).toBeTruthy();
+    ttl.value = '120';
+    ttl.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(changes.at(-1)).toEqual({ kind: 'cdn', hitRate: 99, ttlSeconds: 120 });
+    popover.destroy();
+  });
+
+  it('exposes MQ durability/partitions and WS fan-out and LB algorithm (JR-18)', () => {
+    const changes: unknown[] = [];
+    const host = document.createElement('div');
+    document.body.append(host);
+    const popover = mountConfigPopover(host, {
+      onClose: () => undefined,
+      onNotesChange: () => undefined,
+      onConfigChange: (_id, config) => {
+        changes.push(config);
+      },
+    });
+
+    popover.open(
+      {
+        id: 'mq1',
+        type: 'message_queue',
+        label: 'MQ',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+        config: { kind: 'mq', durability: 'disk', partitionCount: 3 },
+      },
+      anchor,
+    );
+    expect(popover.root.querySelector('[data-testid="config-mq-durability"]')).toBeTruthy();
+    const parts = popover.root.querySelector(
+      '[data-testid="config-mq-partitions"]',
+    ) as HTMLInputElement;
+    parts.value = '16';
+    parts.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(changes.at(-1)).toMatchObject({ kind: 'mq', partitionCount: 16 });
+
+    popover.open(
+      {
+        id: 'ws1',
+        type: 'websocket_gateway',
+        label: 'WS',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+        config: { kind: 'ws', fanOutLimit: 10_000 },
+      },
+      anchor,
+    );
+    const fan = popover.root.querySelector('[data-testid="config-ws-fanout"]') as HTMLInputElement;
+    fan.value = '500';
+    fan.dispatchEvent(new Event('input', { bubbles: true }));
+    expect(changes.at(-1)).toEqual({ kind: 'ws', fanOutLimit: 500 });
+
+    popover.open(
+      {
+        id: 'lb1',
+        type: 'load_balancer',
+        label: 'LB',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+        config: { kind: 'lb', algorithm: 'round_robin' },
+      },
+      anchor,
+    );
+    const algo = popover.root.querySelector(
+      '[data-testid="config-lb-algorithm"]',
+    ) as HTMLSelectElement;
+    algo.value = 'least_conn';
+    algo.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(changes.at(-1)).toEqual({ kind: 'lb', algorithm: 'least_conn' });
     popover.destroy();
   });
 });
