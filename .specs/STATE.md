@@ -22,28 +22,31 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `sandbox-panel-drawers` — Execute T1–T7 |
-| **Próximo passo** | Implement Workload/Mentor FAB drawers (SPD-01–05) |
+| **Fase atual** | `sandbox-panel-drawers` — Execute done; Verify next |
+| **Próximo passo** | Independent Verifier → PR → merge → `vercel deploy --prod` |
 | **Feature ativa** | `sandbox-panel-drawers` |
 | **Branch** | `feature/sandbox-panel-drawers` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034·**035** |
-| **Gate** | `nx run-many -t lint test` |
+| **Decisões** | AD-031·032·033·034·035 |
+| **Gate** | `nx run-many -t lint test` — GREEN (438 tests) |
 | **PR** | pending |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_8XTES2vo299ESnRtqbr8BfLuSXJB` READY |
+| **Deployment** | pre-feature: `dpl_8XTES2vo299ESnRtqbr8BfLuSXJB` READY |
 
-### Context Checkpoint (2026-07-28 sandbox-panel-drawers)
+### Context Checkpoint (2026-07-28 sandbox-panel-drawers execute done)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — fresh session |
-| Uncommitted | GREEN — feature branch start |
+| Chat length | GREEN — single feature |
+| Uncommitted | GREEN after T7 |
 | Spec drift | GREEN |
-| Gate confidence | GREEN — last ship green |
-| Task clarity | GREEN — T1→T7 |
+| Gate confidence | GREEN — full gate |
+| Task clarity | GREEN — Verify → ship |
 
 **Veredito:** GREEN
+
+**Commits:** T1–T6 on branch; T7 this docs commit
+**Gate:** `nx run-many -t lint test`
 
 ### Deploy note (Hobby)
 
