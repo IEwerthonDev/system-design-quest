@@ -115,6 +115,25 @@ export function countCompletedByDifficulty(
   return { completed, total: ids.length };
 }
 
+/**
+ * Percent of qualifying completions in a difficulty tier (0–100).
+ * When total is 0, returns 0.
+ */
+export function completionPercentByDifficulty(
+  difficulty: Difficulty,
+  problemIdsByDifficulty: (difficulty: Difficulty) => string[],
+  storage?: Storage,
+  progress?: ProgressStore,
+): number {
+  const store = progress ?? loadProgress(storage);
+  const ids = problemIdsByDifficulty(difficulty);
+  if (ids.length === 0) {
+    return 0;
+  }
+  const completed = ids.filter((id) => id in store.completions).length;
+  return Math.round((completed / ids.length) * 100);
+}
+
 export function resetProgress(storage?: Storage): void {
   resolveStorage(storage).removeItem(PROGRESS_STORAGE_KEY);
 }

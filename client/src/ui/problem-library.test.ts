@@ -98,6 +98,31 @@ describe('problem library UI', () => {
     ).toContain('2/7');
   });
 
+  it('shows progress percent badges by difficulty and persists after remount', () => {
+    recordCompletion('url-shortener', 'PASS', 90, storage);
+
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+
+    const expected = Math.round((1 / 7) * 100);
+    expect(
+      container.querySelector('[data-testid="library-progress-easy"]')?.getAttribute(
+        'data-progress-percent',
+      ),
+    ).toBe(String(expected));
+    expect(
+      container.querySelector('[data-testid="library-progress-easy"]')?.textContent,
+    ).toContain(`${expected}%`);
+    expect(
+      container.querySelector('[data-testid="library-filter-percent-easy"]')?.textContent,
+    ).toBe(`${expected}%`);
+
+    container.replaceChildren();
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+    expect(
+      container.querySelector('[data-testid="library-filter-percent-easy"]')?.textContent,
+    ).toBe(`${expected}%`);
+  });
+
   it('calls onSelect when study button clicked', () => {
     const onSelect = vi.fn();
     mountProblemLibrary(container, { onSelect }, storage);

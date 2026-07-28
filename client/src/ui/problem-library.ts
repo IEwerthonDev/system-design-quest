@@ -12,6 +12,7 @@ import { t } from '../i18n/t';
 import type { GameMode } from '../test-hook';
 import { DIFFICULTY_LABELS } from './briefing-panel';
 import {
+  completionPercentByDifficulty,
   countCompletedByDifficulty,
   isProblemCompleted,
   loadProgress,
@@ -193,6 +194,13 @@ function injectLibraryStyles(root: HTMLElement): void {
       background: var(--sdq-accent-muted, rgba(201,169,98,0.15));
       border-color: var(--sdq-accent-border);
       color: var(--sdq-accent);
+    }
+    .sdq-library__filter-percent {
+      display: inline-block;
+      margin-left: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: 0.9;
     }
     .sdq-library__progress {
       display: flex;
@@ -492,9 +500,11 @@ export function mountProblemLibrary(
         idsForDifficulty,
         storage,
       );
+      const percent = completionPercentByDifficulty(difficulty, idsForDifficulty, storage);
       const item = document.createElement('span');
       item.className = 'sdq-library__progress-item';
       item.setAttribute('data-testid', `library-progress-${difficulty}`);
+      item.setAttribute('data-progress-percent', String(percent));
       const difficultyLabel =
         currentLocale === 'en'
           ? difficulty === 'easy'
@@ -503,7 +513,7 @@ export function mountProblemLibrary(
               ? 'Medium'
               : 'Hard'
           : DIFFICULTY_LABELS[difficulty];
-      item.textContent = `${DIFFICULTY_BADGES[difficulty]} ${completed}/${total} ${difficultyLabel}`;
+      item.textContent = `${DIFFICULTY_BADGES[difficulty]} ${completed}/${total} (${percent}%) ${difficultyLabel}`;
       progressRow.append(item);
       void tiers[difficulty];
     }
@@ -519,7 +529,18 @@ export function mountProblemLibrary(
         currentFilter === option.id ? ' sdq-library__filter--active' : ''
       }`;
       button.setAttribute('data-testid', `library-filter-${option.id}`);
-      button.textContent = option.label;
+
+      if (option.id === 'all') {
+        button.textContent = option.label;
+      } else {
+        const percent = completionPercentByDifficulty(option.id, idsForDifficulty, storage);
+        const badge = document.createElement('span');
+        badge.className = 'sdq-library__filter-percent';
+        badge.setAttribute('data-testid', `library-filter-percent-${option.id}`);
+        badge.textContent = `${percent}%`;
+        button.append(document.createTextNode(`${option.label} `), badge);
+      }
+
       button.addEventListener('click', () => {
         currentFilter = option.id;
         warningMessage = null;
