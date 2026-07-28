@@ -55,6 +55,11 @@ function startGame(
     mode,
     guidedMode,
     experienceLevel: preferences.experienceLevel,
+    onExitToLibrary: () => {
+      clearAppUi(container, blueprintHost);
+      showLibrary(container, blueprintHost, preferences);
+      mountAppSettings(container, blueprintHost, optionsStorage);
+    },
   });
 }
 
@@ -96,6 +101,11 @@ function showSessionsDashboard(
         mode: record.mode ?? 'study',
         designSession: record,
         experienceLevel: preferences.experienceLevel,
+        onExitToLibrary: () => {
+          clearAppUi(container, blueprintHost);
+          showLibrary(container, blueprintHost, preferences);
+          mountAppSettings(container, blueprintHost, optionsStorage);
+        },
       });
       mountAppSettings(container, blueprintHost, optionsStorage);
     },

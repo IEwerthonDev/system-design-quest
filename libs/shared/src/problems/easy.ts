@@ -2,12 +2,13 @@ import type { Problem } from '../schema/problem';
 
 export const RATE_LIMITER: Problem = {
   id: 'rate-limiter',
+  company: 'Stripe',
   title: 'Rate Limiter',
   difficulty: 'easy',
   description:
-    'Projete um rate limiter para APIs como Stripe ou Uber. Clientes enviam requisições e o sistema ' +
-    'deve limitar quantas são aceitas por janela de tempo, retornando HTTP 429 quando exceder. ' +
-    'Deve funcionar de forma distribuída entre múltiplos servidores de API.',
+    'Projete o rate limiter usado por APIs como Stripe ou Uber: limite requisições por janela de tempo ' +
+    'de forma justa entre servidores distribuídos. Quando o limite é excedido, retorne HTTP 429 com Retry-After. ' +
+    'Deve funcionar com múltiplas instâncias de API gateway sem contagem duplicada.',
   metrics: {
     dau: 10_000_000,
     rps: 1_000_000,
@@ -54,6 +55,7 @@ export const RATE_LIMITER: Problem = {
 
 export const PASTEBIN: Problem = {
   id: 'pastebin',
+  company: 'Pastebin',
   title: 'Pastebin',
   difficulty: 'easy',
   description:
@@ -106,6 +108,7 @@ export const PASTEBIN: Problem = {
 
 export const UNIQUE_ID_GEN: Problem = {
   id: 'unique-id-gen',
+  company: 'Twitter / X',
   title: 'Gerador de ID Distribuído',
   difficulty: 'easy',
   description:
@@ -154,6 +157,7 @@ export const UNIQUE_ID_GEN: Problem = {
 
 export const DISTRIBUTED_CACHE: Problem = {
   id: 'distributed-cache',
+  company: 'Meta',
   title: 'Cache Distribuído',
   difficulty: 'easy',
   description:
@@ -203,6 +207,7 @@ export const DISTRIBUTED_CACHE: Problem = {
 
 export const NOTIFICATION_SYSTEM: Problem = {
   id: 'notification-system',
+  company: 'Uber',
   title: 'Sistema de Notificações',
   difficulty: 'easy',
   description:
@@ -252,6 +257,7 @@ export const NOTIFICATION_SYSTEM: Problem = {
 
 export const KEY_VALUE_STORE: Problem = {
   id: 'key-value-store',
+  company: 'Amazon',
   title: 'Key-Value Store',
   difficulty: 'easy',
   description:

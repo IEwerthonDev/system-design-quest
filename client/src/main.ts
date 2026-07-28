@@ -1,3 +1,4 @@
+import './theme/global.css';
 import { mountBlueprintCanvas, type BlueprintCanvas } from './blueprint/blueprint-canvas';
 import { bootstrapApp } from './bootstrap';
 import { startResponsiveLayout } from './ui/responsive';

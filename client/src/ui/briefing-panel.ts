@@ -127,19 +127,28 @@ function injectBriefingStyles(root: HTMLElement): void {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      background: rgba(15, 20, 25, 0.92);
+      padding: max(16px, env(safe-area-inset-top)) 16px 24px;
+      background: var(--sdq-bg-overlay, rgba(12,12,14,0.94));
       z-index: 15;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     .sdq-briefing__card {
       width: min(560px, 100%);
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: 24px 26px 28px;
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      background: var(--sdq-bg-elevated, #141416);
+      border: 1px solid var(--sdq-border, rgba(255,255,255,0.08));
+      border-radius: var(--sdq-radius-lg, 14px);
+      padding: 24px 22px 28px;
+      color: var(--sdq-text, #f4f4f5);
+      font-family: var(--sdq-font, system-ui, sans-serif);
+      box-shadow: var(--sdq-shadow);
+    }
+    .sdq-briefing__company {
+      font: 500 11px var(--sdq-font-mono, monospace);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--sdq-accent, #c9a962);
+      margin: 0 0 8px;
     }
     .sdq-briefing__badge {
       display: inline-block;
@@ -167,15 +176,16 @@ function injectBriefingStyles(root: HTMLElement): void {
       border: 1px solid rgba(248, 113, 113, 0.45);
     }
     .sdq-briefing__title {
-      font-size: 26px;
-      font-weight: 700;
+      font-size: clamp(1.35rem, 4vw, 1.65rem);
+      font-weight: 600;
       margin: 0 0 12px;
       line-height: 1.2;
+      letter-spacing: -0.02em;
     }
     .sdq-briefing__description {
-      font-size: 14px;
-      line-height: 1.55;
-      color: #cbd5e1;
+      font-size: 15px;
+      line-height: 1.6;
+      color: var(--sdq-text-muted, #a1a1aa);
       margin: 0 0 18px;
     }
     .sdq-briefing__section-title {
@@ -250,16 +260,18 @@ function injectBriefingStyles(root: HTMLElement): void {
     }
     .sdq-briefing__start {
       width: 100%;
-      border: 1px solid rgba(96, 165, 250, 0.5);
-      background: rgba(30, 64, 175, 0.85);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 12px 16px;
-      font: 600 15px system-ui, sans-serif;
+      border: 1px solid var(--sdq-accent-border);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-accent);
+      border-radius: var(--sdq-radius-sm, 6px);
+      padding: 14px 16px;
+      font: 600 15px var(--sdq-font);
       cursor: pointer;
+      min-height: 48px;
+      touch-action: manipulation;
     }
     .sdq-briefing__start:hover {
-      background: rgba(37, 99, 235, 0.95);
+      background: rgba(201, 169, 98, 0.22);
     }
   `;
   root.append(style);
@@ -281,6 +293,10 @@ export function mountBriefingPanel(
   const badge = document.createElement('span');
   badge.className = 'sdq-briefing__badge';
   badge.setAttribute('data-testid', 'briefing-badge');
+
+  const company = document.createElement('p');
+  company.className = 'sdq-briefing__company';
+  company.setAttribute('data-testid', 'briefing-company');
 
   const title = document.createElement('h1');
   title.className = 'sdq-briefing__title';
@@ -314,6 +330,7 @@ export function mountBriefingPanel(
 
   card.append(
     badge,
+    company,
     title,
     description,
     metricsTitle,
@@ -332,6 +349,7 @@ export function mountBriefingPanel(
   const render = (problem: Problem): void => {
     badge.className = `sdq-briefing__badge sdq-briefing__badge--${problem.difficulty}`;
     badge.textContent = DIFFICULTY_LABELS[problem.difficulty];
+    company.textContent = problem.company;
     title.textContent = problem.title;
     description.textContent = problem.description;
 

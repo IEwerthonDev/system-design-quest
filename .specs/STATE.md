@@ -22,9 +22,9 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Mobile web canvas UX (tap-to-add + touch drag/link) |
-| **Próximo passo** | Dogfood on phone at production URL; optional durable remote sessions later |
-| **Feature ativa** | mobile canvas playability on `main` |
+| **Fase atual** | UI redesign + company-branded problems + mobile polish |
+| **Próximo passo** | Dogfood on phone at production URL |
+| **Feature ativa** | minimalist theme + home navigation on `main` |
 | **Branch** | `main` |
 | **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
 | **Production URL** | https://system-design-quest.vercel.app |

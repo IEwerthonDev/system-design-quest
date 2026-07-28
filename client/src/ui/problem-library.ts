@@ -73,51 +73,70 @@ function injectLibraryStyles(root: HTMLElement): void {
       position: fixed;
       inset: 0;
       display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 24px;
-      background: rgba(15, 20, 25, 0.96);
+      flex-direction: column;
+      background: var(--sdq-bg, #0c0c0e);
       z-index: 20;
-      overflow-y: auto;
-      font-family: system-ui, sans-serif;
-      color: #e2e8f0;
+      overflow: hidden;
+      font-family: var(--sdq-font, system-ui, sans-serif);
+      color: var(--sdq-text, #f4f4f5);
     }
-    .sdq-library__card {
-      width: min(960px, 100%);
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 12px;
-      padding: 24px 26px 28px;
+    .sdq-library__scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: max(20px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+    }
+    .sdq-library__inner {
+      width: min(1040px, 100%);
+      margin: 0 auto;
     }
     .sdq-library__header {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
+      align-items: flex-end;
       justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 6px;
+      gap: 16px;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--sdq-border, rgba(255,255,255,0.08));
+    }
+    .sdq-library__eyebrow {
+      font: 500 11px var(--sdq-font-mono, monospace);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--sdq-accent, #c9a962);
+      margin: 0 0 6px;
     }
     .sdq-library__title {
-      margin: 0 0 6px;
-      font-size: 24px;
-      font-weight: 700;
-      color: #f8fafc;
+      margin: 0;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: var(--sdq-text);
+      line-height: 1.15;
     }
     .sdq-library__sessions {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(56, 189, 248, 0.12);
-      color: #7dd3fc;
-      border-radius: 8px;
-      padding: 8px 12px;
-      font: 600 13px system-ui, sans-serif;
+      border: 1px solid var(--sdq-border);
+      background: transparent;
+      color: var(--sdq-text-muted);
+      border-radius: var(--sdq-radius-sm, 6px);
+      padding: 10px 16px;
+      font: 500 13px var(--sdq-font);
       cursor: pointer;
       white-space: nowrap;
+      min-height: 44px;
+      touch-action: manipulation;
+    }
+    .sdq-library__sessions:hover {
+      border-color: var(--sdq-border-strong);
+      color: var(--sdq-text);
     }
     .sdq-library__subtitle {
-      margin: 0 0 18px;
-      font-size: 14px;
-      color: #94a3b8;
-      line-height: 1.5;
+      margin: 0 0 20px;
+      font-size: 15px;
+      color: var(--sdq-text-muted);
+      line-height: 1.55;
+      max-width: 56ch;
     }
     .sdq-library__filters {
       display: flex;
@@ -126,129 +145,170 @@ function injectLibraryStyles(root: HTMLElement): void {
       margin-bottom: 16px;
     }
     .sdq-library__filter {
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(15, 23, 42, 0.65);
-      color: #e2e8f0;
+      border: 1px solid var(--sdq-border);
+      background: transparent;
+      color: var(--sdq-text-muted);
       border-radius: 999px;
-      padding: 6px 14px;
-      font: 600 13px system-ui, sans-serif;
+      padding: 8px 16px;
+      font: 500 13px var(--sdq-font);
       cursor: pointer;
+      min-height: 40px;
+      touch-action: manipulation;
+      transition: border-color 0.15s, color 0.15s;
     }
     .sdq-library__filter--active {
-      background: rgba(56, 189, 248, 0.2);
-      border-color: rgba(56, 189, 248, 0.55);
-      color: #7dd3fc;
+      background: var(--sdq-accent-muted, rgba(201,169,98,0.15));
+      border-color: var(--sdq-accent-border);
+      color: var(--sdq-accent);
     }
     .sdq-library__progress {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-bottom: 18px;
-      font-size: 13px;
-      color: #cbd5e1;
+      gap: 10px;
+      margin-bottom: 24px;
+      font-size: 12px;
+      color: var(--sdq-text-subtle);
     }
     .sdq-library__progress-item {
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(148, 163, 184, 0.15);
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
     }
     .sdq-library__grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 12px;
+      gap: 14px;
+    }
+    @media (max-width: 480px) {
+      .sdq-library__grid {
+        grid-template-columns: 1fr;
+      }
+      .sdq-library__header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .sdq-library__sessions {
+        width: 100%;
+        text-align: center;
+      }
     }
     .sdq-library__problem {
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      border-radius: 10px;
-      padding: 14px 14px 12px;
-      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius, 10px);
+      padding: 18px 16px 16px;
+      background: var(--sdq-bg-elevated);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.15s;
+    }
+    .sdq-library__problem:hover {
+      border-color: var(--sdq-border-strong);
     }
     .sdq-library__problem--completed {
-      border-color: rgba(34, 197, 94, 0.35);
+      border-color: rgba(74, 222, 128, 0.25);
     }
     .sdq-library__problem-header {
       display: flex;
       align-items: flex-start;
-      gap: 8px;
-      margin-bottom: 8px;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .sdq-library__company {
+      font: 500 10px var(--sdq-font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sdq-accent);
+      margin: 0 0 4px;
     }
     .sdq-library__problem-title {
       margin: 0;
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
-      color: #f8fafc;
-      flex: 1;
+      color: var(--sdq-text);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+    .sdq-library__difficulty {
+      font-size: 16px;
+      flex-shrink: 0;
+      line-height: 1;
     }
     .sdq-library__badges {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 8px;
     }
     .sdq-library__badge {
       display: inline-flex;
       align-items: center;
       border-radius: 999px;
-      padding: 2px 8px;
-      font-size: 11px;
+      padding: 3px 9px;
+      font-size: 10px;
       font-weight: 600;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid var(--sdq-border);
+      color: var(--sdq-text-muted);
     }
     .sdq-library__badge--recommended {
-      background: rgba(56, 189, 248, 0.18);
-      color: #7dd3fc;
-      border: 1px solid rgba(56, 189, 248, 0.35);
+      border-color: var(--sdq-accent-border);
+      color: var(--sdq-accent);
     }
     .sdq-library__badge--tutorial {
-      background: rgba(168, 85, 247, 0.18);
+      border-color: rgba(168, 85, 247, 0.35);
       color: #d8b4fe;
-      border: 1px solid rgba(168, 85, 247, 0.35);
     }
     .sdq-library__badge--completed {
-      background: rgba(34, 197, 94, 0.18);
-      color: #86efac;
-      border: 1px solid rgba(34, 197, 94, 0.35);
+      border-color: rgba(74, 222, 128, 0.35);
+      color: var(--sdq-success);
     }
     .sdq-library__tags {
-      margin: 0 0 8px;
+      margin: 0;
       font-size: 12px;
-      color: #94a3b8;
+      color: var(--sdq-text-subtle);
+      line-height: 1.4;
     }
     .sdq-library__meta {
-      margin: 0 0 12px;
-      font-size: 12px;
-      color: #64748b;
+      margin: 0;
+      font-size: 11px;
+      color: var(--sdq-text-subtle);
     }
     .sdq-library__actions {
       display: flex;
       gap: 8px;
+      margin-top: auto;
+      padding-top: 4px;
     }
     .sdq-library__action {
       flex: 1;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.9);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 10px;
-      font: 600 12px system-ui, sans-serif;
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text-muted);
+      border-radius: var(--sdq-radius-sm);
+      padding: 10px 8px;
+      font: 500 12px var(--sdq-font);
       cursor: pointer;
+      min-height: 44px;
+      touch-action: manipulation;
     }
     .sdq-library__action--primary {
-      background: rgba(56, 189, 248, 0.18);
-      border-color: rgba(56, 189, 248, 0.45);
-      color: #7dd3fc;
+      background: var(--sdq-accent-muted);
+      border-color: var(--sdq-accent-border);
+      color: var(--sdq-accent);
     }
     .sdq-library__action:hover {
-      background: rgba(51, 65, 85, 0.95);
+      border-color: var(--sdq-border-strong);
+      color: var(--sdq-text);
     }
     .sdq-library__warning {
       margin: 0 0 16px;
       padding: 12px 14px;
-      border-radius: 8px;
-      background: rgba(234, 179, 8, 0.12);
-      border: 1px solid rgba(234, 179, 8, 0.35);
-      color: #fde047;
+      border-radius: var(--sdq-radius-sm);
+      background: rgba(251, 191, 36, 0.08);
+      border: 1px solid rgba(251, 191, 36, 0.25);
+      color: var(--sdq-warning);
       font-size: 13px;
       line-height: 1.45;
     }
@@ -273,15 +333,26 @@ export function mountProblemLibrary(
   panel.className = 'sdq-library';
   panel.setAttribute('data-testid', 'problem-library');
 
-  const card = document.createElement('div');
-  card.className = 'sdq-library__card';
+  const scroll = document.createElement('div');
+  scroll.className = 'sdq-library__scroll';
+
+  const inner = document.createElement('div');
+  inner.className = 'sdq-library__inner';
 
   const header = document.createElement('div');
   header.className = 'sdq-library__header';
 
+  const headerText = document.createElement('div');
+
+  const eyebrow = document.createElement('p');
+  eyebrow.className = 'sdq-library__eyebrow';
+  eyebrow.textContent = 'System Design Quest';
+
   const title = document.createElement('h1');
   title.className = 'sdq-library__title';
-  title.textContent = 'Biblioteca de Problemas';
+  title.textContent = 'Problemas';
+
+  headerText.append(eyebrow, title);
 
   const sessionsButton = document.createElement('button');
   sessionsButton.type = 'button';
@@ -292,12 +363,12 @@ export function mountProblemLibrary(
     callbacks.onOpenSessions?.();
   });
 
-  header.append(title, sessionsButton);
+  header.append(headerText, sessionsButton);
 
   const subtitle = document.createElement('p');
   subtitle.className = 'sdq-library__subtitle';
   subtitle.textContent =
-    'Escolha um sistema real para praticar. Comece pelos 🟢 Fáceis se você é iniciante.';
+    'Desenhe o system design de features reais de empresas conhecidas — Bit.ly, Uber, Netflix, WhatsApp e mais.';
 
   const warning = document.createElement('div');
   warning.className = 'sdq-library__warning';
@@ -315,8 +386,9 @@ export function mountProblemLibrary(
   grid.className = 'sdq-library__grid';
   grid.setAttribute('data-testid', 'library-grid');
 
-  card.append(header, subtitle, warning, filters, progressRow, grid);
-  panel.append(card);
+  inner.append(header, subtitle, warning, filters, progressRow, grid);
+  scroll.append(inner);
+  panel.append(scroll);
   container.append(panel);
 
   const leaderboardPanel = mountLeaderboardPanel(container, {
@@ -415,15 +487,24 @@ export function mountProblemLibrary(
     const header = document.createElement('div');
     header.className = 'sdq-library__problem-header';
 
+    const titleBlock = document.createElement('div');
+
+    const company = document.createElement('p');
+    company.className = 'sdq-library__company';
+    company.textContent = problem.company;
+
     const problemTitle = document.createElement('h2');
     problemTitle.className = 'sdq-library__problem-title';
     problemTitle.textContent = problem.title;
 
+    titleBlock.append(company, problemTitle);
+
     const difficultyBadge = document.createElement('span');
+    difficultyBadge.className = 'sdq-library__difficulty';
     difficultyBadge.textContent = DIFFICULTY_BADGES[problem.difficulty];
     difficultyBadge.setAttribute('aria-label', DIFFICULTY_LABELS[problem.difficulty]);
 
-    header.append(problemTitle, difficultyBadge);
+    header.append(titleBlock, difficultyBadge);
 
     const badges = document.createElement('div');
     badges.className = 'sdq-library__badges';

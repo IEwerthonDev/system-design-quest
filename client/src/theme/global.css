@@ -1,0 +1,132 @@
+/* System Design Quest — minimalist design tokens */
+:root {
+  --sdq-bg: #0c0c0e;
+  --sdq-bg-elevated: #141416;
+  --sdq-bg-surface: #1a1a1e;
+  --sdq-bg-overlay: rgba(12, 12, 14, 0.94);
+  --sdq-border: rgba(255, 255, 255, 0.08);
+  --sdq-border-strong: rgba(255, 255, 255, 0.14);
+  --sdq-text: #f4f4f5;
+  --sdq-text-muted: #a1a1aa;
+  --sdq-text-subtle: #71717a;
+  --sdq-accent: #c9a962;
+  --sdq-accent-muted: rgba(201, 169, 98, 0.15);
+  --sdq-accent-border: rgba(201, 169, 98, 0.35);
+  --sdq-success: #4ade80;
+  --sdq-warning: #fbbf24;
+  --sdq-danger: #f87171;
+  --sdq-radius-sm: 6px;
+  --sdq-radius: 10px;
+  --sdq-radius-lg: 14px;
+  --sdq-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --sdq-font: 'Inter', system-ui, -apple-system, sans-serif;
+  --sdq-font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --sdq-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body,
+#app {
+  font-family: var(--sdq-font);
+  background: var(--sdq-bg);
+  color: var(--sdq-text);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Shared panel chrome */
+.sdq-panel-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px 24px;
+  background: var(--sdq-bg-overlay);
+  z-index: 20;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sdq-panel-card {
+  width: min(960px, 100%);
+  background: var(--sdq-bg-elevated);
+  border: 1px solid var(--sdq-border);
+  border-radius: var(--sdq-radius-lg);
+  padding: 24px 22px 28px;
+  box-shadow: var(--sdq-shadow);
+}
+
+.sdq-btn {
+  border: 1px solid var(--sdq-border-strong);
+  background: var(--sdq-bg-surface);
+  color: var(--sdq-text);
+  border-radius: var(--sdq-radius-sm);
+  padding: 10px 16px;
+  font: 500 14px var(--sdq-font);
+  cursor: pointer;
+  transition: background 0.15s var(--sdq-ease), border-color 0.15s var(--sdq-ease);
+  touch-action: manipulation;
+}
+
+.sdq-btn:hover {
+  background: #222226;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.sdq-btn--primary {
+  background: var(--sdq-accent-muted);
+  border-color: var(--sdq-accent-border);
+  color: var(--sdq-accent);
+}
+
+.sdq-btn--primary:hover {
+  background: rgba(201, 169, 98, 0.22);
+}
+
+.sdq-btn--ghost {
+  background: transparent;
+  border-color: var(--sdq-border);
+  color: var(--sdq-text-muted);
+}
+
+/* Phase back — home exit */
+.sdq-phase-back {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 12px;
+  z-index: 25;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--sdq-border);
+  background: var(--sdq-bg-elevated);
+  color: var(--sdq-text-muted);
+  border-radius: var(--sdq-radius-sm);
+  font: 500 13px var(--sdq-font);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sdq-phase-back::before {
+  content: '←';
+  font-size: 14px;
+  color: var(--sdq-accent);
+}
+
+.sdq-phase-back:hover {
+  color: var(--sdq-text);
+  border-color: var(--sdq-border-strong);
+}
+
+.sdq-phase-back--in-header {
+  position: static;
+  top: auto;
+  left: auto;
+  z-index: auto;
+  flex-shrink: 0;
+  min-height: 36px;
+  padding: 6px 12px;
+}

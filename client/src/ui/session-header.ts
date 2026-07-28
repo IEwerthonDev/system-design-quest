@@ -26,9 +26,9 @@ function injectStyles(): void {
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      padding: 0 16px 0 16px;
+      padding: 0 16px;
       pointer-events: none;
-      background: linear-gradient(180deg, rgba(10,25,48,0.85), transparent);
+      background: linear-gradient(180deg, rgba(12,12,14,0.9), transparent);
       transition: left 0.18s ease;
     }
     html.sdq-palette-is-collapsed .sdq-session-header {
@@ -44,17 +44,19 @@ function injectStyles(): void {
       display: none;
     }
     .sdq-session-header__brand {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 11px;
-      letter-spacing: 0.06em;
-      color: #93c5fd;
+      font-family: var(--sdq-font-mono, ui-monospace, monospace);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--sdq-text-subtle, #71717a);
       white-space: nowrap;
     }
     .sdq-session-header__brand strong {
       display: block;
       font-size: 13px;
-      color: #f8fafc;
-      letter-spacing: 0.02em;
+      font-family: var(--sdq-font, system-ui, sans-serif);
+      font-weight: 600;
+      color: var(--sdq-text, #f4f4f5);
+      letter-spacing: -0.01em;
     }
     .sdq-session-header__controls {
       display: flex;

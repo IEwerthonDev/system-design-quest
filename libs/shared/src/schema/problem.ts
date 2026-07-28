@@ -34,6 +34,8 @@ export interface SuggestedRequirements {
 
 export interface Problem {
   id: string;
+  /** Well-known company or product this problem is modeled after */
+  company: string;
   title: string;
   difficulty: Difficulty;
   /** Narrative briefing shown before requirements phase */

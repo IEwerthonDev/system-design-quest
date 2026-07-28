@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { mountPhaseNavigation } from './phase-navigation';
 import {
   advancePhase,
@@ -72,8 +72,9 @@ describe('requirements session persistence', () => {
       container.remove();
     });
 
-    it('persists requirements added via suggestions through canvas and back', () => {
-      mountPhaseNavigation(container);
+    it('keeps requirements in game state when exiting canvas to library', () => {
+      const onExitToLibrary = vi.fn();
+      mountPhaseNavigation(container, { onExitToLibrary });
 
       container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
       container.querySelector<HTMLButtonElement>('[data-testid="suggestion-card-functional-0"]')!.click();
@@ -87,12 +88,8 @@ describe('requirements session persistence', () => {
 
       container.querySelector<HTMLButtonElement>('[data-testid="phase-back"]')!.click();
 
-      expect(getSession()?.phase).toBe('requirements');
+      expect(onExitToLibrary).toHaveBeenCalledTimes(1);
       expect(window.__GAME_STATE__.requirements.functional).toHaveLength(2);
-      expect(
-        container.querySelector<HTMLTextAreaElement>('[data-testid="requirements-edit-functional-0"]')
-          ?.value,
-      ).toBe(window.__GAME_STATE__.requirements.functional[0]);
     });
   });
 });

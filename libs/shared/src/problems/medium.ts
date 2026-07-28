@@ -2,11 +2,13 @@ import type { Problem } from '../schema/problem';
 
 export const CHAT_SYSTEM: Problem = {
   id: 'chat-system',
+  company: 'WhatsApp',
   title: 'Chat em Tempo Real',
   difficulty: 'medium',
   description:
-    'Projete um sistema de chat em tempo real como WhatsApp ou Slack. Usuários enviam mensagens 1:1 e em grupos, ' +
-    'com delivery receipts, presence (online/offline) e histórico persistente.',
+    'Projete o sistema de mensagens do WhatsApp ou Slack: chat 1:1 e em grupos com delivery receipts, ' +
+    'presence (online/offline) e histórico persistente. Mensagens devem chegar em menos de 200 ms ' +
+    'para usuários online, com garantias de entrega e suporte a grupos grandes.',
   metrics: {
     dau: 500_000_000,
     rps: 500_000,
@@ -52,11 +54,13 @@ export const CHAT_SYSTEM: Problem = {
 
 export const NEWS_FEED: Problem = {
   id: 'news-feed',
+  company: 'Meta / X',
   title: 'News Feed',
   difficulty: 'medium',
   description:
-    'Projete um news feed como Twitter/X ou Facebook. Usuários publicam posts e veem timeline personalizada ' +
-    'de quem seguem, com fan-out on write ou read e tratamento do celebrity problem.',
+    'Projete o news feed do Twitter/X ou Facebook: usuários publicam posts e veem uma timeline personalizada ' +
+    'de quem seguem. Arquitete fan-out on write ou read, ranking por relevância e recência, ' +
+    'e trate o celebrity problem (contas com milhões de seguidores).',
   metrics: {
     dau: 500_000_000,
     readRps: 500_000,
@@ -104,6 +108,7 @@ export const NEWS_FEED: Problem = {
 
 export const SEARCH_AUTOCOMPLETE: Problem = {
   id: 'search-autocomplete',
+  company: 'Google',
   title: 'Autocomplete / Typeahead',
   difficulty: 'medium',
   description:
@@ -152,6 +157,7 @@ export const SEARCH_AUTOCOMPLETE: Problem = {
 
 export const INSTAGRAM: Problem = {
   id: 'instagram',
+  company: 'Instagram',
   title: 'Instagram',
   difficulty: 'medium',
   description:
@@ -202,6 +208,7 @@ export const INSTAGRAM: Problem = {
 
 export const GOOGLE_DRIVE: Problem = {
   id: 'google-drive',
+  company: 'Google Drive',
   title: 'Armazenamento em Nuvem',
   difficulty: 'medium',
   description:
@@ -250,6 +257,7 @@ export const GOOGLE_DRIVE: Problem = {
 
 export const YELP_NEARBY: Problem = {
   id: 'yelp-nearby',
+  company: 'Yelp',
   title: 'Busca por Proximidade',
   difficulty: 'medium',
   description:
@@ -298,6 +306,7 @@ export const YELP_NEARBY: Problem = {
 
 export const HOTEL_BOOKING: Problem = {
   id: 'hotel-booking',
+  company: 'Booking.com',
   title: 'Reserva de Hotel',
   difficulty: 'medium',
   description:
@@ -346,11 +355,13 @@ export const HOTEL_BOOKING: Problem = {
 
 export const YOUTUBE: Problem = {
   id: 'youtube',
-  title: 'YouTube — Upload/Stream/Social',
+  company: 'YouTube',
+  title: 'Streaming de Vídeo',
   difficulty: 'medium',
   description:
-    'Projete o backend do YouTube: upload de vídeos, transcoding para múltiplas resoluções, streaming HLS/DASH ' +
-    'via CDN, likes/comentários e metadados. 500 horas de upload por minuto.',
+    'Projete o backend de streaming do YouTube: upload de vídeos, transcoding para múltiplas resoluções, ' +
+    'entrega adaptativa (HLS/DASH) via CDN para milhões de usuários. 500 horas de upload por minuto, ' +
+    'bitrate adaptativo e metadados com baixa latência.',
   metrics: {
     dau: 2_000_000_000,
     writeRps: 10_000,
@@ -397,11 +408,13 @@ export const YOUTUBE: Problem = {
 
 export const UBER_RIDE: Problem = {
   id: 'uber-ride',
-  title: 'Uber — Matching de Motoristas',
+  company: 'Uber',
+  title: 'Motoristas Próximos',
   difficulty: 'medium',
   description:
-    'Projete o sistema de matching de corridas do Uber. Passageiros solicitam rides, motoristas próximos ' +
-    'são encontrados via geolocalização, preço surge em alta demanda e status atualiza em tempo real.',
+    'Projete como o Uber encontra motoristas próximos: sirva consultas geoespaciais em escala (1M+ RPS de ' +
+    'location updates) com baixa latência e localizações frescas. Matching em menos de 30 segundos, ' +
+    'geohash/quadtree para proximidade e status da corrida em tempo real.',
   metrics: {
     dau: 100_000_000,
     rps: 1_000_000,
@@ -447,6 +460,7 @@ export const UBER_RIDE: Problem = {
 
 export const TIKTOK_FEED: Problem = {
   id: 'tiktok-feed',
+  company: 'TikTok',
   title: 'TikTok — Feed de Vídeos Curtos',
   difficulty: 'medium',
   description:

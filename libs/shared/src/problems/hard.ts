@@ -2,6 +2,7 @@ import type { Problem } from '../schema/problem';
 
 export const NETFLIX_STREAMING: Problem = {
   id: 'netflix-streaming',
+  company: 'Netflix',
   title: 'Netflix — Streaming ABR',
   difficulty: 'hard',
   description:
@@ -52,6 +53,7 @@ export const NETFLIX_STREAMING: Problem = {
 
 export const TICKETMASTER: Problem = {
   id: 'ticketmaster',
+  company: 'Ticketmaster',
   title: 'Ticketmaster — Venda de Ingressos',
   difficulty: 'hard',
   description:
@@ -101,6 +103,7 @@ export const TICKETMASTER: Problem = {
 
 export const GOOGLE_MAPS: Problem = {
   id: 'google-maps',
+  company: 'Google Maps',
   title: 'Google Maps',
   difficulty: 'hard',
   description:
@@ -150,6 +153,7 @@ export const GOOGLE_MAPS: Problem = {
 
 export const GOOGLE_DOCS: Problem = {
   id: 'google-docs',
+  company: 'Google Docs',
   title: 'Edição Colaborativa',
   difficulty: 'hard',
   description:
@@ -199,6 +203,7 @@ export const GOOGLE_DOCS: Problem = {
 
 export const STRIPE_PAYMENTS: Problem = {
   id: 'stripe-payments',
+  company: 'Stripe',
   title: 'Sistema de Pagamentos',
   difficulty: 'hard',
   description:
@@ -248,6 +253,7 @@ export const STRIPE_PAYMENTS: Problem = {
 
 export const ZOOM_CONFERENCE: Problem = {
   id: 'zoom-conference',
+  company: 'Zoom',
   title: 'Videoconferência',
   difficulty: 'hard',
   description:
@@ -297,6 +303,7 @@ export const ZOOM_CONFERENCE: Problem = {
 
 export const DOORDASH_DELIVERY: Problem = {
   id: 'doordash-delivery',
+  company: 'DoorDash',
   title: 'Delivery de Comida',
   difficulty: 'hard',
   description:
@@ -346,6 +353,7 @@ export const DOORDASH_DELIVERY: Problem = {
 
 export const DISTRIBUTED_KAFKA: Problem = {
   id: 'distributed-kafka',
+  company: 'LinkedIn',
   title: 'Message Queue Distribuída',
   difficulty: 'hard',
   description:
@@ -394,6 +402,7 @@ export const DISTRIBUTED_KAFKA: Problem = {
 
 export const S3_STORAGE: Problem = {
   id: 's3-storage',
+  company: 'AWS',
   title: 'Object Storage (S3-like)',
   difficulty: 'hard',
   description:
@@ -442,6 +451,7 @@ export const S3_STORAGE: Problem = {
 
 export const DISTRIBUTED_LOCK: Problem = {
   id: 'distributed-lock',
+  company: 'Google',
   title: 'Distributed Lock',
   difficulty: 'hard',
   description:

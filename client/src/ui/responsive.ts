@@ -68,17 +68,17 @@ function injectResponsiveStyles(): void {
       left: 12px;
       bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       z-index: 19;
-      min-height: 44px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      border: 1px solid rgba(56, 120, 180, 0.5);
-      background: linear-gradient(180deg, rgba(18, 42, 74, 0.98), rgba(10, 25, 48, 0.98));
-      color: #e2e8f0;
-      font: 700 10px ui-monospace, Menlo, monospace;
-      letter-spacing: 0.08em;
+      min-height: 48px;
+      padding: 12px 16px;
+      border-radius: var(--sdq-radius, 10px);
+      border: 1px solid var(--sdq-accent-border, rgba(201,169,98,0.35));
+      background: var(--sdq-bg-elevated, #141416);
+      color: var(--sdq-accent, #c9a962);
+      font: 600 11px var(--sdq-font-mono, monospace);
+      letter-spacing: 0.06em;
       cursor: pointer;
       touch-action: manipulation;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+      box-shadow: var(--sdq-shadow);
     }
     .sdq-layout--phone .sdq-palette-fab::before {
       content: "▦";
@@ -102,17 +102,17 @@ function injectResponsiveStyles(): void {
       bottom: 0;
       left: 0;
       right: auto;
-      width: min(340px, 88vw) !important;
+      width: min(340px, 92vw) !important;
       height: 100% !important;
       max-height: none !important;
       padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(16px + env(safe-area-inset-bottom, 0px));
-      border-right: 1px solid rgba(148, 163, 184, 0.35);
+      border-right: 1px solid var(--sdq-border);
       border-top: none;
       border-bottom: none;
       z-index: 22;
-      background: rgba(10, 22, 40, 0.98);
+      background: var(--sdq-bg-elevated);
       backdrop-filter: blur(12px);
-      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+      box-shadow: var(--sdq-shadow);
       transform: translateX(-105%);
       transition: transform 0.22s ease, visibility 0.22s ease;
       overflow-y: auto;
@@ -187,11 +187,11 @@ function injectResponsiveStyles(): void {
       align-items: center;
       gap: 8px;
       pointer-events: auto;
-      padding: 8px 10px;
-      border-radius: 12px;
-      background: rgba(8, 20, 38, 0.92);
-      border: 1px solid rgba(56, 120, 180, 0.3);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-radius: var(--sdq-radius, 10px);
+      background: var(--sdq-bg-elevated);
+      border: 1px solid var(--sdq-border);
+      box-shadow: var(--sdq-shadow);
     }
     .sdq-layout--phone .sdq-session-header__brand-sub {
       display: none;
@@ -246,6 +246,34 @@ function injectResponsiveStyles(): void {
     }
     .sdq-layout--phone .sdq-node__delete {
       display: inline-flex !important;
+    }
+
+    /* Phone: full-screen phase panels */
+    .sdq-layout--phone .sdq-briefing,
+    .sdq-layout--phone .sdq-requirements {
+      padding: max(12px, env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));
+      align-items: flex-start;
+    }
+    .sdq-layout--phone .sdq-briefing__card,
+    .sdq-layout--phone .sdq-requirements__card {
+      width: 100%;
+      max-height: none;
+      margin-top: 48px;
+    }
+    .sdq-layout--phone .sdq-phase-back {
+      position: fixed;
+      top: max(10px, env(safe-area-inset-top));
+      left: 10px;
+      z-index: 30;
+    }
+    .sdq-layout--phone .sdq-phase-back--in-header {
+      position: static;
+    }
+    .sdq-layout--phone .sdq-submit-panel {
+      left: 12px !important;
+      right: 12px !important;
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+      width: auto !important;
     }
   `;
   document.head.appendChild(style);

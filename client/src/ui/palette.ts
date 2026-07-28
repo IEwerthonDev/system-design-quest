@@ -65,10 +65,12 @@ export interface MountPaletteOptions {
 export interface PaletteHandle {
   root: HTMLElement;
   fab: HTMLButtonElement;
+  backdrop: HTMLElement;
   open(): void;
   close(): void;
   toggle(): void;
   isOpen(): boolean;
+  setVisible(visible: boolean): void;
 }
 
 export function resolvePaletteDropTarget(explicit?: HTMLElement): HTMLElement | null {
@@ -116,10 +118,10 @@ function injectPaletteStyles(root: HTMLElement): void {
       width: 220px;
       height: 100%;
       overflow-y: auto;
-      background: rgba(15, 20, 25, 0.92);
-      border-right: 1px solid rgba(148, 163, 184, 0.2);
-      color: #e2e8f0;
-      font-family: system-ui, sans-serif;
+      background: var(--sdq-bg-elevated, #141416);
+      border-right: 1px solid var(--sdq-border, rgba(255,255,255,0.08));
+      color: var(--sdq-text, #f4f4f5);
+      font-family: var(--sdq-font, system-ui, sans-serif);
       font-size: 13px;
       z-index: 10;
       padding: 12px 10px 24px;
@@ -423,9 +425,18 @@ export function mountPalette(
   return {
     root: palette,
     fab,
+    backdrop,
     open: openDrawer,
     close: closeDrawer,
     toggle: toggleDrawer,
     isOpen: () => !palette.classList.contains('sdq-palette--collapsed'),
+    setVisible(visible: boolean) {
+      palette.hidden = !visible;
+      fab.hidden = !visible;
+      backdrop.hidden = !visible;
+      if (!visible) {
+        closeDrawer();
+      }
+    },
   };
 }

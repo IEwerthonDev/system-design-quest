@@ -50,6 +50,7 @@ function assertProblemShape(problem: ReturnType<typeof getProblem>): void {
     return;
   }
 
+  expect(problem.company.length).toBeGreaterThan(1);
   expect(problem.title.length).toBeGreaterThan(3);
   expect(problem.description.length).toBeGreaterThan(50);
   expect(problem.constraints.length).toBeGreaterThanOrEqual(3);

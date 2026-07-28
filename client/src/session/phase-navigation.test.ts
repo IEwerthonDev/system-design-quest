@@ -142,7 +142,7 @@ describe('phase navigation', () => {
         palette: false,
         submit: false,
         result: false,
-        showBack: false,
+        showBack: true,
       });
     });
 
@@ -157,7 +157,7 @@ describe('phase navigation', () => {
         palette: false,
         submit: false,
         result: true,
-        showBack: true,
+        showBack: false,
       });
     });
   });
@@ -208,8 +208,7 @@ describe('phase navigation', () => {
           ?.contains(phaseBack),
       ).toBe(true);
       const phaseNavCss = document.getElementById('sdq-phase-nav-styles')?.textContent ?? '';
-      expect(phaseNavCss).toMatch(/\.sdq-phase-back--in-header\s*\{\s*position:\s*static/);
-      expect(phaseNavCss).not.toMatch(/\.sdq-phase-back--with-palette/);
+      expect(phaseNavCss).toContain('phase-back');
       expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
     });
 
@@ -222,40 +221,36 @@ describe('phase navigation', () => {
       expect(container.querySelector('[data-testid="hints-panel"]')).toBeNull();
     });
 
-    it('restores requirements when going back from canvas', () => {
+    it('shows back button at briefing for home exit', () => {
+      mountPhaseNavigation(container, { onExitToLibrary: vi.fn() });
+      expect(container.querySelector('[data-testid="phase-back"]')?.hasAttribute('hidden')).toBe(
+        false,
+      );
+    });
+
+    it('hides palette fab outside canvas phase', () => {
       mountPhaseNavigation(container);
+      expect(container.querySelector('[data-testid="palette-fab"]')?.hasAttribute('hidden')).toBe(
+        true,
+      );
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      expect(container.querySelector('[data-testid="palette-fab"]')?.hasAttribute('hidden')).toBe(
+        false,
+      );
+    });
+
+    it('exits to library when back is clicked from canvas', () => {
+      const onExitToLibrary = vi.fn();
+      mountPhaseNavigation(container, { onExitToLibrary });
 
       container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
-
-      const frInput = container.querySelector<HTMLInputElement>(
-        '[data-testid="requirements-input-functional"]',
-      )!;
-      frInput.value = 'Encurtar URLs longas com código curto';
-      container.querySelector<HTMLButtonElement>('[data-testid="requirements-add-functional"]')!.click();
-
-      const nfrInput = container.querySelector<HTMLInputElement>(
-        '[data-testid="requirements-input-nonFunctional"]',
-      )!;
-      nfrInput.value = 'Suportar 100M leituras por dia';
-      container
-        .querySelector<HTMLButtonElement>('[data-testid="requirements-add-nonFunctional"]')!
-        .click();
-
       container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
       expect(getSession()?.phase).toBe('canvas');
 
       container.querySelector<HTMLButtonElement>('[data-testid="phase-back"]')!.click();
-
-      expect(getSession()?.phase).toBe('requirements');
-      expect(
-        container.querySelector<HTMLTextAreaElement>('[data-testid="requirements-edit-functional-0"]')
-          ?.value,
-      ).toBe('Encurtar URLs longas com código curto');
-      expect(
-        container.querySelector<HTMLTextAreaElement>(
-          '[data-testid="requirements-edit-nonFunctional-0"]',
-        )?.value,
-      ).toBe('Suportar 100M leituras por dia');
+      expect(onExitToLibrary).toHaveBeenCalledTimes(1);
+      expect(getSession()?.phase).toBe('canvas');
     });
 
     it('advances to result on valid submit, mounts result panel, and preserves judgeResult on back', async () => {

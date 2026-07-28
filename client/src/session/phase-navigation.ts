@@ -26,7 +26,6 @@ import { mountTimerPanel } from '../ui/timer-panel';
 import { mountSessionHeader } from '../ui/session-header';
 import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
-import { canGoBackPhase } from './phase-machine';
 import {
   advancePhase,
   createSession,
@@ -61,6 +60,8 @@ export interface MountPhaseNavigationOptions {
   experienceLevel?: ExperienceLevel | null;
   /** When set, hydrate this persisted session instead of creating a new one (PP-08). */
   designSession?: DesignSessionRecord;
+  /** Exit session and return to problem library (home). */
+  onExitToLibrary?: () => void;
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
@@ -82,44 +83,19 @@ export function getPhaseLayerVisibility(phase: GamePhase): PhaseLayerVisibility 
     palette: phase === 'canvas',
     submit: phase === 'canvas',
     result: phase === 'result',
-    showBack: canGoBackPhase(phase),
+    showBack: phase !== 'result',
   };
 }
 
-function injectPhaseNavigationStyles(root: HTMLElement): void {
+function injectPhaseNavigationStyles(): void {
   if (document.getElementById('sdq-phase-nav-styles')) {
     return;
   }
 
   const style = document.createElement('style');
   style.id = 'sdq-phase-nav-styles';
-  style.textContent = `
-    .sdq-phase-back {
-      position: fixed;
-      top: 16px;
-      left: 16px;
-      z-index: 25;
-      border: 1px solid rgba(148, 163, 184, 0.35);
-      background: rgba(30, 41, 59, 0.92);
-      color: #e2e8f0;
-      border-radius: 8px;
-      padding: 8px 14px;
-      font: 600 13px system-ui, sans-serif;
-      cursor: pointer;
-    }
-    /* Canvas: sit in session header leading slot — never over the palette. */
-    .sdq-phase-back--in-header {
-      position: static;
-      top: auto;
-      left: auto;
-      z-index: auto;
-      flex-shrink: 0;
-    }
-    .sdq-phase-back:hover {
-      background: rgba(51, 65, 85, 0.95);
-    }
-  `;
-  root.append(style);
+  style.textContent = `/* phase-back styles live in theme/global.css */`;
+  document.head.append(style);
 }
 
 export function mountPhaseNavigation(
@@ -135,7 +111,7 @@ export function mountPhaseNavigation(
     throw new Error(`Unknown problem: ${problemId}`);
   }
 
-  injectPhaseNavigationStyles(document.head);
+  injectPhaseNavigationStyles();
   const now = options.now ?? Date.now;
   if (options.designSession) {
     hydrateFromDesignSession(
@@ -168,7 +144,7 @@ export function mountPhaseNavigation(
   backButton.type = 'button';
   backButton.className = 'sdq-phase-back';
   backButton.setAttribute('data-testid', 'phase-back');
-  backButton.textContent = 'Voltar';
+  backButton.textContent = 'Início';
   shell.append(backButton);
 
   const resultHost = document.createElement('div');
@@ -364,7 +340,7 @@ export function mountPhaseNavigation(
 
     briefingPanel.root.hidden = !visibility.briefing;
     requirementsPanel.root.hidden = !visibility.requirements;
-    palette.root.hidden = !visibility.palette;
+    palette.setVisible(visibility.palette);
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);
@@ -438,8 +414,7 @@ export function mountPhaseNavigation(
       void handleResultBack();
       return;
     }
-    goBackPhase();
-    sync();
+    options.onExitToLibrary?.();
   });
 
   sync();

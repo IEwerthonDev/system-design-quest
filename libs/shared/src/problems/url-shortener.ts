@@ -4,12 +4,13 @@ export const URL_SHORTENER_ID = 'url-shortener';
 
 export const URL_SHORTENER: Problem = {
   id: URL_SHORTENER_ID,
+  company: 'Bit.ly',
   title: 'Encurtador de URL',
   difficulty: 'easy',
   description:
-    'Projete um serviço como Bit.ly ou TinyURL. Usuários colam URLs longas e recebem links curtos ' +
-    'únicos. Ao acessar o link curto, o sistema redireciona (HTTP 302) para a URL original. ' +
-    'O tráfego é fortemente read-heavy: cada link criado gera muitos cliques ao longo do tempo.',
+    'Projete o system design do Bit.ly: um serviço que mapeia URLs longas em códigos curtos em escala global. ' +
+    'Cada link criado gera muito mais leituras (redirects HTTP 302) do que escritas. ' +
+    'O sistema precisa ser read-heavy, com códigos únicos, compactos e resistentes a picos de tráfego.',
   metrics: {
     dau: 100_000_000,
     readRps: 100_000,
