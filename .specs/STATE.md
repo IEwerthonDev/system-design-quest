@@ -22,17 +22,17 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | UI chrome fixes shipping; next = `judge-realism` (Complex — discuss pending) |
-| **Próximo passo** | Discuss gray areas for problem-specific judge + meaningful configs; then TLC Specify |
-| **Feature ativa** | `judge-realism` (planned) |
-| **Branch** | `main` |
+| **Fase atual** | `judge-realism` Design A approved (AD-027/028); Tasks drafted — await approve |
+| **Próximo passo** | User approves `.specs/features/judge-realism/tasks.md` → Execute T1 on `feature/judge-realism` |
+| **Feature ativa** | `judge-realism` (Complex) |
+| **Branch** | `main` (create `feature/judge-realism` at Execute) |
 | **Bloqueios** | Judge mock uses URL-shortener golden tiers for ALL problems when `LLM_API_KEY` missing — same graph can “pass” videoconference |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
-| **Decisões discuss** | pending for judge-realism |
+| **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** approved |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_99JVXdfuakhwUv9u8WFo4XYi31DZ` — READY (`b555df7` canvas-clear + paper icon + header gap) |
-| **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET (rotated) |
+| **Env set** | KV_* · AUTH_* · GOOGLE_* · LLM_API_KEY + LLM_BASE_URL (OpenRouter) + LLM_MODEL (`openai/gpt-4o-mini`) — local `.env` + Vercel prod/preview/dev; redeploy needed for live judge; user accepted no-rotate for chat-exposed key |
 | **Skills** | `ddia-systems` + `interview-system-designer` installed (~/.agents/skills) |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip; compact header; tap-to-add |
 | **Bugfix** | Canvas cleared on new challenge; Stop contrast; Share styles; paper config icon; header gap |
@@ -111,7 +111,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-016 | active | **Critério de score e veredito** — verdeto `PASS` se score ≥ 80 e zero blockers críticos; `PARTIAL` se score ≥ 70 e zero blockers; `FAIL` caso contrário. Ranking speedrun aceita apenas `PASS` ou `PARTIAL` com score ≥ 70 e zero blockers. Canvas vazio = FAIL local sem LLM | Unifica product spec, judge prompts e leaderboard; decisão tomada antes da Fase 2 |
 | AD-017 | active | **Tiers de componentes:** Tier 1 = 15 tipos (MVP 1a, canvas jogável); Tier 2 = 25 tipos (MVP 1c, meta do canvas); Tier 3 = 36 tipos (catálogo completo, Fase 3); Tier 4 = GLB assets (Fase 5 polish) | Alinha goal "≥25" com roadmap; evita bloquear 1a por catálogo completo |
 | AD-018 | active | **Canvas de sessão = DOM node cards + SVG edges** sobre grid CSS blueprint; pan/zoom no world container | Paridade System Design Playground; supersede AD-002/008/009 no path de jogo |
-| AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
+| AD-019 | active (extended by AD-028) | **`ArchitectureGraph` inclui** `replicas`, `config` tipado, `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado; AD-028 amplia kinds scale-critical |
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
 | AD-021 | superseded by AD-026 (Hobby durable) | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
 | AD-022 | superseded by AD-025 | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
@@ -119,6 +119,8 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-024 | active | **Bilingual EN/PT-BR** — UI + problem copy + Judge narrative; `sdq-locale`; default `pt-BR`; jargon stays English; library locale buttons | Supersedes AD-011; user request full-system locale including AI Judge |
 | AD-025 | active | **Hobby durable platform** — thin `api/*.js` (judge/sessions/leaderboard/cron/export); KV for sessions+leaderboard; localStorage fallback; Fastify+DI for local; Neon deferred | Supersedes AD-022; KV-first Hobby ROI without full Fastify on Vercel |
 | AD-026 | active | **Google OAuth identity** — guest play OK; durable sessions + leaderboard POST require Google session cookie + unique public nickname; nickname-alone is no longer ownership on Hobby APIs | User chose real OAuth over nickname surrogate; supersedes AD-021 auth surrogate for Hobby durable path |
+| AD-027 | active | **Judge structural-first (hybrid)** — deterministic per-problem structural rubric always runs before LLM; LLM cannot clear structural blockers; no cross-problem URL-shortener golden mock; Baseline 27 + Deep Core 13 | judge-realism Approach A; trustworthy learning bar |
+| AD-028 | active | **Scale-critical `ComponentConfig`** — cache, CDN(+TTL), SQL, MQ durability/partitions, WS fan-out, LB algorithm; configs affect simulation pressure and structural judge rules | Extends AD-019; judge-realism 2A/7B |
 
 ---
 
