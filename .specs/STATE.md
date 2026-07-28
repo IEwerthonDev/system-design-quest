@@ -42,7 +42,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 **Veredito:** GREEN (continuation unlocked)
 
----
+### Deploy note (Hobby)
 
 - **Serves:** Vite client `dist/client` + serverless `api/*.js` (judge, sessions, leaderboard, cron, optional export) via esbuild from `server/src/vercel/`
 - **Sessions / leaderboard on Hobby:** Vercel KV primary (AD-025); client `localStorage` fallback when remote missing/fails; optional `VITE_SESSIONS_MODE=local`
