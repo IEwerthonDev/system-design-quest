@@ -203,6 +203,41 @@ export interface SimulationSettings {
   speed: number;
   traffic: number;
   readRatio: number;
+  /** Absolute ingress RPS (sandbox / advanced). When unset with read/write RPS, traffic drives load. */
+  rps?: number;
+  concurrentUsers?: number;
+  readRps?: number;
+  writeRps?: number;
+  avgObjectKb?: number;
+  avgResponseKb?: number;
+  networkLatencyMs?: number;
+  bandwidthMbps?: number;
+  /** Target availability percent, e.g. 99.9 */
+  targetAvailability?: number;
+  /** Expected growth multiplier, e.g. 10 */
+  growthFactor?: number;
+  dailyDataGb?: number;
+}
+
+export type FindingCode =
+  | 'SPOF'
+  | 'MISSING_CACHE'
+  | 'MISSING_MQ'
+  | 'NO_LB'
+  | 'SINGLE_PRIMARY'
+  | 'CACHE_OFF_PATH'
+  | 'CONSISTENCY_RISK'
+  | 'BOTTLENECK'
+  | 'OVERPROVISION';
+
+export type FindingSeverity = 'blocker' | 'major' | 'minor';
+
+export interface ArchitectureFinding {
+  code: FindingCode;
+  severity: FindingSeverity;
+  nodeIds: string[];
+  reasonPt: string;
+  reasonEn: string;
 }
 
 export interface ArchitectureGraph {

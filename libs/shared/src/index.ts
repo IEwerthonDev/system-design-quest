@@ -1,6 +1,7 @@
 export type {
   AccessPattern,
   ApiGatewayConfig,
+  ArchitectureFinding,
   ArchitectureGraph,
   AuthConfig,
   CacheConfig,
@@ -13,6 +14,8 @@ export type {
   ConsistencyMode,
   DbTopologyRole,
   DeliveryGuarantee,
+  FindingCode,
+  FindingSeverity,
   KafkaConfig,
   LbAlgorithm,
   LbConfig,
@@ -40,15 +43,20 @@ export type {
   WsConfig,
 } from './schema/architecture-graph';
 export {
+  BASE_RPS,
   DEFAULT_SIMULATION,
   DETAIL_BONUS_CAP,
+  SANDBOX_PROBLEM_ID,
   defaultConfigForType,
+  hasAbsoluteWorkload,
   normalizeGraph,
   normalizeNode,
   normalizeSimulation,
+  resolveIngressRps,
 } from './schema/normalize-graph';
 export { edgeReadWeight, evaluateSimulation } from './simulation/evaluate-simulation';
 export type { SimulationEvaluation } from './simulation/evaluate-simulation';
+export { analyzeTopology } from './simulation/analyze-topology';
 export type { ComponentCategory, ComponentType, ComponentTypeMeta } from './schema/component-types';
 export type {
   Difficulty,

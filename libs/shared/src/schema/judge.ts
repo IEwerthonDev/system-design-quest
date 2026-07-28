@@ -3,7 +3,7 @@ import type { Locale } from './problem';
 
 export type Verdict = 'PASS' | 'PARTIAL' | 'FAIL';
 
-export type GameMode = 'study' | 'speedrun';
+export type GameMode = 'study' | 'speedrun' | 'sandbox';
 
 export interface JudgeInput {
   problemId: string;

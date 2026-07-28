@@ -3,8 +3,11 @@ import type { ArchitectureGraph, ComponentNode } from '../schema/architecture-gr
 import {
   DEFAULT_SIMULATION,
   defaultConfigForType,
+  hasAbsoluteWorkload,
   normalizeGraph,
   normalizeNode,
+  normalizeSimulation,
+  resolveIngressRps,
 } from './normalize-graph';
 
 describe('normalizeGraph', () => {
@@ -278,5 +281,32 @@ describe('normalizeGraph', () => {
       config: { kind: 'lb', algorithm: 'least_conn', healthCheck: true },
     });
     expect(lb.config).toEqual({ kind: 'lb', algorithm: 'least_conn', healthCheck: true });
+  });
+
+  it('clamps absolute workload fields and derives readRatio from read/write RPS', () => {
+    const sim = normalizeSimulation({
+      running: true,
+      speed: 2,
+      traffic: 3,
+      readRatio: 50,
+      rps: 50_000,
+      readRps: 40_000,
+      writeRps: 10_000,
+      targetAvailability: 99.9,
+      growthFactor: 10,
+    });
+    expect(sim.rps).toBe(50_000);
+    expect(sim.readRps).toBe(40_000);
+    expect(sim.writeRps).toBe(10_000);
+    expect(sim.readRatio).toBe(80);
+    expect(sim.targetAvailability).toBe(99.9);
+    expect(hasAbsoluteWorkload(sim)).toBe(true);
+    expect(resolveIngressRps(sim)).toBe(50_000);
+  });
+
+  it('resolveIngressRps falls back to BASE_RPS × traffic when absolute unset', () => {
+    const sim = normalizeSimulation({ traffic: 2, readRatio: 80 });
+    expect(hasAbsoluteWorkload(sim)).toBe(false);
+    expect(resolveIngressRps(sim)).toBe(400);
   });
 });

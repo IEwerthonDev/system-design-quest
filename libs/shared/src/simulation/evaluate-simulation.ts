@@ -1,6 +1,15 @@
-import type { ArchitectureGraph, ComponentNode, PressureLevel } from '../schema/architecture-graph';
+import type {
+  ArchitectureGraph,
+  ComponentNode,
+  PressureLevel,
+  SimulationSettings,
+} from '../schema/architecture-graph';
 import type { ComponentType } from '../schema/component-types';
-import { normalizeGraph } from '../schema/normalize-graph';
+import {
+  hasAbsoluteWorkload,
+  normalizeGraph,
+  resolveIngressRps,
+} from '../schema/normalize-graph';
 
 export type { PressureLevel };
 
@@ -9,6 +18,8 @@ export interface SimulationEvaluation {
   latencyMs: Record<string, number>;
   reasons: Record<string, string>;
   hotReadPath: boolean;
+  /** Effective ingress RPS used for this evaluation */
+  ingressRps: number;
 }
 
 const LATENCY_MS_BY_PRESSURE: Record<PressureLevel, number> = {
@@ -19,6 +30,7 @@ const LATENCY_MS_BY_PRESSURE: Record<PressureLevel, number> = {
 
 const BASE_LOAD = 10;
 
+/** Pedagogical capacity units (traffic-only / AD-020 back-compat). */
 const CAPACITY_PER_REPLICA: Partial<Record<ComponentType, number>> = {
   client_web: 50,
   client_mobile: 50,
@@ -48,12 +60,65 @@ const CAPACITY_PER_REPLICA: Partial<Record<ComponentType, number>> = {
   websocket_gateway: 18,
 };
 
-function capacityPerReplica(type: ComponentType): number {
+/** RPS capacity per replica when absolute workload is set (AD-031). */
+const CAPACITY_RPS_PER_REPLICA: Partial<Record<ComponentType, number>> = {
+  client_web: 50_000,
+  client_mobile: 50_000,
+  dns: 100_000,
+  cdn: 40_000,
+  waf: 30_000,
+  load_balancer: 25_000,
+  api_gateway: 20_000,
+  reverse_proxy: 22_000,
+  rate_limiter: 15_000,
+  app_server: 2_000,
+  microservice: 2_000,
+  serverless: 2_500,
+  worker: 800,
+  auth_service: 5_000,
+  cache_redis: 20_000,
+  sql_db: 800,
+  nosql_db: 3_000,
+  object_storage: 10_000,
+  message_queue: 8_000,
+  kafka: 12_000,
+  pub_sub: 10_000,
+  search_engine: 1_500,
+  monitoring: 50_000,
+  logging: 50_000,
+  notification: 5_000,
+  websocket_gateway: 5_000,
+};
+
+function capacityPerReplica(type: ComponentType, absolute: boolean): number {
+  if (absolute) {
+    return CAPACITY_RPS_PER_REPLICA[type] ?? 5_000;
+  }
   return CAPACITY_PER_REPLICA[type] ?? 20;
 }
 
 /** 1 = fully read-biased edge, 0 = fully write-biased, 0.5 = mixed */
-export function edgeReadWeight(fromType: ComponentType, toType: ComponentType): number {
+export function edgeReadWeight(
+  fromType: ComponentType,
+  toType: ComponentType,
+  label?: string,
+): number {
+  const intent = label?.toUpperCase();
+  if (intent === 'CACHE') {
+    return 0.95;
+  }
+  if (intent === 'DB') {
+    if (fromType === 'cache_redis' || fromType === 'cdn') {
+      return 0.9;
+    }
+    if (fromType === 'app_server' || fromType === 'microservice' || fromType === 'worker') {
+      return 0.35;
+    }
+    return 0.4;
+  }
+  if (intent === 'REQ') {
+    return 0.5;
+  }
   if (toType === 'cache_redis' || toType === 'cdn') {
     return 0.95;
   }
@@ -85,13 +150,11 @@ function hitRateOf(node: ArchitectureGraph['nodes'][number]): number | null {
   return null;
 }
 
-/** Low CDN TTL weakens edge relief (JR-19). Default 3600 → factor 1. */
 function cdnTtlReliefFactor(node: ArchitectureGraph['nodes'][number]): number {
   if (node.config?.kind !== 'cdn') {
     return 1;
   }
   const ttl = node.config.ttlSeconds;
-  // ttl≈60 → ~0.5; ttl 3600 → 1.0; shorter TTL passes more load to origin
   return clamp(Math.log10(Math.max(ttl, 1)) / Math.log10(DEFAULT_CDN_TTL_REF), 0.25, 1);
 }
 
@@ -122,7 +185,6 @@ function wsCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
   if (node.config?.kind !== 'ws') {
     return 1;
   }
-  // Default fan-out 10k → 1.0; low fan-out shrinks capacity
   const fan = clamp(node.config.fanOutLimit / 10_000, 0.15, 2);
   return fan * (node.config.stickySessions ? 1 : 0.9);
 }
@@ -197,7 +259,6 @@ function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
     return 1;
   }
   const base = Math.sqrt(node.config.shardCount) * (1 - (node.config.keySkew / 100) * 0.5);
-  // RF=1 → unchanged vs pre-config-depth; extra replicas add modest capacity
   const rfBoost = 1 + (node.config.replicationFactor - 1) * 0.15;
   return base * clamp(rfBoost, 1, 1.8);
 }
@@ -206,11 +267,11 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function nodeCapacity(node: ArchitectureGraph['nodes'][number]): number {
+function nodeCapacity(node: ArchitectureGraph['nodes'][number], absolute: boolean): number {
   const reps = node.replicas ?? 1;
   return (
     reps *
-    capacityPerReplica(node.type) *
+    capacityPerReplica(node.type, absolute) *
     sqlCapacityModifier(node) *
     nosqlCapacityModifier(node) *
     mqCapacityModifier(node) *
@@ -261,7 +322,6 @@ function buildPressureReason(
     return 'Shards/skew limitam capacidade do SQL';
   }
 
-  // level is already narrowed to warn|hot (ok returned above)
   if (
     (node.config?.kind === 'mq' || node.config?.kind === 'kafka') &&
     node.config.durability === 'memory'
@@ -296,16 +356,10 @@ function buildPressureReason(
   return 'Carga próxima da capacidade deste nó';
 }
 
-/**
- * Deterministic educational simulation (AD-020).
- * Speed is intentionally ignored — visual-only on the client.
- */
-export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluation {
-  const normalized = normalizeGraph(graph);
+function evaluateTrafficOnly(normalized: ArchitectureGraph): Record<string, number> {
   const { traffic, readRatio } = normalized.simulation!;
   const readFrac = readRatio / 100;
   const writeFrac = 1 - readFrac;
-
   const typeById = new Map(normalized.nodes.map((n) => [n.id, n]));
   const loadById: Record<string, number> = {};
   for (const node of normalized.nodes) {
@@ -319,7 +373,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
       continue;
     }
 
-    const w = edgeReadWeight(from.type, to.type);
+    const w = edgeReadWeight(from.type, to.type, edge.label);
     let load = BASE_LOAD * traffic * (readFrac * w + writeFrac * (1 - w));
 
     if (from.type === 'cache_redis' || from.type === 'cdn') {
@@ -346,13 +400,165 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
         (from.type === 'app_server' || from.type === 'microservice') &&
         (to.type === 'sql_db' || to.type === 'nosql_db')
       ) {
-        // High hit rate should visibly unload parallel app→DB read pressure (pedagogical).
         const reduction = readFrac * (avgCacheHit / 100) * 0.95;
         loadById[edge.to] = Math.max(0, (loadById[edge.to] ?? 0) * (1 - reduction));
       }
     }
   }
 
+  return loadById;
+}
+
+function outgoing(normalized: ArchitectureGraph): Map<string, ArchitectureGraph['edges']> {
+  const map = new Map<string, ArchitectureGraph['edges']>();
+  for (const edge of normalized.edges) {
+    const list = map.get(edge.from) ?? [];
+    list.push(edge);
+    map.set(edge.from, list);
+  }
+  return map;
+}
+
+/** Path-aware RPS propagation from client nodes (AD-031). */
+function evaluateAbsoluteWorkload(normalized: ArchitectureGraph): Record<string, number> {
+  const sim = normalized.simulation!;
+  const ingress = resolveIngressRps(sim);
+  const readFrac = sim.readRatio / 100;
+  const writeFrac = 1 - readFrac;
+  const typeById = new Map(normalized.nodes.map((n) => [n.id, n]));
+  const loadById: Record<string, number> = {};
+  for (const node of normalized.nodes) {
+    loadById[node.id] = 0;
+  }
+
+  const clients = normalized.nodes.filter(
+    (n) => n.type === 'client_web' || n.type === 'client_mobile',
+  );
+  const seeds = clients.length > 0 ? clients : normalized.nodes.slice(0, 1);
+  const perSeed = seeds.length > 0 ? ingress / seeds.length : ingress;
+  for (const seed of seeds) {
+    loadById[seed.id] = (loadById[seed.id] ?? 0) + perSeed;
+  }
+
+  const out = outgoing(normalized);
+  const queue = seeds.map((s) => s.id);
+  const visitedHops = new Set<string>();
+
+  while (queue.length > 0) {
+    const fromId = queue.shift()!;
+    const from = typeById.get(fromId);
+    if (!from) {
+      continue;
+    }
+    const edges = out.get(fromId) ?? [];
+    if (edges.length === 0) {
+      continue;
+    }
+
+    const parentLoad = loadById[fromId] ?? 0;
+    if (parentLoad <= 0) {
+      continue;
+    }
+
+    const share = parentLoad / edges.length;
+    for (const edge of edges) {
+      const hopKey = `${edge.id}:${fromId}`;
+      if (visitedHops.has(hopKey)) {
+        continue;
+      }
+      visitedHops.add(hopKey);
+
+      const to = typeById.get(edge.to);
+      if (!to) {
+        continue;
+      }
+
+      const w = edgeReadWeight(from.type, to.type, edge.label);
+      let load = share * (readFrac * w + writeFrac * (1 - w));
+      // Ensure we don't zero out entirely on mixed edges
+      if (load < share * 0.15) {
+        load = share * 0.15;
+      }
+
+      if (from.type === 'cache_redis' || from.type === 'cdn') {
+        const hr = hitRateOf(from) ?? 90;
+        const ttlFactor = from.type === 'cdn' ? cdnTtlReliefFactor(from) : 1;
+        const passThrough = clamp(1 - (hr / 100) * ttlFactor, 0, 1);
+        load *= passThrough;
+      }
+
+      // Bandwidth / object size pressure bump on storage path
+      if (
+        (to.type === 'object_storage' || to.type === 'cdn') &&
+        (sim.avgObjectKb ?? 0) > 512 &&
+        (sim.bandwidthMbps ?? 1000) < 100
+      ) {
+        load *= 1.4;
+      }
+
+      loadById[edge.to] = (loadById[edge.to] ?? 0) + load;
+      queue.push(edge.to);
+    }
+  }
+
+  // Pedagogical: presence of cache/cdn unloads parallel app→DB reads
+  const caches = normalized.nodes.filter((n) => n.type === 'cache_redis' || n.type === 'cdn');
+  if (caches.length > 0) {
+    const avgCacheHit =
+      caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
+    for (const edge of normalized.edges) {
+      const from = typeById.get(edge.from);
+      const to = typeById.get(edge.to);
+      if (!from || !to) {
+        continue;
+      }
+      if (
+        (from.type === 'app_server' || from.type === 'microservice') &&
+        (to.type === 'sql_db' || to.type === 'nosql_db')
+      ) {
+        const reduction = readFrac * (avgCacheHit / 100) * 0.95;
+        loadById[edge.to] = Math.max(0, (loadById[edge.to] ?? 0) * (1 - reduction));
+      }
+    }
+  }
+
+  // Growth factor stresses capacity scenario
+  const growth = sim.growthFactor && sim.growthFactor > 1 ? sim.growthFactor : 1;
+  if (growth > 1) {
+    for (const id of Object.keys(loadById)) {
+      loadById[id] *= growth;
+    }
+  }
+
+  return loadById;
+}
+
+function avgCacheHitOf(normalized: ArchitectureGraph): number | null {
+  const caches = normalized.nodes.filter((n) => n.type === 'cache_redis' || n.type === 'cdn');
+  if (caches.length === 0) {
+    return null;
+  }
+  return caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
+}
+
+/**
+ * Deterministic educational simulation (AD-020 + AD-031).
+ * Speed is intentionally ignored — visual-only on the client.
+ * Absolute workload fields enable path-aware RPS mode; otherwise traffic 1–5 back-compat.
+ */
+export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluation {
+  const normalized = normalizeGraph(graph);
+  const sim = normalized.simulation as SimulationSettings;
+  const absolute = hasAbsoluteWorkload(sim);
+  const ingressRps = resolveIngressRps(sim);
+  const readFrac = sim.readRatio / 100;
+  const traffic = sim.traffic;
+
+  const loadById = absolute
+    ? evaluateAbsoluteWorkload(normalized)
+    : evaluateTrafficOnly(normalized);
+
+  const avgCacheHit = avgCacheHitOf(normalized);
   const nodes: Record<string, PressureLevel> = {};
   const latencyMs: Record<string, number> = {};
   const reasons: Record<string, string> = {};
@@ -360,7 +566,7 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
 
   for (const node of normalized.nodes) {
     const load = loadById[node.id] ?? 0;
-    const capacity = Math.max(0.001, nodeCapacity(node));
+    const capacity = Math.max(0.001, nodeCapacity(node, absolute));
     const ratio = load / capacity;
     const level = pressureFromRatio(ratio);
     nodes[node.id] = level;
@@ -383,10 +589,20 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
     }
   }
 
+  // Network latency adds educational latency on hot/warn when absolute
+  if (absolute && (sim.networkLatencyMs ?? 0) > 80) {
+    for (const id of Object.keys(latencyMs)) {
+      if (nodes[id] !== 'ok') {
+        latencyMs[id] += Math.min(200, Math.round((sim.networkLatencyMs ?? 0) / 2));
+      }
+    }
+  }
+
   return {
     nodes,
     latencyMs,
     reasons,
     hotReadPath: anyHotOnReadPath && readFrac >= 0.7,
+    ingressRps,
   };
 }
