@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ComponentType } from '@sdq/shared';
 import {
   CONNECTION_INTENTS,
+  clearDbIntentRole,
   defaultLabelForDestination,
   rememberDbIntentRole,
   resolveMenuSelection,
@@ -75,6 +76,13 @@ describe('resolveMenuSelection (CI-02 CUSTOM / active row)', () => {
     rememberDbIntentRole('e1', 'db-origin-fallback');
     expect(resolveMenuSelection('DB', 'e1')).toBe('db-origin-fallback');
     expect(resolveMenuSelection('DB', 'e2')).toBe('db-default');
+  });
+
+  it('clearDbIntentRole removes remembered DB role', () => {
+    rememberDbIntentRole('e9', 'db-origin-fallback');
+    expect(resolveMenuSelection('DB', 'e9')).toBe('db-origin-fallback');
+    clearDbIntentRole('e9');
+    expect(resolveMenuSelection('DB', 'e9')).toBe('db-default');
   });
 
   it('returns custom for legacy free-text labels', () => {

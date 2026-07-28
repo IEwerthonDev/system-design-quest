@@ -50,6 +50,13 @@ describe('mentor', () => {
       },
       findings: [
         {
+          code: 'BOTTLENECK',
+          severity: 'blocker',
+          nodeIds: ['app'],
+          reasonPt: 'App hot',
+          reasonEn: 'App is hot',
+        },
+        {
           code: 'QUEUE_BACKLOG',
           severity: 'major',
           nodeIds: ['app'],
@@ -59,6 +66,7 @@ describe('mentor', () => {
       ],
       locale: 'en',
     });
+    expect(result.body).toContain('BOTTLENECK');
     expect(result.body).toContain('QUEUE_BACKLOG');
     expect(result.body).toContain('queueing');
   });

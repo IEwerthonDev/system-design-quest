@@ -453,6 +453,24 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     canvas.destroy();
   });
 
+  it('touch Delete connection control removes the selected edge', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+    const a = placeComponentForTest(canvas, 'app_server', { x: 0, y: 0 });
+    const b = placeComponentForTest(canvas, 'sql_db', { x: 200, y: 0 });
+    connectForTest(canvas, a, b, 'DB');
+    const edgeId = canvas.getGraph().edges[0]!.id;
+    firePointerDown(host.querySelector(`g[data-edge-id="${edgeId}"] > path`)!);
+    const del = document.querySelector(
+      '[data-testid="connection-intent-delete"]',
+    ) as HTMLButtonElement;
+    expect(del).toBeTruthy();
+    del.click();
+    expect(canvas.getGraph().edges).toHaveLength(0);
+    canvas.destroy();
+  });
+
   it('tap palette drop places a node near canvas center', () => {
     const host = document.createElement('div');
     document.body.append(host);
