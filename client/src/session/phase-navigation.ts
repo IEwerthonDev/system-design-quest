@@ -63,6 +63,8 @@ export interface MountPhaseNavigationOptions {
   designSession?: DesignSessionRecord;
   /** Exit session and return to problem library (home). */
   onExitToLibrary?: () => void;
+  /** Open sessions dashboard after saving the judged session. */
+  onOpenSessions?: (status: DesignSessionStatus) => void;
   storage?: Storage;
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
@@ -213,6 +215,20 @@ export function mountPhaseNavigation(
       return;
     }
     destroyConfirmModal();
+  };
+
+  const handleOpenSessions = async (): Promise<void> => {
+    const judgeResult = getJudgeResult();
+    if (!judgeResult) {
+      return;
+    }
+    const status = verdictToSessionStatus(judgeResult.verdict);
+    const ok = await persistDesignSession(status);
+    if (!ok) {
+      return;
+    }
+    destroyConfirmModal();
+    options.onOpenSessions?.(status);
   };
 
   const briefingPanel = mountBriefingPanel(shell, {
@@ -385,6 +401,7 @@ export function mountPhaseNavigation(
           onToggleBeginner: (enabled) => {
             beginnerMode = enabled;
           },
+          onOpenSessions: options.onOpenSessions ? () => handleOpenSessions() : undefined,
         });
       } else {
         resultPanel.render(judgeResult);

@@ -22,6 +22,7 @@ const STATUS_TABS: DesignSessionStatus[] = [
 
 export interface SessionsDashboardOptions {
   storage?: Storage;
+  initialFilter?: DesignSessionStatus;
   listSessionsFn?: (
     query: ListSessionsQuery,
     options?: SessionsApiOptions,
@@ -197,7 +198,7 @@ export function mountSessionsDashboard(
   const getNickname = options.getNickname ?? (() => getOrCreateNickname(options.storage));
   const nickname = getNickname();
 
-  let currentFilter: DesignSessionStatus = 'approved';
+  let currentFilter: DesignSessionStatus = options.initialFilter ?? 'approved';
   let sessions: DesignSessionRecord[] = [];
 
   const root = document.createElement('div');

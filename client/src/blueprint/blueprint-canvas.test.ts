@@ -137,6 +137,12 @@ describe('blueprint canvas', () => {
     card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
 
     const popover = document.querySelector('[data-testid="config-popover"]') as HTMLElement;
+    expect(popover.hidden).toBe(true);
+
+    (
+      host.querySelector(`[data-testid="node-details-${id}"]`) as HTMLButtonElement
+    ).click();
+
     expect(popover.hidden).toBe(false);
     expect(popover.textContent).toMatch(/HIT RATE/i);
     expect(popover.textContent).toMatch(/AI judges read these notes/i);
@@ -165,6 +171,13 @@ describe('blueprint canvas', () => {
     card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
 
     const popover = document.querySelector('[data-testid="config-popover"]') as HTMLElement;
+    expect(popover.hidden).toBe(true);
+
+    (
+      host.querySelector(`[data-testid="node-details-${id}"]`) as HTMLButtonElement
+    ).click();
+
+    expect(popover.hidden).toBe(false);
     expect(popover.querySelector('[data-testid="config-shard-count"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-partitioning"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-key-skew"]')).toBeTruthy();
@@ -324,6 +337,13 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     const card = host.querySelector(`[data-testid="blueprint-node-${a}"]`) as HTMLElement;
     card.setPointerCapture = () => undefined;
     card.dispatchEvent(createPointerEvent('pointerdown', { clientX: 10, clientY: 10 }));
+    expect(document.querySelector('[data-testid="config-popover"]')?.hasAttribute('hidden')).toBe(
+      true,
+    );
+
+    (
+      host.querySelector(`[data-testid="node-details-${a}"]`) as HTMLButtonElement
+    ).click();
     expect(document.querySelector('[data-testid="config-popover"]')?.hasAttribute('hidden')).toBe(
       false,
     );

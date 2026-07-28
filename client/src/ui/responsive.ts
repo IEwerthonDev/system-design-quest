@@ -105,7 +105,8 @@ function injectResponsiveStyles(): void {
       width: min(340px, 92vw) !important;
       height: 100% !important;
       max-height: none !important;
-      padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(16px + env(safe-area-inset-bottom, 0px));
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(16px + env(safe-area-inset-bottom, 0px))
+        calc(12px + var(--sdq-problem-tab-width, 32px));
       border-right: 1px solid var(--sdq-border);
       border-top: none;
       border-bottom: none;
@@ -254,6 +255,11 @@ function injectResponsiveStyles(): void {
     }
     .sdq-layout--phone .sdq-node__delete {
       display: inline-flex !important;
+    }
+    .sdq-layout--phone .sdq-node__details {
+      min-width: 36px;
+      min-height: 36px;
+      font-size: 14px;
     }
 
     /* Phone: full-screen phase panels */

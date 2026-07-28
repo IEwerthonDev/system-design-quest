@@ -20,6 +20,7 @@ export const REQUIREMENT_TYPE_LABELS: Record<ReqCoverageItem['type'], string> = 
 export interface ResultPanelOptions {
   beginnerMode: boolean;
   onToggleBeginner: (enabled: boolean) => void;
+  onOpenSessions?: () => void | Promise<void>;
 }
 
 export interface ResultPanel {
@@ -171,6 +172,24 @@ function injectResultStyles(root: HTMLElement): void {
     }
     .sdq-result__details--expanded {
       display: block;
+    }
+    .sdq-result__sessions-btn {
+      width: 100%;
+      margin-top: 18px;
+      border: 1px solid var(--sdq-accent-border);
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-accent);
+      border-radius: var(--sdq-radius-sm);
+      padding: 12px 14px;
+      font: 600 14px var(--sdq-font);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .sdq-result__sessions-btn:hover {
+      background: rgba(201, 169, 98, 0.22);
+    }
+    .sdq-result__sessions-btn[hidden] {
+      display: none !important;
     }
     .sdq-result__section {
       margin-bottom: 18px;
@@ -459,7 +478,17 @@ export function mountResultPanel(
   details.className = 'sdq-result__details';
   details.setAttribute('data-testid', 'result-details');
 
-  card.append(header, summary, nextStep, detailsToggle, details);
+  const sessionsBtn = document.createElement('button');
+  sessionsBtn.type = 'button';
+  sessionsBtn.className = 'sdq-result__sessions-btn';
+  sessionsBtn.setAttribute('data-testid', 'result-open-sessions');
+  sessionsBtn.textContent = 'Ver em Minhas sessões';
+  sessionsBtn.hidden = true;
+  sessionsBtn.addEventListener('click', () => {
+    void options.onOpenSessions?.();
+  });
+
+  card.append(header, summary, nextStep, detailsToggle, details, sessionsBtn);
   panel.append(card);
   container.append(panel);
 
@@ -516,6 +545,7 @@ export function mountResultPanel(
     detailsToggle.textContent = detailsExpanded
       ? 'Ocultar detalhes técnicos'
       : 'Detalhes técnicos';
+    sessionsBtn.hidden = !detailsExpanded || !options.onOpenSessions;
   };
 
   beginnerToggle.addEventListener('change', () => {

@@ -191,4 +191,24 @@ describe('result panel', () => {
     expect(styles).toMatch(/\.sdq-result\s*\{[^}]*left:\s*auto/s);
     expect(container.querySelector('[data-testid="result-panel"]')).toBeTruthy();
   });
+
+  it('shows Minhas sessões button when technical details are expanded', () => {
+    const onOpenSessions = vi.fn();
+    mountResultPanel(container, sampleResult, {
+      beginnerMode: true,
+      onToggleBeginner: () => undefined,
+      onOpenSessions,
+    });
+
+    const sessionsBtn = container.querySelector(
+      '[data-testid="result-open-sessions"]',
+    ) as HTMLButtonElement;
+    expect(sessionsBtn.hidden).toBe(true);
+
+    container.querySelector<HTMLButtonElement>('[data-testid="result-details-toggle"]')!.click();
+    expect(sessionsBtn.hidden).toBe(false);
+
+    sessionsBtn.click();
+    expect(onOpenSessions).toHaveBeenCalled();
+  });
 });

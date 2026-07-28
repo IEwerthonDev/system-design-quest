@@ -1,5 +1,6 @@
 import { mountPhaseNavigation } from './session/phase-navigation';
 import { loadPreferences, type UserPreferences } from './storage/preferences';
+import type { DesignSessionStatus } from '@sdq/shared';
 import { fetchLeaderboard } from './leaderboard/leaderboard-api';
 import { mountProblemLibrary, type LibrarySelection } from './ui/problem-library';
 import { mountSessionsDashboard } from './ui/sessions-dashboard';
@@ -41,6 +42,10 @@ function startGame(
       clearAppUi(container, blueprintHost);
       showLibrary(container, blueprintHost, preferences);
     },
+    onOpenSessions: (status) => {
+      clearAppUi(container, blueprintHost);
+      showSessionsDashboard(container, blueprintHost, preferences, status);
+    },
   });
 }
 
@@ -48,9 +53,11 @@ function showSessionsDashboard(
   container: HTMLElement,
   blueprintHost: HTMLElement | null,
   preferences: UserPreferences,
+  initialFilter?: DesignSessionStatus,
 ): void {
   mountSessionsDashboard(container, {
     storage: optionsStorage,
+    initialFilter,
     onBack: () => {
       clearAppUi(container, blueprintHost);
       showLibrary(container, blueprintHost, preferences);
@@ -67,6 +74,10 @@ function showSessionsDashboard(
         onExitToLibrary: () => {
           clearAppUi(container, blueprintHost);
           showLibrary(container, blueprintHost, preferences);
+        },
+        onOpenSessions: (status) => {
+          clearAppUi(container, blueprintHost);
+          showSessionsDashboard(container, blueprintHost, preferences, status);
         },
       });
     },

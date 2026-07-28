@@ -354,21 +354,37 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     applyPressures();
   };
 
+  const openNodeDetails = (id: string): void => {
+    selectedNodeId = id;
+    selectedEdgeId = null;
+    intentPopover.close();
+    for (const [cid, c] of cards) {
+      c.setSelected(cid === id);
+    }
+    const n = graph.nodes.find((x) => x.id === id);
+    const card = cards.get(id);
+    if (n && card) {
+      popover.open(n, card.root.getBoundingClientRect());
+    }
+    renderEdges();
+    publishInteraction();
+  };
+
   const addCard = (node: ComponentNode): void => {
     const card = createNodeCard(node, {
       onSelect: (id) => {
         selectedNodeId = id;
         selectedEdgeId = null;
         intentPopover.close();
+        popover.close();
         for (const [cid, c] of cards) {
           c.setSelected(cid === id);
         }
-        const n = graph.nodes.find((x) => x.id === id);
-        if (n) {
-          popover.open(n, card.root.getBoundingClientRect());
-        }
         renderEdges();
         publishInteraction();
+      },
+      onOpenDetails: (id) => {
+        openNodeDetails(id);
       },
       onReplicasChange: (id, replicas) => {
         updateNode(id, (n) => ({ ...n, replicas }));

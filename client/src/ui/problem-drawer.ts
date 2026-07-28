@@ -22,6 +22,8 @@ function injectStyles(): void {
       top: 50%;
       transform: translateY(-50%);
       z-index: 22;
+      width: var(--sdq-problem-tab-width, 32px);
+      box-sizing: border-box;
       writing-mode: vertical-rl;
       text-orientation: mixed;
       background: var(--sdq-bg-elevated);

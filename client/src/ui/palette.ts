@@ -124,7 +124,7 @@ function injectPaletteStyles(root: HTMLElement): void {
       font-family: var(--sdq-font, system-ui, sans-serif);
       font-size: 13px;
       z-index: 10;
-      padding: 12px 10px 24px;
+      padding: 12px 10px 24px calc(10px + var(--sdq-problem-tab-width, 32px));
       transition: width 0.18s ease;
     }
     .sdq-palette__header {

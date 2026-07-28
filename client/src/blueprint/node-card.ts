@@ -22,6 +22,7 @@ export interface NodeCardCallbacks {
   onReplicasChange(id: string, replicas: number): void;
   onDragStart(id: string, ev: PointerEvent): void;
   onOutHandleDown(id: string, ev: PointerEvent): void;
+  onOpenDetails?(id: string): void;
   onDelete?(id: string): void;
 }
 
@@ -137,7 +138,27 @@ function injectNodeCardStyles(): void {
       font-size: 14px;
       font-weight: 700;
     }
-    .sdq-node--selected .sdq-node__delete {
+    .sdq-node__details {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      min-height: 28px;
+      margin-left: auto;
+      border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text-muted);
+      cursor: pointer;
+      font: 700 12px/1 var(--sdq-font);
+      touch-action: manipulation;
+    }
+    .sdq-node__details:hover {
+      color: var(--sdq-accent);
+      border-color: var(--sdq-accent-border);
+    }
+    .sdq-node--selected .sdq-node__delete,
+    .sdq-node--selected .sdq-node__details {
       display: inline-flex;
     }
   `;
@@ -208,7 +229,13 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   del.setAttribute('data-testid', `node-delete-${node.id}`);
   del.setAttribute('aria-label', 'Remover componente');
   del.textContent = '×';
-  footer.append(minus, repsLabel, plus, del);
+  const details = document.createElement('button');
+  details.type = 'button';
+  details.className = 'sdq-node__details';
+  details.setAttribute('data-testid', `node-details-${node.id}`);
+  details.setAttribute('aria-label', 'Detalhes do componente');
+  details.textContent = 'i';
+  footer.append(minus, repsLabel, plus, details, del);
 
   root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, footer);
 
@@ -231,7 +258,11 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
 
   root.addEventListener('pointerdown', (ev) => {
     const t = ev.target as HTMLElement;
-    if (t.closest('.sdq-node__rep-btn') || t.closest('.sdq-node__delete')) {
+    if (
+      t.closest('.sdq-node__rep-btn') ||
+      t.closest('.sdq-node__delete') ||
+      t.closest('.sdq-node__details')
+    ) {
       return;
     }
     if (t.dataset.handle === 'out' || t.closest('[data-handle="out"]')) {
@@ -261,6 +292,10 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   del.addEventListener('click', (ev) => {
     ev.stopPropagation();
     callbacks.onDelete?.(node.id);
+  });
+  details.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    callbacks.onOpenDetails?.(node.id);
   });
 
   return {
