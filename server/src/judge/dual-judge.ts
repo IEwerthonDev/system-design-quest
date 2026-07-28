@@ -298,6 +298,7 @@ export function mergeWithStructuralHardGate(
   llmConsensus: LlmConsensus,
   report: StructuralReport,
   input: JudgeInput,
+  scaleNarrative = '',
 ): JudgeResult {
   const locale = resolveJudgeLocale(input);
   const criticalIssues = dedupeFeedbackItems([
@@ -313,12 +314,33 @@ export function mergeWithStructuralHardGate(
     verdict,
     summary: buildSummary(verdict, llmConsensus.score, locale),
     nextStep: buildNextStep(verdict, criticalIssues, locale),
-    scaleNarrative: '',
+    scaleNarrative,
     structuralCodes: report.codes,
   };
 }
 
-/** Run dual-judge orchestration: structural → LLM → hard-gate merge → AD-016 verdict. */
+/**
+ * JR-14/JR-15: on LLM path, empty scaleNarrative cannot PASS (demote to PARTIAL band).
+ */
+export function assertScaleNarrative(result: JudgeResult, locale: Locale = 'pt-BR'): JudgeResult {
+  if (result.scaleNarrative.trim().length > 0) {
+    return result;
+  }
+  if (result.verdict !== 'PASS') {
+    return result;
+  }
+  const score = Math.min(result.score, 79);
+  const verdict = applyVerdictRules(score, result.criticalIssues);
+  return {
+    ...result,
+    score,
+    verdict,
+    summary: buildSummary(verdict, score, locale),
+    nextStep: buildNextStep(verdict, result.criticalIssues, locale),
+  };
+}
+
+/** Run dual-judge orchestration: structural → LLM → hard-gate merge → scale gate → AD-016. */
 export async function judgeSubmission(input: JudgeInput, client: LlmClient): Promise<JudgeResult> {
   const problem = getProblem(input.problemId);
   if (!problem) {
@@ -352,5 +374,11 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
   ]);
 
   const merged = mergeConsensus(rigorous, pragmatic, normalizedInput);
-  return mergeWithStructuralHardGate(merged, report, normalizedInput);
+  const gated = mergeWithStructuralHardGate(
+    merged,
+    report,
+    normalizedInput,
+    report.scaleChecklistLines.join('\n'),
+  );
+  return assertScaleNarrative(gated, locale);
 }

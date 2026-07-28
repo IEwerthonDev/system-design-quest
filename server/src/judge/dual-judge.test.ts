@@ -3,12 +3,14 @@ import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { JudgeInput } from '@sdq/shared';
 import type { FeedbackItem, JudgePartialResult } from '@sdq/shared';
 import {
+  assertScaleNarrative,
   buildRequirementCoverage,
   judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
   UnknownProblemError,
 } from './dual-judge';
+import type { JudgeResult } from '@sdq/shared';
 import { createMockLlmClient, mockJudgePartial, type LlmClient } from './mock-llm-client';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 import { getProblem } from '@sdq/shared';
@@ -281,5 +283,43 @@ describe('judgeSubmission', () => {
     );
     expect(result.judgeDebate.rigorous).toContain('Stub LLM would PASS');
     expect(result.judgeDebate.pragmatic).toContain('Stub LLM would PASS');
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
+  });
+});
+
+describe('assertScaleNarrative (JR-14, JR-15)', () => {
+  const passBase: JudgeResult = {
+    verdict: 'PASS',
+    score: 95,
+    summary: 'Your architecture scored 95/100.',
+    nextStep: 'Review improvements.',
+    strengths: [PASS_STRENGTH],
+    criticalIssues: [],
+    improvements: [],
+    requirementCoverage: [],
+    judgeDebate: {
+      rigorous: 'ok',
+      pragmatic: 'ok',
+      consensus: 'ok',
+    },
+    scaleNarrative: '',
+  };
+
+  it('blocks PASS when scaleNarrative is empty', () => {
+    const result = assertScaleNarrative(passBase, 'en');
+
+    expect(result.verdict).not.toBe('PASS');
+    expect(result.score).toBeLessThan(80);
+    expect(result.scaleNarrative).toBe('');
+  });
+
+  it('allows PASS when scaleNarrative is non-empty and AD-016 otherwise met', () => {
+    const result = assertScaleNarrative(
+      { ...passBase, scaleNarrative: 'At 100k RPS, cache must absorb redirect reads.' },
+      'en',
+    );
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.score).toBe(95);
   });
 });
