@@ -21,12 +21,28 @@ export interface CdnConfig {
   ttlSeconds: number;
 }
 
+/** How the store is used in the design (CQRS / read replicas). */
+export type AccessPattern = 'read' | 'write' | 'read_write';
+
+/** Primary vs replica vs undifferentiated store. */
+export type DbTopologyRole = 'primary' | 'replica' | 'standalone';
+
 export interface SqlDbConfig {
   kind: 'sql_db';
   shardCount: number;
   partitioningStrategy: PartitioningStrategy;
   partitionKey?: string;
   keySkew: number;
+  /** Defaults to read_write via normalizeGraph */
+  accessPattern: AccessPattern;
+  /** Defaults to primary via normalizeGraph */
+  topologyRole: DbTopologyRole;
+}
+
+export interface NosqlDbConfig {
+  kind: 'nosql_db';
+  accessPattern: AccessPattern;
+  topologyRole: DbTopologyRole;
 }
 
 export type MqDurability = 'memory' | 'disk';
@@ -53,6 +69,7 @@ export type ComponentConfig =
   | CacheConfig
   | CdnConfig
   | SqlDbConfig
+  | NosqlDbConfig
   | MqConfig
   | WsConfig
   | LbConfig;

@@ -38,6 +38,8 @@ function urlShortenerFixture(hitRate: number, traffic: number): ArchitectureGrap
           shardCount: 1,
           partitioningStrategy: 'hash',
           keySkew: 0,
+          accessPattern: 'read_write',
+          topologyRole: 'primary',
         },
       },
     ],
@@ -149,6 +151,8 @@ describe('evaluateSimulation', () => {
                 shardCount: 64,
                 partitioningStrategy: 'hash' as const,
                 keySkew: 0,
+                accessPattern: 'read_write' as const,
+                topologyRole: 'primary' as const,
               },
             }
           : n,

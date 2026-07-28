@@ -112,6 +112,63 @@ describe('normalizeGraph', () => {
       shardCount: 1,
       partitioningStrategy: 'geographic',
       keySkew: 0,
+      accessPattern: 'read_write',
+      topologyRole: 'primary',
+    });
+  });
+
+  it('defaults accessPattern and topologyRole for sql_db and nosql_db', () => {
+    const sql = normalizeNode({
+      id: 's',
+      type: 'sql_db',
+      label: 'SQL',
+      position: { x: 0, y: 0 },
+    });
+    expect(sql.config).toEqual({
+      kind: 'sql_db',
+      shardCount: 1,
+      partitioningStrategy: 'hash',
+      keySkew: 0,
+      accessPattern: 'read_write',
+      topologyRole: 'primary',
+    });
+
+    const nosql = normalizeNode({
+      id: 'n',
+      type: 'nosql_db',
+      label: 'NoSQL',
+      position: { x: 0, y: 0 },
+      config: {
+        kind: 'nosql_db',
+        accessPattern: 'read',
+        topologyRole: 'replica',
+      },
+    });
+    expect(nosql.config).toEqual({
+      kind: 'nosql_db',
+      accessPattern: 'read',
+      topologyRole: 'replica',
+    });
+  });
+
+  it('rejects invalid accessPattern / topologyRole into defaults', () => {
+    const sql = normalizeNode({
+      id: 's',
+      type: 'sql_db',
+      label: 'SQL',
+      position: { x: 0, y: 0 },
+      config: {
+        kind: 'sql_db',
+        shardCount: 2,
+        partitioningStrategy: 'hash',
+        keySkew: 0,
+        accessPattern: 'both' as never,
+        topologyRole: 'master' as never,
+      },
+    });
+    expect(sql.config).toMatchObject({
+      accessPattern: 'read_write',
+      topologyRole: 'primary',
     });
   });
 

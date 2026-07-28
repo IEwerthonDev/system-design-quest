@@ -1,8 +1,10 @@
 import type { ComponentType } from './component-types';
 import type {
+  AccessPattern,
   ArchitectureGraph,
   ComponentConfig,
   ComponentNode,
+  DbTopologyRole,
   LbAlgorithm,
   MqDurability,
   SimulationSettings,
@@ -21,6 +23,8 @@ export const DEFAULT_WS_FAN_OUT = 10_000;
 
 const LB_ALGORITHMS: readonly LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
 const MQ_DURABILITIES: readonly MqDurability[] = ['memory', 'disk'];
+const ACCESS_PATTERNS: readonly AccessPattern[] = ['read', 'write', 'read_write'];
+const DB_TOPOLOGY_ROLES: readonly DbTopologyRole[] = ['primary', 'replica', 'standalone'];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
@@ -32,6 +36,22 @@ function isLbAlgorithm(value: unknown): value is LbAlgorithm {
 
 function isMqDurability(value: unknown): value is MqDurability {
   return typeof value === 'string' && (MQ_DURABILITIES as readonly string[]).includes(value);
+}
+
+function isAccessPattern(value: unknown): value is AccessPattern {
+  return typeof value === 'string' && (ACCESS_PATTERNS as readonly string[]).includes(value);
+}
+
+function isDbTopologyRole(value: unknown): value is DbTopologyRole {
+  return typeof value === 'string' && (DB_TOPOLOGY_ROLES as readonly string[]).includes(value);
+}
+
+function resolveAccessPattern(value: unknown): AccessPattern {
+  return isAccessPattern(value) ? value : 'read_write';
+}
+
+function resolveTopologyRole(value: unknown): DbTopologyRole {
+  return isDbTopologyRole(value) ? value : 'primary';
 }
 
 export function defaultConfigForType(type: ComponentType): ComponentConfig | undefined {
@@ -47,6 +67,15 @@ export function defaultConfigForType(type: ComponentType): ComponentConfig | und
       shardCount: 1,
       partitioningStrategy: 'hash',
       keySkew: 0,
+      accessPattern: 'read_write',
+      topologyRole: 'primary',
+    };
+  }
+  if (type === 'nosql_db') {
+    return {
+      kind: 'nosql_db',
+      accessPattern: 'read_write',
+      topologyRole: 'primary',
     };
   }
   if (type === 'message_queue' || type === 'kafka' || type === 'pub_sub') {
@@ -97,6 +126,24 @@ function normalizeConfig(node: ComponentNode): ComponentConfig | undefined {
       partitioningStrategy: node.config.partitioningStrategy,
       partitionKey: node.config.partitionKey,
       keySkew: clamp(node.config.keySkew, 0, 100),
+      accessPattern: resolveAccessPattern(
+        (node.config as { accessPattern?: unknown }).accessPattern,
+      ),
+      topologyRole: resolveTopologyRole(
+        (node.config as { topologyRole?: unknown }).topologyRole,
+      ),
+    };
+  }
+
+  if (node.config.kind === 'nosql_db') {
+    return {
+      kind: 'nosql_db',
+      accessPattern: resolveAccessPattern(
+        (node.config as { accessPattern?: unknown }).accessPattern,
+      ),
+      topologyRole: resolveTopologyRole(
+        (node.config as { topologyRole?: unknown }).topologyRole,
+      ),
     };
   }
 
