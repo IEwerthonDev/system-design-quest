@@ -5,11 +5,16 @@ export type {
   ComponentConfig,
   ComponentNode,
   ConnectionEdge,
+  LbAlgorithm,
+  LbConfig,
+  MqConfig,
+  MqDurability,
   PartitioningStrategy,
   PressureLevel,
   SimulationSettings,
   SqlDbConfig,
   Vec2,
+  WsConfig,
 } from './schema/architecture-graph';
 export {
   DEFAULT_SIMULATION,
@@ -30,8 +35,13 @@ export type {
   ProblemCopy,
   ProblemDefinition,
   ProblemMetrics,
+  StructuralAntiPattern,
+  StructuralConfigRule,
+  StructuralDepth,
   SuggestedRequirements,
 } from './schema/problem';
+export { CORE_REALISM_IDS, isCoreRealismProblem } from './problems/structural-depth';
+export type { CoreRealismId } from './problems/structural-depth';
 export { attachBilingualCopy, localizeProblem } from './i18n/localize-problem';
 export type {
   FeedbackItem,
@@ -68,6 +78,11 @@ export {
   verdictToSessionStatus,
 } from './schema/design-session';
 export { applyVerdictRules, isBlocker } from './judge/apply-verdict';
+export { evaluateStructuralRubric } from './judge/evaluate-structural-rubric';
+export type {
+  EvaluateStructuralRubricInput,
+  StructuralReport,
+} from './judge/evaluate-structural-rubric';
 export { getGoldenGraph } from './judge/golden-graphs';
 export type { GoldenGraphTier } from './judge/golden-graphs';
 export {

@@ -50,6 +50,34 @@ export const RATE_LIMITER: ProblemDefinition = {
       'No 429 response or Retry-After header',
       'Rate limit check after expensive backend processing',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'in-memory-only-counter',
+        requiredAnyOf: ['cache_redis'],
+        severity: 'blocker',
+        messageKey: 'rate_limiter.in_memory_only',
+      },
+    ],
+    configRules: [
+      {
+        code: 'hitRate-too-low',
+        componentType: 'cache_redis',
+        minHitRate: 90,
+        severity: 'major',
+        messageKey: 'rate_limiter.hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Plan quota checks for ~1,000,000 RPS across gateway instances with a shared counter.',
+        'Keep p99 quota-check latency under 5 ms while tolerating <1% count skew.',
+      ],
+      'pt-BR': [
+        'Planeje verificação de quota para ~1.000.000 RPS entre gateways com contador compartilhado.',
+        'Mantenha latência p99 de quota < 5 ms tolerando <1% de erro de contagem.',
+      ],
+    },
   },
 };
 
@@ -103,6 +131,35 @@ export const PASTEBIN: ProblemDefinition = {
       'Predictable paste URLs enabling enumeration attacks',
       'No expiration job for TTL pastes',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'paste-in-sql-rows',
+        forbiddenType: 'sql_db',
+        unlessAnyOf: ['object_storage'],
+        severity: 'major',
+        messageKey: 'pastebin.paste_in_sql',
+      },
+    ],
+    configRules: [
+      {
+        code: 'hitRate-too-low',
+        componentType: 'cache_redis',
+        minHitRate: 80,
+        severity: 'major',
+        messageKey: 'pastebin.hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Serve ~50,000 read RPS vs ~500 write RPS with cache in front of blob metadata.',
+        'Plan ~200 GB paste storage plus TTL expiration jobs for automatic cleanup.',
+      ],
+      'pt-BR': [
+        'Atenda ~50.000 RPS de leitura vs ~500 de escrita com cache à frente dos metadados do blob.',
+        'Planeje ~200 GB de storage de pastes e jobs de TTL para limpeza automática.',
+      ],
+    },
   },
 };
 
@@ -152,6 +209,25 @@ export const UNIQUE_ID_GEN: ProblemDefinition = {
       'Auto-increment database — single point of failure',
       'No machine ID allocation strategy',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'auto-increment-db-ids',
+        forbiddenType: 'sql_db',
+        severity: 'major',
+        messageKey: 'unique_id_gen.auto_increment_db',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Sustain ~10,000 IDs/s aggregate across machines without a central DB round-trip per ID.',
+        'Handle clock drift so IDs stay unique and roughly time-sortable.',
+      ],
+      'pt-BR': [
+        'Sustente ~10.000 IDs/s agregados entre máquinas sem round-trip a um DB central por ID.',
+        'Trate clock drift para IDs únicos e aproximadamente ordenáveis por tempo.',
+      ],
+    },
   },
 };
 
@@ -202,6 +278,34 @@ export const DISTRIBUTED_CACHE: ProblemDefinition = {
       'No eviction strategy — OOM crashes',
       'All clients refresh expired hot key simultaneously',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'single-cache-node',
+        requiredAnyOf: ['load_balancer'],
+        severity: 'blocker',
+        messageKey: 'distributed_cache.single_node',
+      },
+    ],
+    configRules: [
+      {
+        code: 'hitRate-too-low',
+        componentType: 'cache_redis',
+        minHitRate: 95,
+        severity: 'major',
+        messageKey: 'distributed_cache.hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Target ~99% hit rate on hot keys at ~1,000,000 RPS with consistent hashing.',
+        'Protect against cache stampede when popular keys expire under a 50:1 read/write mix.',
+      ],
+      'pt-BR': [
+        'Mire ~99% de hit rate em chaves quentes a ~1.000.000 RPS com consistent hashing.',
+        'Proteja contra cache stampede quando chaves populares expiram (razão 50:1).',
+      ],
+    },
   },
 };
 
@@ -252,6 +356,34 @@ export const NOTIFICATION_SYSTEM: ProblemDefinition = {
       'No retry queue for failed deliveries',
       'Single channel only without preference routing',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'sync-delivery-no-queue',
+        requiredAnyOf: ['message_queue'],
+        severity: 'blocker',
+        messageKey: 'notification_system.sync_delivery',
+      },
+    ],
+    configRules: [
+      {
+        code: 'mq-not-durable',
+        componentType: 'message_queue',
+        requireMqDurability: 'disk',
+        severity: 'major',
+        messageKey: 'notification_system.mq_not_durable',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Decouple producers from push/email/SMS workers for ~1M notifications/min peak.',
+        'Use at-least-once delivery with idempotency and per-channel rate limits.',
+      ],
+      'pt-BR': [
+        'Desacople produtores dos workers push/email/SMS para ~1M notificações/min no pico.',
+        'Use entrega at-least-once com idempotência e rate limit por canal.',
+      ],
+    },
   },
 };
 
@@ -301,6 +433,32 @@ export const KEY_VALUE_STORE: ProblemDefinition = {
       'No replication — data loss on node failure',
       'Split-brain without quorum configuration',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'single-node-kv',
+        requiredAnyOf: ['load_balancer'],
+        severity: 'blocker',
+        messageKey: 'key_value_store.single_node',
+      },
+      {
+        code: 'sql-as-kv-primary',
+        forbiddenType: 'sql_db',
+        unlessAnyOf: ['nosql_db'],
+        severity: 'major',
+        messageKey: 'key_value_store.sql_as_primary',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Shard ~1B keys via consistent hashing for ~100,000 ops/s aggregate.',
+        'Replicate with factor 3 and quorum (R+W>N) so one node failure per shard is tolerable.',
+      ],
+      'pt-BR': [
+        'Faça shard de ~1B chaves via consistent hashing para ~100.000 ops/s agregadas.',
+        'Replique com fator 3 e quorum (R+W>N) para tolerar falha de um nó por shard.',
+      ],
+    },
   },
 };
 

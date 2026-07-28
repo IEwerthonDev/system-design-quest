@@ -49,6 +49,10 @@ export interface JudgeResult {
   improvements: FeedbackItem[];
   requirementCoverage: ReqCoverageItem[];
   judgeDebate: JudgeDebate;
+  /** Required for PASS on LLM path; structural-only fills from checklist */
+  scaleNarrative: string;
+  /** Optional machine-readable structural codes for tests/debug */
+  structuralCodes?: string[];
 }
 
 /** Response from one judge role before consensus merge. */

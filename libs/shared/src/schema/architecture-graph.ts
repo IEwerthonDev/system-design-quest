@@ -17,6 +17,8 @@ export interface CacheConfig {
 export interface CdnConfig {
   kind: 'cdn';
   hitRate: number;
+  /** Cache TTL at the edge (seconds). Default 3600 via normalize. */
+  ttlSeconds: number;
 }
 
 export interface SqlDbConfig {
@@ -27,7 +29,33 @@ export interface SqlDbConfig {
   keySkew: number;
 }
 
-export type ComponentConfig = CacheConfig | CdnConfig | SqlDbConfig;
+export type MqDurability = 'memory' | 'disk';
+
+export interface MqConfig {
+  kind: 'mq';
+  durability: MqDurability;
+  partitionCount: number;
+}
+
+export interface WsConfig {
+  kind: 'ws';
+  fanOutLimit: number;
+}
+
+export type LbAlgorithm = 'round_robin' | 'least_conn' | 'ip_hash';
+
+export interface LbConfig {
+  kind: 'lb';
+  algorithm: LbAlgorithm;
+}
+
+export type ComponentConfig =
+  | CacheConfig
+  | CdnConfig
+  | SqlDbConfig
+  | MqConfig
+  | WsConfig
+  | LbConfig;
 
 export interface ComponentNode {
   id: string;

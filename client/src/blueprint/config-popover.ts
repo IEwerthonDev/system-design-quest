@@ -2,6 +2,8 @@ import {
   getComponentMeta,
   type ComponentConfig,
   type ComponentNode,
+  type LbAlgorithm,
+  type MqDurability,
   type PartitioningStrategy,
 } from '@sdq/shared';
 
@@ -19,6 +21,8 @@ export interface ConfigPopover {
 }
 
 const STRATEGIES: PartitioningStrategy[] = ['hash', 'range', 'geographic', 'list'];
+const LB_ALGORITHMS: LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
+const MQ_DURABILITIES: MqDurability[] = ['memory', 'disk'];
 
 function injectStyles(): void {
   if (document.getElementById('sdq-config-popover-styles')) {
@@ -107,7 +111,7 @@ export function mountConfigPopover(
 
     root.append(header, desc);
 
-    if (node.config?.kind === 'cache' || node.config?.kind === 'cdn') {
+    if (node.config?.kind === 'cache') {
       const field = document.createElement('div');
       field.className = 'sdq-config-popover__field';
       const label = document.createElement('label');
@@ -125,10 +129,56 @@ export function mountConfigPopover(
       slider.addEventListener('input', () => {
         const hitRate = Number(slider.value);
         value.textContent = `${hitRate}%`;
-        callbacks.onConfigChange(node.id, { kind: node.config!.kind, hitRate });
+        callbacks.onConfigChange(node.id, { kind: 'cache', hitRate });
       });
       field.append(label, slider);
       root.append(field);
+    }
+
+    if (node.config?.kind === 'cdn') {
+      const cfg = node.config;
+      const hitField = document.createElement('div');
+      hitField.className = 'sdq-config-popover__field';
+      const hitLabel = document.createElement('label');
+      const hitName = document.createElement('span');
+      hitName.textContent = 'HIT RATE';
+      const hitVal = document.createElement('span');
+      hitVal.textContent = `${cfg.hitRate}%`;
+      hitLabel.append(hitName, hitVal);
+      const hitSlider = document.createElement('input');
+      hitSlider.type = 'range';
+      hitSlider.min = '0';
+      hitSlider.max = '100';
+      hitSlider.value = String(cfg.hitRate);
+      hitSlider.setAttribute('data-testid', 'config-hit-rate');
+      hitSlider.addEventListener('input', () => {
+        const hitRate = Number(hitSlider.value);
+        hitVal.textContent = `${hitRate}%`;
+        callbacks.onConfigChange(node.id, { ...cfg, hitRate });
+      });
+      hitField.append(hitLabel, hitSlider);
+
+      const ttlField = document.createElement('div');
+      ttlField.className = 'sdq-config-popover__field';
+      const ttlLabel = document.createElement('label');
+      const ttlName = document.createElement('span');
+      ttlName.textContent = 'TTL (SECONDS)';
+      const ttlVal = document.createElement('span');
+      ttlVal.textContent = String(cfg.ttlSeconds);
+      ttlLabel.append(ttlName, ttlVal);
+      const ttlSlider = document.createElement('input');
+      ttlSlider.type = 'range';
+      ttlSlider.min = '1';
+      ttlSlider.max = '86400';
+      ttlSlider.value = String(cfg.ttlSeconds);
+      ttlSlider.setAttribute('data-testid', 'config-cdn-ttl');
+      ttlSlider.addEventListener('input', () => {
+        const ttlSeconds = Number(ttlSlider.value);
+        ttlVal.textContent = String(ttlSeconds);
+        callbacks.onConfigChange(node.id, { ...cfg, ttlSeconds });
+      });
+      ttlField.append(ttlLabel, ttlSlider);
+      root.append(hitField, ttlField);
     }
 
     if (node.config?.kind === 'sql_db') {
@@ -216,6 +266,106 @@ export function mountConfigPopover(
       skewField.append(skewLabel, skewSlider);
 
       root.append(shardField, stratField, keyField, skewField);
+    }
+
+    if (node.config?.kind === 'mq') {
+      const cfg = node.config;
+      const durField = document.createElement('div');
+      durField.className = 'sdq-config-popover__field';
+      const durLabel = document.createElement('label');
+      durLabel.innerHTML = '<span>DURABILITY</span>';
+      const durSelect = document.createElement('select');
+      durSelect.setAttribute('data-testid', 'config-mq-durability');
+      for (const d of MQ_DURABILITIES) {
+        const opt = document.createElement('option');
+        opt.value = d;
+        opt.textContent = d;
+        if (d === cfg.durability) {
+          opt.selected = true;
+        }
+        durSelect.append(opt);
+      }
+      durSelect.addEventListener('change', () => {
+        callbacks.onConfigChange(node.id, {
+          ...cfg,
+          durability: durSelect.value as MqDurability,
+        });
+      });
+      durField.append(durLabel, durSelect);
+
+      const partField = document.createElement('div');
+      partField.className = 'sdq-config-popover__field';
+      const partLabel = document.createElement('label');
+      const partName = document.createElement('span');
+      partName.textContent = 'PARTITION COUNT';
+      const partVal = document.createElement('span');
+      partVal.textContent = String(cfg.partitionCount);
+      partLabel.append(partName, partVal);
+      const partSlider = document.createElement('input');
+      partSlider.type = 'range';
+      partSlider.min = '1';
+      partSlider.max = '256';
+      partSlider.value = String(cfg.partitionCount);
+      partSlider.setAttribute('data-testid', 'config-mq-partitions');
+      partSlider.addEventListener('input', () => {
+        const partitionCount = Number(partSlider.value);
+        partVal.textContent = String(partitionCount);
+        callbacks.onConfigChange(node.id, { ...cfg, partitionCount });
+      });
+      partField.append(partLabel, partSlider);
+      root.append(durField, partField);
+    }
+
+    if (node.config?.kind === 'ws') {
+      const cfg = node.config;
+      const field = document.createElement('div');
+      field.className = 'sdq-config-popover__field';
+      const label = document.createElement('label');
+      const name = document.createElement('span');
+      name.textContent = 'FAN-OUT LIMIT';
+      const value = document.createElement('span');
+      value.textContent = String(cfg.fanOutLimit);
+      label.append(name, value);
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = '1';
+      slider.max = '100000';
+      slider.value = String(cfg.fanOutLimit);
+      slider.setAttribute('data-testid', 'config-ws-fanout');
+      slider.addEventListener('input', () => {
+        const fanOutLimit = Number(slider.value);
+        value.textContent = String(fanOutLimit);
+        callbacks.onConfigChange(node.id, { ...cfg, fanOutLimit });
+      });
+      field.append(label, slider);
+      root.append(field);
+    }
+
+    if (node.config?.kind === 'lb') {
+      const cfg = node.config;
+      const field = document.createElement('div');
+      field.className = 'sdq-config-popover__field';
+      const label = document.createElement('label');
+      label.innerHTML = '<span>ALGORITHM</span>';
+      const select = document.createElement('select');
+      select.setAttribute('data-testid', 'config-lb-algorithm');
+      for (const algo of LB_ALGORITHMS) {
+        const opt = document.createElement('option');
+        opt.value = algo;
+        opt.textContent = algo;
+        if (algo === cfg.algorithm) {
+          opt.selected = true;
+        }
+        select.append(opt);
+      }
+      select.addEventListener('change', () => {
+        callbacks.onConfigChange(node.id, {
+          ...cfg,
+          algorithm: select.value as LbAlgorithm,
+        });
+      });
+      field.append(label, select);
+      root.append(field);
     }
 
     const notesTitle = document.createElement('div');

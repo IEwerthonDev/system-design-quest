@@ -1,17 +1,17 @@
 import {
   applyVerdictRules,
+  evaluateStructuralRubric,
   getProblem,
   type FeedbackItem,
-  type GoldenGraphTier,
   type JudgeInput,
   type JudgePartialResult,
   type JudgeResult,
   type Locale,
   type ReqCoverageItem,
+  type StructuralReport,
   type Verdict,
 } from '@sdq/shared';
 import type { LlmClient } from './mock-llm-client';
-import { resolveGraphTier } from './mock-llm-client';
 import { resolveJudgeLocale } from './locale';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 
@@ -45,13 +45,8 @@ function mergeReqCoverageItems(items: ReqCoverageItem[]): ReqCoverageItem[] {
   return [...byRequirement.values()];
 }
 
-function defaultCoverageStatus(tier: GoldenGraphTier, index: number): ReqCoverageItem['status'] {
-  if (tier === 'good') {
-    return 'covered';
-  }
-  if (tier === 'medium') {
-    return index % 2 === 0 ? 'partial' : 'missing';
-  }
+/** Conservative gap fill — never invent "covered" from URL-shortener golden tiers (JR-02). */
+function defaultGapCoverageStatus(): ReqCoverageItem['status'] {
   return 'missing';
 }
 
@@ -89,7 +84,6 @@ export function buildRequirementCoverage(
   rigorous: JudgePartialResult,
   pragmatic: JudgePartialResult,
 ): ReqCoverageItem[] {
-  const tier = resolveGraphTier(input.graph);
   const locale = resolveJudgeLocale(input);
   const merged = mergeReqCoverageItems([
     ...rigorous.requirementCoverage,
@@ -98,14 +92,13 @@ export function buildRequirementCoverage(
   const byRequirement = new Map(merged.map((item) => [item.requirement, item]));
 
   const declared: ReqCoverageItem[] = [];
-  let index = 0;
 
   for (const requirement of input.requirements.functional) {
     const existing = byRequirement.get(requirement);
     if (existing) {
       declared.push(existing);
     } else {
-      const status = defaultCoverageStatus(tier, index++);
+      const status = defaultGapCoverageStatus();
       declared.push({
         requirement,
         type: 'functional',
@@ -120,7 +113,7 @@ export function buildRequirementCoverage(
     if (existing) {
       declared.push(existing);
     } else {
-      const status = defaultCoverageStatus(tier, index++);
+      const status = defaultGapCoverageStatus();
       declared.push({
         requirement,
         type: 'nonFunctional',
@@ -216,7 +209,138 @@ export class UnknownProblemError extends Error {
   }
 }
 
-/** Run dual-judge orchestration: parallel LLM calls → consensus merge → AD-016 verdict. */
+function llmConfigNote(locale: Locale): string {
+  if (locale === 'en') {
+    return 'Configure LLM_API_KEY for richer dual-judge narrative. This result is structural-only.';
+  }
+  return 'Configure LLM_API_KEY para narrativa dual-judge mais rica. Este resultado é apenas estrutural.';
+}
+
+function structuralCoverage(
+  input: JudgeInput,
+  report: StructuralReport,
+  locale: Locale,
+): ReqCoverageItem[] {
+  const hasBlockers = report.blockers.length > 0;
+  const status: ReqCoverageItem['status'] = hasBlockers ? 'missing' : 'covered';
+  const explanation =
+    locale === 'en'
+      ? hasBlockers
+        ? 'Structural Baseline found missing must-have components for this problem.'
+        : 'Declared requirements align with present Baseline must-have components.'
+      : hasBlockers
+        ? 'O Baseline estrutural encontrou componentes obrigatórios faltando neste problema.'
+        : 'Os requisitos declarados alinham-se aos must-haves Baseline presentes.';
+
+  const declared: ReqCoverageItem[] = [];
+  for (const requirement of input.requirements.functional) {
+    declared.push({ requirement, type: 'functional', status, explanation });
+  }
+  for (const requirement of input.requirements.nonFunctional) {
+    declared.push({ requirement, type: 'nonFunctional', status, explanation });
+  }
+  return declared;
+}
+
+/** Build a JudgeResult from StructuralReport only (no LLM / no shortener golden fixtures). */
+export function buildStructuralOnlyResult(
+  report: StructuralReport,
+  input: JudgeInput,
+): JudgeResult {
+  const locale = resolveJudgeLocale(input);
+  const criticalIssues = [...report.blockers, ...report.majors];
+  const score = report.scoreHint;
+  const verdict = applyVerdictRules(score, criticalIssues);
+  const note = llmConfigNote(locale);
+  const scaleNarrative = report.scaleChecklistLines.join('\n');
+
+  return {
+    verdict,
+    score,
+    summary: `${buildSummary(verdict, score, locale)} ${note}`,
+    nextStep: buildNextStep(verdict, criticalIssues, locale),
+    strengths: report.strengths,
+    criticalIssues,
+    improvements: [],
+    requirementCoverage: structuralCoverage(input, report, locale),
+    judgeDebate: {
+      rigorous: note,
+      pragmatic: note,
+      consensus: note,
+    },
+    scaleNarrative,
+    structuralCodes: report.codes,
+  };
+}
+
+/** Deterministic structural-only judgment (mock / no LLM key path). */
+export function judgeStructuralOnly(input: JudgeInput): JudgeResult {
+  const problem = getProblem(input.problemId);
+  if (!problem) {
+    throw new UnknownProblemError(input.problemId);
+  }
+  const locale = resolveJudgeLocale(input);
+  const report = evaluateStructuralRubric({
+    problem,
+    graph: input.graph,
+    locale,
+  });
+  return buildStructuralOnlyResult(report, { ...input, locale });
+}
+
+type LlmConsensus = ReturnType<typeof mergeConsensus>;
+
+/**
+ * Inject structural blockers/majors into LLM consensus (JR-10–JR-12).
+ * LLM cannot clear structural blockers into PASS/PARTIAL.
+ */
+export function mergeWithStructuralHardGate(
+  llmConsensus: LlmConsensus,
+  report: StructuralReport,
+  input: JudgeInput,
+  scaleNarrative = '',
+): JudgeResult {
+  const locale = resolveJudgeLocale(input);
+  const criticalIssues = dedupeFeedbackItems([
+    ...report.blockers,
+    ...report.majors,
+    ...llmConsensus.criticalIssues,
+  ]);
+  const verdict = applyVerdictRules(llmConsensus.score, criticalIssues);
+
+  return {
+    ...llmConsensus,
+    criticalIssues,
+    verdict,
+    summary: buildSummary(verdict, llmConsensus.score, locale),
+    nextStep: buildNextStep(verdict, criticalIssues, locale),
+    scaleNarrative,
+    structuralCodes: report.codes,
+  };
+}
+
+/**
+ * JR-14/JR-15: on LLM path, empty scaleNarrative cannot PASS (demote to PARTIAL band).
+ */
+export function assertScaleNarrative(result: JudgeResult, locale: Locale = 'pt-BR'): JudgeResult {
+  if (result.scaleNarrative.trim().length > 0) {
+    return result;
+  }
+  if (result.verdict !== 'PASS') {
+    return result;
+  }
+  const score = Math.min(result.score, 79);
+  const verdict = applyVerdictRules(score, result.criticalIssues);
+  return {
+    ...result,
+    score,
+    verdict,
+    summary: buildSummary(verdict, score, locale),
+    nextStep: buildNextStep(verdict, result.criticalIssues, locale),
+  };
+}
+
+/** Run dual-judge orchestration: structural → LLM → hard-gate merge → scale gate → AD-016. */
 export async function judgeSubmission(input: JudgeInput, client: LlmClient): Promise<JudgeResult> {
   const problem = getProblem(input.problemId);
   if (!problem) {
@@ -226,28 +350,35 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
   const locale = resolveJudgeLocale(input);
   const normalizedInput: JudgeInput = { ...input, locale };
 
+  const report = evaluateStructuralRubric({
+    problem,
+    graph: input.graph,
+    locale,
+  });
+
   const [rigorous, pragmatic] = await Promise.all([
     client.completeJson<JudgePartialResult>({
       role: 'rigorous',
       graph: input.graph,
       locale,
-      text: buildRigorousPrompt(problem, normalizedInput),
+      problemId: input.problemId,
+      text: buildRigorousPrompt(problem, normalizedInput, report),
     }),
     client.completeJson<JudgePartialResult>({
       role: 'pragmatic',
       graph: input.graph,
       locale,
-      text: buildPragmaticPrompt(problem, normalizedInput),
+      problemId: input.problemId,
+      text: buildPragmaticPrompt(problem, normalizedInput, report),
     }),
   ]);
 
   const merged = mergeConsensus(rigorous, pragmatic, normalizedInput);
-  const verdict = applyVerdictRules(merged.score, merged.criticalIssues);
-
-  return {
-    ...merged,
-    verdict,
-    summary: buildSummary(verdict, merged.score, locale),
-    nextStep: buildNextStep(verdict, merged.criticalIssues, locale),
-  };
+  const gated = mergeWithStructuralHardGate(
+    merged,
+    report,
+    normalizedInput,
+    report.scaleChecklistLines.join('\n'),
+  );
+  return assertScaleNarrative(gated, locale);
 }

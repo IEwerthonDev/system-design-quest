@@ -49,6 +49,7 @@ const sampleResult: JudgeResult = {
     pragmatic: 'Protótipo aceitável; adicione cache antes do pico.',
     consensus: 'Score 75/100 — adicionar cache eleva prontidão para produção.',
   },
+  scaleNarrative: '',
 };
 
 describe('result panel', () => {
@@ -210,5 +211,38 @@ describe('result panel', () => {
 
     sessionsBtn.click();
     expect(onOpenSessions).toHaveBeenCalled();
+  });
+
+  it('shows scale block when scaleNarrative is non-empty', () => {
+    mountResultPanel(
+      container,
+      {
+        ...sampleResult,
+        scaleNarrative:
+          'Plan redirect capacity for ~100,000 read RPS with cache-before-DB.',
+      },
+      {
+        beginnerMode: true,
+        onToggleBeginner: () => undefined,
+      },
+    );
+
+    const scale = container.querySelector('[data-testid="result-scale"]') as HTMLElement;
+    expect(scale).toBeTruthy();
+    expect(scale.hidden).toBe(false);
+    expect(
+      container.querySelector('[data-testid="result-scale-narrative"]')?.textContent,
+    ).toContain('100,000 read RPS');
+  });
+
+  it('hides scale block when scaleNarrative is empty', () => {
+    mountResultPanel(container, sampleResult, {
+      beginnerMode: true,
+      onToggleBeginner: () => undefined,
+    });
+
+    const scale = container.querySelector('[data-testid="result-scale"]') as HTMLElement;
+    expect(scale).toBeTruthy();
+    expect(scale.hidden).toBe(true);
   });
 });

@@ -62,5 +62,34 @@ export const URL_SHORTENER: ProblemDefinition = {
       'Single app server with no load balancing at scale',
       'Missing redirect (302) handling on read path',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'sql-without-cache',
+        forbiddenType: 'sql_db',
+        unlessAnyOf: ['cache_redis'],
+        severity: 'blocker',
+        messageKey: 'url_shortener.sql_without_cache',
+      },
+    ],
+    configRules: [
+      {
+        code: 'hitRate-too-low',
+        componentType: 'cache_redis',
+        minHitRate: 80,
+        severity: 'major',
+        messageKey: 'url_shortener.hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Plan redirect capacity for ~100,000 read RPS with cache-before-DB on a 100:1 read/write mix.',
+        'Account for ~500 GB slug→URL storage growth with multi-year retention.',
+      ],
+      'pt-BR': [
+        'Planeje capacidade de redirect para ~100.000 RPS de leitura com cache antes do DB (razão 100:1).',
+        'Considere ~500 GB de crescimento do mapeamento slug→URL com retenção de vários anos.',
+      ],
+    },
   },
 };

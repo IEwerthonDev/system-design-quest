@@ -33,8 +33,37 @@ describe('handleJudgeRequest', () => {
       expect.objectContaining({
         verdict: expect.any(String),
         score: expect.any(Number),
+        scaleNarrative: expect.any(String),
       }),
     );
+  });
+
+  it('structural-only: shortener-good graph as zoom-conference returns FAIL with structural codes', async () => {
+    const result = await handleJudgeRequest({
+      body: validPayload({
+        problemId: 'zoom-conference',
+        graph: getGoldenGraph('good'),
+      }),
+      ip: TEST_IP,
+      env: { NODE_ENV: 'test' },
+    });
+
+    expect(result.status).toBe(200);
+    const body = result.body as {
+      verdict: string;
+      structuralCodes?: string[];
+      criticalIssues: { severity?: string }[];
+      scaleNarrative: string;
+      summary: string;
+      judgeDebate: { consensus: string };
+    };
+    expect(body.verdict).toBe('FAIL');
+    expect(body.structuralCodes).toContain('missing_component');
+    expect(body.criticalIssues.some((i) => i.severity === 'blocker')).toBe(true);
+    expect(body.scaleNarrative.length).toBeGreaterThan(0);
+    expect(body.summary).toMatch(/LLM_API_KEY|estrutural/i);
+    expect(body.judgeDebate.consensus).toMatch(/LLM_API_KEY|estrutural/i);
+    expect(body.judgeDebate.consensus).not.toMatch(/URL Shortener|encurtador/i);
   });
 
   it('returns 400 for invalid body', async () => {

@@ -31,6 +31,7 @@ export type UiStringKey =
   | 'result.improvements'
   | 'result.details'
   | 'result.detailsHide'
+  | 'result.scale'
   | 'continue.cta'
   | 'share.cta'
   | 'share.copied'
@@ -88,6 +89,7 @@ export const CATALOG_EN: UiCatalog = {
   'result.improvements': 'Suggested improvements',
   'result.details': 'Technical details',
   'result.detailsHide': 'Hide technical details',
+  'result.scale': 'Scale analysis',
   'continue.cta': 'Continue where I left off',
   'share.cta': 'Share',
   'share.copied': 'Link copied',

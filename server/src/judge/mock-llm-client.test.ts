@@ -1,13 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { getGoldenGraph } from '@sdq/shared';
+import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { ArchitectureGraph } from '@sdq/shared';
 import {
   createMockLlmClient,
   graphTopologySignature,
   mockJudgePartial,
+  MockScopedToUrlShortenerError,
   resolveGraphTier,
   shouldUseMock,
 } from './mock-llm-client';
+import { judgeSubmission } from './dual-judge';
 
 function cloneGraphWithRenamedIds(graph: ArchitectureGraph): ArchitectureGraph {
   return {
@@ -112,11 +114,37 @@ describe('createMockLlmClient', () => {
   it('returns the same result for repeated calls with the same prompt', async () => {
     const client = createMockLlmClient();
     const graph = getGoldenGraph('medium');
-    const prompt = { role: 'rigorous' as const, graph };
+    const prompt = { role: 'rigorous' as const, graph, problemId: URL_SHORTENER_ID };
 
     const first = await client.completeJson(prompt);
     const second = await client.completeJson(prompt);
 
     expect(second).toEqual(first);
+  });
+
+  it('refuses golden mapping for non-url-shortener problemId', async () => {
+    const client = createMockLlmClient();
+    await expect(
+      client.completeJson({
+        role: 'rigorous',
+        graph: getGoldenGraph('good'),
+        problemId: 'zoom-conference',
+      }),
+    ).rejects.toBeInstanceOf(MockScopedToUrlShortenerError);
+  });
+
+  it('judgeSubmission with mock refuses non-shortener problemId', async () => {
+    const client = createMockLlmClient();
+    await expect(
+      judgeSubmission(
+        {
+          problemId: 'zoom-conference',
+          requirements: { functional: [], nonFunctional: [] },
+          graph: getGoldenGraph('good'),
+          mode: 'study',
+        },
+        client,
+      ),
+    ).rejects.toBeInstanceOf(MockScopedToUrlShortenerError);
   });
 });

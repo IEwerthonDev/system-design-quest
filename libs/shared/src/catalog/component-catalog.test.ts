@@ -87,17 +87,17 @@ describe('component catalog — Tier 1', () => {
 });
 
 describe('component catalog — Tier 2', () => {
-  it('getComponentsForTier(2) returns exactly 25 component types', () => {
-    expect(getComponentsForTier(2)).toHaveLength(25);
+  it('getComponentsForTier(2) returns exactly 26 component types', () => {
+    expect(getComponentsForTier(2)).toHaveLength(26);
   });
 
   it('Tier 2 includes all Tier 1 types plus AD-017 additions', () => {
     const types = getComponentsForTier(2).map((c) => c.type);
     expect(types).toEqual(expect.arrayContaining([...TIER_2_TYPES]));
-    expect(new Set(types).size).toBe(25);
+    expect(new Set(types).size).toBe(26);
   });
 
-  it('Tier 2 adds microservice, nosql_db, kafka, pub_sub, search_engine, waf, reverse_proxy, logging, notification, serverless', () => {
+  it('Tier 2 adds microservice, nosql_db, kafka, pub_sub, search_engine, waf, reverse_proxy, logging, notification, serverless, websocket_gateway', () => {
     const types = getComponentsForTier(2).map((c) => c.type);
     expect(types).toEqual(
       expect.arrayContaining([
@@ -111,6 +111,7 @@ describe('component catalog — Tier 2', () => {
         'logging',
         'notification',
         'serverless',
+        'websocket_gateway',
       ]),
     );
   });
@@ -121,9 +122,9 @@ describe('component catalog — Tier 2', () => {
     expect(meta.whenToUse.length).toBeGreaterThan(0);
   });
 
-  it('getComponentsByCategory(2) groups all 25 types', () => {
+  it('getComponentsByCategory(2) groups all 26 types', () => {
     const grouped = getComponentsByCategory(2);
     const groupedTypes = [...grouped.values()].flat().map((c) => c.type);
-    expect(groupedTypes).toHaveLength(25);
+    expect(groupedTypes).toHaveLength(26);
   });
 });

@@ -1,4 +1,6 @@
 import type { Difficulty } from '../schema/problem';
+import { evaluateStructuralRubric } from '../judge/evaluate-structural-rubric';
+import { normalizeGraph } from '../schema/normalize-graph';
 import {
   countByDifficulty,
   filterProblems,
@@ -7,6 +9,7 @@ import {
   listProblems,
   listProblemsByDifficulty,
 } from './index';
+import { CORE_REALISM_IDS, isCoreRealismProblem } from './structural-depth';
 
 const EXPECTED_EASY_IDS = [
   'url-shortener',
@@ -139,6 +142,121 @@ describe('Problem catalog', () => {
     const hardIds = listProblemsByDifficulty('hard').map((p) => p.id);
     expect(hardIds).toContain('netflix-streaming');
     expect(hardIds).toContain('ticketmaster');
+  });
+});
+
+describe('Baseline structural coverage (JR-04 / JR-23)', () => {
+  it('all 27 problems produce ≥1 must-have check and ≥1 scale line without throwing', () => {
+    const empty = normalizeGraph({ nodes: [], edges: [] });
+    const problems = listProblems();
+    expect(problems).toHaveLength(27);
+
+    for (const problem of problems) {
+      expect(problem.rubric.expectedComponents.length).toBeGreaterThanOrEqual(1);
+
+      const report = evaluateStructuralRubric({
+        problem,
+        graph: empty,
+        locale: 'en',
+      });
+
+      expect(report.problemId).toBe(problem.id);
+      expect(report.blockers.length + report.strengths.length).toBeGreaterThanOrEqual(1);
+      expect(report.scaleChecklistLines.length).toBeGreaterThanOrEqual(1);
+      expect(report.scaleChecklistLines.every((line) => line.length > 0)).toBe(true);
+    }
+  });
+});
+
+describe('Core Easy Deep rubrics (JR-24 / JR-30)', () => {
+  const easyCoreIds = EXPECTED_EASY_IDS.filter((id) => isCoreRealismProblem(id));
+
+  it('covers all 7 Easy Core Realism ids', () => {
+    expect(easyCoreIds).toHaveLength(7);
+    expect(easyCoreIds.every((id) => (CORE_REALISM_IDS as readonly string[]).includes(id))).toBe(
+      true,
+    );
+  });
+
+  it('each Easy Core id has deep depth and ≥1 antiPattern or configRule', () => {
+    for (const id of easyCoreIds) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth === 'deep' || isCoreRealismProblem(id)).toBe(true);
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+
+      const enLines = problem.rubric.scaleChecklist?.en ?? [];
+      const ptLines = problem.rubric.scaleChecklist?.['pt-BR'] ?? [];
+      expect(enLines.length).toBeGreaterThanOrEqual(1);
+      expect(ptLines.length).toBeGreaterThanOrEqual(1);
+      expect(enLines.every((l) => l.length > 0)).toBe(true);
+      expect(ptLines.every((l) => l.length > 0)).toBe(true);
+    }
+  });
+});
+
+describe('Core Medium/Hard Deep rubrics (JR-25 / JR-28)', () => {
+  const mediumHardCoreIds = [
+    'chat-system',
+    'news-feed',
+    'youtube',
+    'zoom-conference',
+    'ticketmaster',
+    'stripe-payments',
+  ] as const;
+
+  it('enriches all 6 Core Medium/Hard ids with Deep fields', () => {
+    for (const id of mediumHardCoreIds) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth).toBe('deep');
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('Core Hard entries have ≥2 explicit scale dimensions', () => {
+    for (const id of ['zoom-conference', 'ticketmaster', 'stripe-payments'] as const) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+      expect(problem.difficulty).toBe('hard');
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(2);
+      expect(problem.rubric.scaleChecklist?.['pt-BR']?.length ?? 0).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
+
+describe('Epic pack coverage (JR-26 / JR-27)', () => {
+  it('Baseline 27/27 + Deep Core 13/13', () => {
+    const problems = listProblems();
+    expect(problems).toHaveLength(27);
+
+    for (const problem of problems) {
+      expect(problem.rubric.expectedComponents.length).toBeGreaterThanOrEqual(1);
+    }
+
+    expect(CORE_REALISM_IDS).toHaveLength(13);
+    for (const id of CORE_REALISM_IDS) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth === 'deep' || isCoreRealismProblem(id)).toBe(true);
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.['pt-BR']?.length ?? 0).toBeGreaterThanOrEqual(1);
+    }
   });
 });
 

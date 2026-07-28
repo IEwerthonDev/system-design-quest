@@ -1,6 +1,6 @@
 import type { ComponentTypeMeta } from '../schema/component-types';
 
-/** AD-017 Tier 2 additions — 10 types on top of Tier 1 (25 total) */
+/** AD-017 Tier 2 additions — 11 types on top of Tier 1 (26 total; +websocket_gateway for AD-028) */
 export const TIER_2_ADDITIONS = [
   {
     type: 'microservice',
@@ -71,6 +71,13 @@ export const TIER_2_ADDITIONS = [
     category: 'observability',
     description: 'Agrega logs estruturados para depuração, auditoria e correlação de incidentes.',
     whenToUse: 'ELK, CloudWatch Logs',
+  },
+  {
+    type: 'websocket_gateway',
+    label: 'WebSocket Gateway',
+    category: 'traffic',
+    description: 'Mantém conexões persistentes para push em tempo real e fan-out de eventos.',
+    whenToUse: 'Chat, presença, streaming de eventos',
   },
 ] as const satisfies readonly ComponentTypeMeta[];
 

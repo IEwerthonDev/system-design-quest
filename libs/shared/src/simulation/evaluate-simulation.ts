@@ -45,6 +45,7 @@ const CAPACITY_PER_REPLICA: Partial<Record<ComponentType, number>> = {
   monitoring: 40,
   logging: 40,
   notification: 20,
+  websocket_gateway: 18,
 };
 
 function capacityPerReplica(type: ComponentType): number {
@@ -84,6 +85,18 @@ function hitRateOf(node: ArchitectureGraph['nodes'][number]): number | null {
   return null;
 }
 
+/** Low CDN TTL weakens edge relief (JR-19). Default 3600 → factor 1. */
+function cdnTtlReliefFactor(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'cdn') {
+    return 1;
+  }
+  const ttl = node.config.ttlSeconds;
+  // ttl≈60 → ~0.5; ttl 3600 → 1.0; shorter TTL passes more load to origin
+  return clamp(Math.log10(Math.max(ttl, 1)) / Math.log10(DEFAULT_CDN_TTL_REF), 0.25, 1);
+}
+
+const DEFAULT_CDN_TTL_REF = 3600;
+
 function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
   if (node.config?.kind !== 'sql_db') {
     return 1;
@@ -92,9 +105,50 @@ function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
   return Math.sqrt(shardCount) * (1 - (keySkew / 100) * 0.5);
 }
 
+function mqCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'mq') {
+    return 1;
+  }
+  const durabilityFactor = node.config.durability === 'memory' ? 0.55 : 1;
+  const partitionFactor = Math.sqrt(Math.max(node.config.partitionCount, 1) / 3);
+  return durabilityFactor * partitionFactor;
+}
+
+function wsCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'ws') {
+    return 1;
+  }
+  // Default fan-out 10k → 1.0; low fan-out shrinks capacity
+  return clamp(node.config.fanOutLimit / 10_000, 0.15, 2);
+}
+
+function lbCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'lb') {
+    return 1;
+  }
+  if (node.config.algorithm === 'least_conn') {
+    return 1.08;
+  }
+  if (node.config.algorithm === 'ip_hash') {
+    return 0.92;
+  }
+  return 1;
+}
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, value));
+}
+
 function nodeCapacity(node: ArchitectureGraph['nodes'][number]): number {
   const reps = node.replicas ?? 1;
-  return reps * capacityPerReplica(node.type) * sqlCapacityModifier(node);
+  return (
+    reps *
+    capacityPerReplica(node.type) *
+    sqlCapacityModifier(node) *
+    mqCapacityModifier(node) *
+    wsCapacityModifier(node) *
+    lbCapacityModifier(node)
+  );
 }
 
 function pressureFromRatio(ratio: number): PressureLevel {
@@ -131,6 +185,18 @@ function buildPressureReason(
     level === 'hot'
   ) {
     return 'Shards/skew limitam capacidade do SQL';
+  }
+
+  if (node.config?.kind === 'mq' && node.config.durability === 'memory' && level !== 'ok') {
+    return 'Fila em memória sob pressão — risco de perda sob carga';
+  }
+
+  if (node.config?.kind === 'ws' && node.config.fanOutLimit < 2000 && level !== 'ok') {
+    return 'Fan-out baixo no WebSocket Gateway';
+  }
+
+  if (node.config?.kind === 'cdn' && node.config.ttlSeconds < 300 && level !== 'ok') {
+    return 'TTL baixo no CDN reduz alívio na origem';
   }
 
   if (reps <= 2 && ratio >= 0.7 && traffic >= 3) {
@@ -172,7 +238,9 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
 
     if (from.type === 'cache_redis' || from.type === 'cdn') {
       const hr = hitRateOf(from) ?? 90;
-      load *= 1 - hr / 100;
+      const ttlFactor = from.type === 'cdn' ? cdnTtlReliefFactor(from) : 1;
+      const passThrough = clamp(1 - (hr / 100) * ttlFactor, 0, 1);
+      load *= passThrough;
     }
 
     loadById[edge.to] = (loadById[edge.to] ?? 0) + load;

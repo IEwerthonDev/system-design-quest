@@ -1,15 +1,43 @@
 import { describe, expect, it } from 'vitest';
 import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { JudgeInput } from '@sdq/shared';
+import type { FeedbackItem, JudgePartialResult } from '@sdq/shared';
 import {
+  assertScaleNarrative,
   buildRequirementCoverage,
+  judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
   UnknownProblemError,
 } from './dual-judge';
-import { createMockLlmClient, mockJudgePartial } from './mock-llm-client';
+import type { JudgeResult } from '@sdq/shared';
+import { createMockLlmClient, mockJudgePartial, type LlmClient } from './mock-llm-client';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 import { getProblem } from '@sdq/shared';
+
+const PASS_STRENGTH: FeedbackItem = {
+  title: 'LLM invented strength',
+  explanation: 'Stub says architecture is excellent.',
+  howToImprove: 'None',
+  whyItMatters: 'Tests narrative preservation',
+};
+
+function createPassStubClient(overrides: Partial<JudgePartialResult> = {}): LlmClient {
+  const partial: JudgePartialResult = {
+    score: 95,
+    strengths: [PASS_STRENGTH],
+    criticalIssues: [],
+    improvements: [],
+    requirementCoverage: [],
+    rationale: 'Stub LLM would PASS this design.',
+    ...overrides,
+  };
+  return {
+    async completeJson<T>(): Promise<T> {
+      return partial as T;
+    },
+  };
+}
 
 function makeInput(
   graph: JudgeInput['graph'],
@@ -57,6 +85,29 @@ describe('buildRigorousPrompt / buildPragmaticPrompt', () => {
     expect(prompt).toContain('Token bucket');
     expect(prompt).toContain('api_gateway');
   });
+
+  it('includes structural blockers and scale mandate (JR-12)', () => {
+    const zoom = getProblem('zoom-conference')!;
+    const prompt = buildRigorousPrompt(zoom, {
+      ...input,
+      problemId: 'zoom-conference',
+      graph: getGoldenGraph('good'),
+    });
+    expect(prompt).toMatch(/BLOCKER|Must-have gaps/i);
+    expect(prompt).toMatch(/Scale mandate|scale analysis/i);
+    expect(prompt).toMatch(/QPS|throughput|storage|fan-out/i);
+  });
+
+  it('includes Core Hard consistency/durability/coordination cue (JR-29)', () => {
+    const stripe = getProblem('stripe-payments')!;
+    const prompt = buildPragmaticPrompt(stripe, {
+      ...input,
+      problemId: 'stripe-payments',
+    });
+    expect(prompt).toMatch(/consistency/i);
+    expect(prompt).toMatch(/durability/i);
+    expect(prompt).toMatch(/coordination/i);
+  });
 });
 
 describe('buildRequirementCoverage', () => {
@@ -77,15 +128,43 @@ describe('buildRequirementCoverage', () => {
       'Redirect HTTP 302',
       '100k read RPS',
     ]);
-    expect(coverage.every((item) => ['covered', 'partial', 'missing'].includes(item.status))).toBe(
-      true,
-    );
-    expect(coverage.some((item) => item.status === 'partial' && item.explanation.length > 0)).toBe(
-      true,
-    );
-    expect(coverage.some((item) => item.status === 'missing' && item.explanation.length > 0)).toBe(
-      true,
-    );
+    expect(coverage.every((item) => item.status === 'missing')).toBe(true);
+    expect(coverage.every((item) => item.explanation.length > 0)).toBe(true);
+  });
+
+  it('merges LLM-provided coverage and does not invent covered from golden tiers', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const withLlmCoverage: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Encurtar URL',
+          type: 'functional',
+          status: 'covered',
+          explanation: 'LLM found shorten path',
+        },
+      ],
+    };
+    const input = makeInput(graph, {
+      functional: ['Encurtar URL', 'Redirect HTTP 302'],
+      nonFunctional: [],
+    });
+
+    const coverage = buildRequirementCoverage(input, withLlmCoverage, pragmatic);
+
+    expect(coverage).toEqual([
+      expect.objectContaining({
+        requirement: 'Encurtar URL',
+        status: 'covered',
+        explanation: 'LLM found shorten path',
+      }),
+      expect.objectContaining({
+        requirement: 'Redirect HTTP 302',
+        status: 'missing',
+      }),
+    ]);
   });
 
   it('returns empty array when no requirements were declared', async () => {
@@ -110,6 +189,38 @@ describe('mergeConsensus', () => {
     expect(merged.score).toBe(Math.min(rigorous.score, pragmatic.score));
     expect(merged.judgeDebate.rigorous).toBe(rigorous.rationale);
     expect(merged.judgeDebate.pragmatic).toBe(pragmatic.rationale);
+  });
+});
+
+describe('judgeStructuralOnly', () => {
+  it('FAILS shortener-good graph on zoom-conference with missing_component codes', () => {
+    const result = judgeStructuralOnly({
+      problemId: 'zoom-conference',
+      requirements: { functional: [], nonFunctional: [] },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'en',
+    });
+
+    expect(result.verdict).toBe('FAIL');
+    expect(result.structuralCodes).toContain('missing_component');
+    expect(result.criticalIssues.some((i) => i.severity === 'blocker')).toBe(true);
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
+    expect(result.summary).toContain('LLM_API_KEY');
+  });
+
+  it('PASSes url-shortener good graph on structural Baseline', () => {
+    const result = judgeStructuralOnly({
+      problemId: URL_SHORTENER_ID,
+      requirements: { functional: [], nonFunctional: [] },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'en',
+    });
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.structuralCodes ?? []).not.toContain('missing_component');
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
   });
 });
 
@@ -158,13 +269,80 @@ describe('judgeSubmission', () => {
       expect.objectContaining({
         requirement: 'Gerar link curto',
         type: 'functional',
-        status: 'covered',
+        status: 'missing',
       }),
       expect.objectContaining({
         requirement: 'Alta disponibilidade',
         type: 'nonFunctional',
-        status: 'covered',
+        status: 'missing',
       }),
     ]);
+  });
+
+  it('FAILS when stub LLM returns PASS but structural blockers exist (JR-11)', async () => {
+    const result = await judgeSubmission(
+      {
+        problemId: 'zoom-conference',
+        requirements: { functional: [], nonFunctional: [] },
+        graph: getGoldenGraph('good'),
+        mode: 'study',
+        locale: 'en',
+      },
+      createPassStubClient(),
+    );
+
+    expect(result.verdict).toBe('FAIL');
+    expect(result.criticalIssues.some((i) => i.severity === 'blocker')).toBe(true);
+    expect(result.structuralCodes).toContain('missing_component');
+  });
+
+  it('preserves LLM narrative fields when structural has no blockers (JR-12)', async () => {
+    const result = await judgeSubmission(makeInput(getGoldenGraph('good')), createPassStubClient());
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.score).toBe(95);
+    expect(result.strengths).toEqual(
+      expect.arrayContaining([expect.objectContaining({ title: PASS_STRENGTH.title })]),
+    );
+    expect(result.judgeDebate.rigorous).toContain('Stub LLM would PASS');
+    expect(result.judgeDebate.pragmatic).toContain('Stub LLM would PASS');
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
+  });
+});
+
+describe('assertScaleNarrative (JR-14, JR-15)', () => {
+  const passBase: JudgeResult = {
+    verdict: 'PASS',
+    score: 95,
+    summary: 'Your architecture scored 95/100.',
+    nextStep: 'Review improvements.',
+    strengths: [PASS_STRENGTH],
+    criticalIssues: [],
+    improvements: [],
+    requirementCoverage: [],
+    judgeDebate: {
+      rigorous: 'ok',
+      pragmatic: 'ok',
+      consensus: 'ok',
+    },
+    scaleNarrative: '',
+  };
+
+  it('blocks PASS when scaleNarrative is empty', () => {
+    const result = assertScaleNarrative(passBase, 'en');
+
+    expect(result.verdict).not.toBe('PASS');
+    expect(result.score).toBeLessThan(80);
+    expect(result.scaleNarrative).toBe('');
+  });
+
+  it('allows PASS when scaleNarrative is non-empty and AD-016 otherwise met', () => {
+    const result = assertScaleNarrative(
+      { ...passBase, scaleNarrative: 'At 100k RPS, cache must absorb redirect reads.' },
+      'en',
+    );
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.score).toBe(95);
   });
 });

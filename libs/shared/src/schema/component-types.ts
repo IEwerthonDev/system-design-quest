@@ -23,7 +23,8 @@ export type ComponentType =
   | 'reverse_proxy'
   | 'logging'
   | 'notification'
-  | 'serverless';
+  | 'serverless'
+  | 'websocket_gateway';
 
 export type ComponentCategory =
   | 'client'

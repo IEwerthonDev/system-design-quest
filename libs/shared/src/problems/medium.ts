@@ -49,6 +49,41 @@ export const CHAT_SYSTEM: ProblemDefinition = {
       'No message queue for offline users',
       'Single database for all messages globally',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'polling-only-chat',
+        requiredAnyOf: ['websocket_gateway'],
+        severity: 'blocker',
+        messageKey: 'chat_system.polling_only',
+      },
+    ],
+    configRules: [
+      {
+        code: 'ws-fanout-too-low',
+        componentType: 'websocket_gateway',
+        minFanOutLimit: 1_000,
+        severity: 'major',
+        messageKey: 'chat_system.ws_fanout_too_low',
+      },
+      {
+        code: 'mq-not-durable',
+        componentType: 'message_queue',
+        requireMqDurability: 'disk',
+        severity: 'major',
+        messageKey: 'chat_system.mq_not_durable',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Design for ~500M DAU and ~500,000 message RPS with persistent WebSocket connections.',
+        'Shard chat history and use a durable queue for offline delivery and group fan-out.',
+      ],
+      'pt-BR': [
+        'Projete para ~500M DAU e ~500.000 RPS de mensagens com WebSocket persistente.',
+        'Faça shard do histórico e use fila durável para offline e fan-out de grupos.',
+      ],
+    },
   },
 };
 
@@ -103,6 +138,34 @@ export const NEWS_FEED: ProblemDefinition = {
       'Pure fan-out on read only — slow timeline for active users',
       'No caching layer for hot timelines',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'no-feed-cache',
+        requiredAnyOf: ['cache_redis'],
+        severity: 'blocker',
+        messageKey: 'news_feed.no_cache',
+      },
+    ],
+    configRules: [
+      {
+        code: 'hitRate-too-low',
+        componentType: 'cache_redis',
+        minHitRate: 85,
+        severity: 'major',
+        messageKey: 'news_feed.hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Handle ~500,000 read RPS timeline loads under 500 ms with hybrid celebrity fan-out.',
+        'Pre-compute hot timelines in cache while using pull for accounts with millions of followers.',
+      ],
+      'pt-BR': [
+        'Suporte ~500.000 RPS de leitura de timeline < 500 ms com fan-out híbrido para celebrities.',
+        'Pré-calcule timelines quentes em cache e use pull para contas com milhões de seguidores.',
+      ],
+    },
   },
 };
 
@@ -403,6 +466,41 @@ export const YOUTUBE: ProblemDefinition = {
       'Serving video files directly from origin without CDN',
       'Single resolution only — no adaptive bitrate',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'origin-without-cdn',
+        forbiddenType: 'object_storage',
+        unlessAnyOf: ['cdn'],
+        severity: 'blocker',
+        messageKey: 'youtube.origin_without_cdn',
+      },
+      {
+        code: 'sync-transcode',
+        requiredAnyOf: ['message_queue', 'worker'],
+        severity: 'major',
+        messageKey: 'youtube.sync_transcode',
+      },
+    ],
+    configRules: [
+      {
+        code: 'cdn-hitRate-too-low',
+        componentType: 'cdn',
+        minHitRate: 90,
+        severity: 'major',
+        messageKey: 'youtube.cdn_hit_rate_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Pipeline ~500 hours/min of upload through async transcoding into object storage.',
+        'Serve adaptive bitrate segments via CDN — never stream video blobs from origin alone.',
+      ],
+      'pt-BR': [
+        'Processe ~500 horas/min de upload com transcoding assíncrono para object storage.',
+        'Sirva segmentos de bitrate adaptativo via CDN — nunca streame blobs só da origem.',
+      ],
+    },
   },
 };
 
