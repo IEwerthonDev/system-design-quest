@@ -28,6 +28,8 @@ import { mountSessionHeader } from '../ui/session-header';
 import { mountSettingsPanel } from '../ui/settings-panel';
 import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
+import { t } from '../i18n/t';
+import { shareDesign } from '../share/share-design';
 import {
   advancePhase,
   createSession,
@@ -272,6 +274,31 @@ export function mountPhaseNavigation(
   });
 
   const sessionHeader = mountSessionHeader(shell, problem.title);
+
+  const shareBtn = document.createElement('button');
+  shareBtn.type = 'button';
+  shareBtn.className = 'sdq-phase-share';
+  shareBtn.setAttribute('data-testid', 'share-design');
+  shareBtn.textContent = t('share.cta');
+  shareBtn.addEventListener('click', () => {
+    void shareDesign({
+      problemId,
+      graph: getGraph(),
+      onCopied: (message) => {
+        shareBtn.textContent = message;
+        window.setTimeout(() => {
+          shareBtn.textContent = t('share.cta');
+        }, 1600);
+      },
+      onOversized: (_json, message) => {
+        shareBtn.textContent = message;
+        window.setTimeout(() => {
+          shareBtn.textContent = t('share.cta');
+        }, 2800);
+      },
+    });
+  });
+  sessionHeader.trailingSlot.append(shareBtn);
 
   const settingsPanel = mountSettingsPanel(shell, {
     anchor: sessionHeader.trailingSlot,
