@@ -83,6 +83,7 @@ function injectStyles(): void {
       align-items: center;
       justify-content: flex-end;
       flex-shrink: 0;
+      gap: 8px;
     }
     .sdq-session-header[hidden] { display: none !important; }
   `;

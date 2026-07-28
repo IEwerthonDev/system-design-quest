@@ -144,6 +144,11 @@ describe('blueprint canvas', () => {
     ).click();
 
     expect(popover.hidden).toBe(false);
+    const detailsBtn = host.querySelector(
+      `[data-testid="node-details-${id}"]`,
+    ) as HTMLButtonElement;
+    expect(detailsBtn.querySelector('svg')).toBeTruthy();
+    expect(detailsBtn.getAttribute('aria-label')).toMatch(/configurações/i);
     expect(popover.textContent).toMatch(/HIT RATE/i);
     expect(popover.textContent).toMatch(/AI judges read these notes/i);
     expect(popover.querySelector('[data-testid="config-hit-rate"]')).toBeTruthy();

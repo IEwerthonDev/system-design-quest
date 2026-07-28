@@ -176,6 +176,24 @@ describe('phase navigation', () => {
       container.remove();
     });
 
+    it('syncs blueprint to empty graph when starting a new challenge', () => {
+      const setGraphMock = vi.fn();
+      (
+        window as Window & {
+          __BLUEPRINT__?: { setGraph: (g: ArchitectureGraph) => void };
+        }
+      ).__BLUEPRINT__ = { setGraph: setGraphMock };
+
+      mountPhaseNavigation(container, { problemId: 'url-shortener' });
+
+      expect(getGraph().nodes).toEqual([]);
+      expect(setGraphMock).toHaveBeenCalledWith(
+        expect.objectContaining({ nodes: [], edges: [] }),
+      );
+
+      delete (window as Window & { __BLUEPRINT__?: unknown }).__BLUEPRINT__;
+    });
+
     it('starts at briefing and advances through requirements to canvas', () => {
       mountPhaseNavigation(container, {
         submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),

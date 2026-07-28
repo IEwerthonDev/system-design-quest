@@ -152,14 +152,17 @@ export function mountPhaseNavigation(
       { guidedMode, experienceLevel },
       now,
     );
-    const blueprint = (
-      window as Window & { __BLUEPRINT__?: import('../blueprint/blueprint-canvas').BlueprintCanvas }
-    ).__BLUEPRINT__;
-    if (blueprint) {
-      blueprint.setGraph(getGraph());
-    }
   } else {
     createSession(problemId, mode, { guidedMode, experienceLevel }, now);
+  }
+
+  // Blueprint host survives library ↔ session transitions; always sync so a new
+  // challenge never shows the previous problem's drawing.
+  const bootBlueprint = (
+    window as Window & { __BLUEPRINT__?: import('../blueprint/blueprint-canvas').BlueprintCanvas }
+  ).__BLUEPRINT__;
+  if (bootBlueprint) {
+    bootBlueprint.setGraph(getGraph());
   }
 
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;

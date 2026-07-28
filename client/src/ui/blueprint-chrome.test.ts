@@ -84,6 +84,8 @@ describe('session header', () => {
     );
     expect(host.querySelector('[data-testid="session-header-leading"]')).toBeTruthy();
     expect(header.leadingSlot).toBeTruthy();
+    const headerCss = document.getElementById('sdq-session-header-styles')?.textContent ?? '';
+    expect(headerCss).toMatch(/\.sdq-session-header__trailing[\s\S]*?gap:\s*8px/);
     header.destroy();
   });
 });
