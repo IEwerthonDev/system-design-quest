@@ -1,4 +1,5 @@
 import type { FeedbackItem, JudgeResult, ReqCoverageItem, Verdict } from '@sdq/shared';
+import { t } from '../i18n/t';
 
 export const VERDICT_LABELS: Record<Verdict, string> = {
   PASS: 'Aprovado',
@@ -262,6 +263,29 @@ function injectResultStyles(root: HTMLElement): void {
       text-transform: uppercase;
       color: var(--sdq-accent);
     }
+    .sdq-result__scale {
+      margin: 0 0 16px;
+      padding: 12px 14px;
+      border-radius: var(--sdq-radius-sm);
+      background: var(--sdq-bg-surface);
+      border: 1px solid var(--sdq-border);
+    }
+    .sdq-result__scale-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--sdq-text-muted);
+    }
+    .sdq-result__scale-body {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--sdq-text);
+      white-space: pre-wrap;
+    }
     .sdq-result__empty {
       margin: 0;
       font-size: 13px;
@@ -468,6 +492,11 @@ export function mountResultPanel(
   nextStep.className = 'sdq-result__next-step';
   nextStep.setAttribute('data-testid', 'result-next-step');
 
+  const scaleBlock = document.createElement('section');
+  scaleBlock.className = 'sdq-result__scale';
+  scaleBlock.setAttribute('data-testid', 'result-scale');
+  scaleBlock.hidden = true;
+
   const detailsToggle = document.createElement('button');
   detailsToggle.type = 'button';
   detailsToggle.className = 'sdq-result__details-toggle';
@@ -488,7 +517,7 @@ export function mountResultPanel(
     void options.onOpenSessions?.();
   });
 
-  card.append(header, summary, nextStep, detailsToggle, details, sessionsBtn);
+  card.append(header, summary, nextStep, scaleBlock, detailsToggle, details, sessionsBtn);
   panel.append(card);
   container.append(panel);
 
@@ -502,6 +531,23 @@ export function mountResultPanel(
       ${currentResult.nextStep}
     `;
     beginnerToggle.checked = beginnerMode;
+
+    const narrative = currentResult.scaleNarrative?.trim() ?? '';
+    if (narrative.length > 0) {
+      scaleBlock.hidden = false;
+      scaleBlock.replaceChildren();
+      const scaleLabel = document.createElement('span');
+      scaleLabel.className = 'sdq-result__scale-label';
+      scaleLabel.textContent = t('result.scale');
+      const scaleBody = document.createElement('p');
+      scaleBody.className = 'sdq-result__scale-body';
+      scaleBody.setAttribute('data-testid', 'result-scale-narrative');
+      scaleBody.textContent = narrative;
+      scaleBlock.append(scaleLabel, scaleBody);
+    } else {
+      scaleBlock.hidden = true;
+      scaleBlock.replaceChildren();
+    }
   };
 
   const renderDetails = (): void => {

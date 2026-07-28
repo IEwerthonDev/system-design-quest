@@ -34,6 +34,7 @@ export const CATALOG_PT_BR: UiCatalog = {
   'result.improvements': 'Melhorias sugeridas',
   'result.details': 'Detalhes técnicos',
   'result.detailsHide': 'Ocultar detalhes técnicos',
+  'result.scale': 'Análise de escala',
   'continue.cta': 'Continuar de onde parei',
   'share.cta': 'Compartilhar',
   'share.copied': 'Link copiado',
