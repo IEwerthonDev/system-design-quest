@@ -92,11 +92,11 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Missing must-have → blocker `missing_component`
-- [ ] Emits `scaleChecklistLines` (≥1)
-- [ ] Returns `StructuralReport` with `scoreHint` + `codes`
-- [ ] Unit tests cover empty graph, missing component, happy must-haves
-- [ ] Commit: `feat(shared): baseline structural rubric engine`
+- [x] Missing must-have → blocker `missing_component`
+- [x] Emits `scaleChecklistLines` (≥1)
+- [x] Returns `StructuralReport` with `scoreHint` + `codes`
+- [x] Unit tests cover empty graph, missing component, happy must-haves
+- [x] Commit: `feat(shared): baseline structural rubric engine`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -113,9 +113,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Catalog test: 27 ids each produce ≥1 must-have check and ≥1 scale line
-- [ ] No problem throws in `evaluateStructuralRubric`
-- [ ] Commit: `test(shared): baseline structural coverage for 27 problems`
+- [x] Catalog test: 27 ids each produce ≥1 must-have check and ≥1 scale line
+- [x] No problem throws in `evaluateStructuralRubric`
+- [x] Commit: `test(shared): baseline structural coverage for 27 problems`
 
 **Tests:** unit  
 **Gate:** quick shared  

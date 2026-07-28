@@ -1,4 +1,6 @@
 import type { Difficulty } from '../schema/problem';
+import { evaluateStructuralRubric } from '../judge/evaluate-structural-rubric';
+import { normalizeGraph } from '../schema/normalize-graph';
 import {
   countByDifficulty,
   filterProblems,
@@ -139,6 +141,29 @@ describe('Problem catalog', () => {
     const hardIds = listProblemsByDifficulty('hard').map((p) => p.id);
     expect(hardIds).toContain('netflix-streaming');
     expect(hardIds).toContain('ticketmaster');
+  });
+});
+
+describe('Baseline structural coverage (JR-04 / JR-23)', () => {
+  it('all 27 problems produce ≥1 must-have check and ≥1 scale line without throwing', () => {
+    const empty = normalizeGraph({ nodes: [], edges: [] });
+    const problems = listProblems();
+    expect(problems).toHaveLength(27);
+
+    for (const problem of problems) {
+      expect(problem.rubric.expectedComponents.length).toBeGreaterThanOrEqual(1);
+
+      const report = evaluateStructuralRubric({
+        problem,
+        graph: empty,
+        locale: 'en',
+      });
+
+      expect(report.problemId).toBe(problem.id);
+      expect(report.blockers.length + report.strengths.length).toBeGreaterThanOrEqual(1);
+      expect(report.scaleChecklistLines.length).toBeGreaterThanOrEqual(1);
+      expect(report.scaleChecklistLines.every((line) => line.length > 0)).toBe(true);
+    }
   });
 });
 
