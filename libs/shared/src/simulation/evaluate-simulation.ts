@@ -187,15 +187,16 @@ function buildPressureReason(
     return 'Shards/skew limitam capacidade do SQL';
   }
 
-  if (node.config?.kind === 'mq' && node.config.durability === 'memory' && level !== 'ok') {
+  // level is already narrowed to warn|hot (ok returned above)
+  if (node.config?.kind === 'mq' && node.config.durability === 'memory') {
     return 'Fila em memória sob pressão — risco de perda sob carga';
   }
 
-  if (node.config?.kind === 'ws' && node.config.fanOutLimit < 2000 && level !== 'ok') {
+  if (node.config?.kind === 'ws' && node.config.fanOutLimit < 2000) {
     return 'Fan-out baixo no WebSocket Gateway';
   }
 
-  if (node.config?.kind === 'cdn' && node.config.ttlSeconds < 300 && level !== 'ok') {
+  if (node.config?.kind === 'cdn' && node.config.ttlSeconds < 300) {
     return 'TTL baixo no CDN reduz alívio na origem';
   }
 
