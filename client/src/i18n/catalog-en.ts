@@ -162,6 +162,8 @@ export type UiStringKey =
   | 'palette.collapse'
   | 'findings.title'
   | 'workload.title'
+  | 'workload.fab'
+  | 'workload.collapse'
   | 'workload.rps'
   | 'workload.readRps'
   | 'workload.writeRps'
@@ -352,6 +354,8 @@ export const CATALOG_EN: UiCatalog = {
   'palette.collapse': 'Minimize components',
   'findings.title': 'Findings',
   'workload.title': 'Workload',
+  'workload.fab': 'WORKLOAD',
+  'workload.collapse': 'Minimize workload',
   'workload.rps': 'RPS',
   'workload.readRps': 'Reads/s',
   'workload.writeRps': 'Writes/s',

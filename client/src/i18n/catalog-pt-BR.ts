@@ -171,6 +171,8 @@ export const CATALOG_PT_BR: UiCatalog = {
   'palette.collapse': 'Minimizar componentes',
   'findings.title': 'Achados',
   'workload.title': 'Carga (workload)',
+  'workload.fab': 'CARGA',
+  'workload.collapse': 'Minimizar carga',
   'workload.rps': 'RPS',
   'workload.readRps': 'Leituras/s',
   'workload.writeRps': 'Escritas/s',
