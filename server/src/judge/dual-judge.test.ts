@@ -85,6 +85,29 @@ describe('buildRigorousPrompt / buildPragmaticPrompt', () => {
     expect(prompt).toContain('Token bucket');
     expect(prompt).toContain('api_gateway');
   });
+
+  it('includes structural blockers and scale mandate (JR-12)', () => {
+    const zoom = getProblem('zoom-conference')!;
+    const prompt = buildRigorousPrompt(zoom, {
+      ...input,
+      problemId: 'zoom-conference',
+      graph: getGoldenGraph('good'),
+    });
+    expect(prompt).toMatch(/BLOCKER|Must-have gaps/i);
+    expect(prompt).toMatch(/Scale mandate|scale analysis/i);
+    expect(prompt).toMatch(/QPS|throughput|storage|fan-out/i);
+  });
+
+  it('includes Core Hard consistency/durability/coordination cue (JR-29)', () => {
+    const stripe = getProblem('stripe-payments')!;
+    const prompt = buildPragmaticPrompt(stripe, {
+      ...input,
+      problemId: 'stripe-payments',
+    });
+    expect(prompt).toMatch(/consistency/i);
+    expect(prompt).toMatch(/durability/i);
+    expect(prompt).toMatch(/coordination/i);
+  });
 });
 
 describe('buildRequirementCoverage', () => {

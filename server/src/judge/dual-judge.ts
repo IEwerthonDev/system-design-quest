@@ -362,14 +362,14 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
       graph: input.graph,
       locale,
       problemId: input.problemId,
-      text: buildRigorousPrompt(problem, normalizedInput),
+      text: buildRigorousPrompt(problem, normalizedInput, report),
     }),
     client.completeJson<JudgePartialResult>({
       role: 'pragmatic',
       graph: input.graph,
       locale,
       problemId: input.problemId,
-      text: buildPragmaticPrompt(problem, normalizedInput),
+      text: buildPragmaticPrompt(problem, normalizedInput, report),
     }),
   ]);
 

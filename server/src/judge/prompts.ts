@@ -1,5 +1,9 @@
-import type { JudgeInput, Problem } from '@sdq/shared';
-import { normalizeGraph } from '@sdq/shared';
+import type { JudgeInput, Problem, StructuralReport } from '@sdq/shared';
+import {
+  evaluateStructuralRubric,
+  isCoreRealismProblem,
+  normalizeGraph,
+} from '@sdq/shared';
 import { localeInstruction, resolveJudgeLocale } from './locale';
 
 function formatRequirements(input: JudgeInput): string {
@@ -42,8 +46,62 @@ function formatGraph(input: JudgeInput): string {
   return `Components:\n${nodes || '  (none)'}\n\nConnections:\n${edges || '  (none)'}\n\n${simLine}`;
 }
 
-function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, input: JudgeInput): string {
+function formatStructuralContext(report: StructuralReport): string {
+  const blockerLines =
+    report.blockers.length > 0
+      ? report.blockers.map((item) => `- BLOCKER: ${item.title} — ${item.explanation}`)
+      : ['- (no structural blockers)'];
+  const majorLines =
+    report.majors.length > 0
+      ? report.majors.map((item) => `- MAJOR: ${item.title} — ${item.explanation}`)
+      : [];
+  const scaleLines = report.scaleChecklistLines.map((line) => `- ${line}`);
+
+  return [
+    'Structural evaluation (deterministic hard constraints — do not contradict blockers):',
+    'Must-have gaps / blockers:',
+    ...blockerLines,
+    ...(majorLines.length > 0 ? ['Majors:', ...majorLines] : []),
+    '',
+    'Scale mandate: you MUST include scale analysis covering QPS/throughput, storage, and fan-out as relevant to this problem.',
+    'Scale checklist:',
+    ...scaleLines,
+  ].join('\n');
+}
+
+function coreHardTradeOffCue(problem: Problem): string[] {
+  if (problem.difficulty === 'hard' && isCoreRealismProblem(problem.id)) {
+    return [
+      '',
+      'Core Hard trade-offs: explicitly discuss consistency, durability, and coordination.',
+    ];
+  }
+  return [];
+}
+
+function resolveStructuralReport(
+  problem: Problem,
+  input: JudgeInput,
+  report?: StructuralReport,
+): StructuralReport {
+  if (report) {
+    return report;
+  }
+  return evaluateStructuralRubric({
+    problem,
+    graph: input.graph,
+    locale: resolveJudgeLocale(input),
+  });
+}
+
+function buildJudgePrompt(
+  role: 'rigorous' | 'pragmatic',
+  problem: Problem,
+  input: JudgeInput,
+  report?: StructuralReport,
+): string {
   const locale = resolveJudgeLocale(input);
+  const structural = resolveStructuralReport(problem, input, report);
   const roleFocus =
     role === 'rigorous'
       ? 'Focus on requirements traceability, scalability, single points of failure, and consistency.'
@@ -73,23 +131,35 @@ function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, inpu
     'Constraints:',
     ...problem.constraints.map((constraint) => `- ${constraint}`),
     ...rubricLines,
+    ...coreHardTradeOffCue(problem),
+    '',
+    formatStructuralContext(structural),
     '',
     formatRequirements(input),
     '',
     formatGraph(input),
     '',
     'Return JSON matching JudgePartialResult: score (0-100), strengths, criticalIssues, improvements, requirementCoverage, rationale.',
+    'In rationale and criticalIssues, honor structural blockers and include the required scale analysis.',
   ].join('\n');
 }
 
 /** Build the rigorous judge system/user prompt for the LLM adapter. */
-export function buildRigorousPrompt(problem: Problem, input: JudgeInput): string {
-  return buildJudgePrompt('rigorous', problem, input);
+export function buildRigorousPrompt(
+  problem: Problem,
+  input: JudgeInput,
+  report?: StructuralReport,
+): string {
+  return buildJudgePrompt('rigorous', problem, input, report);
 }
 
 /** Build the pragmatic judge system/user prompt for the LLM adapter. */
-export function buildPragmaticPrompt(problem: Problem, input: JudgeInput): string {
-  return buildJudgePrompt('pragmatic', problem, input);
+export function buildPragmaticPrompt(
+  problem: Problem,
+  input: JudgeInput,
+  report?: StructuralReport,
+): string {
+  return buildJudgePrompt('pragmatic', problem, input, report);
 }
 
 /** Exposed for unit tests */
