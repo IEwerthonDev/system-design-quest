@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nx run-many -t serve --projects=client,server --parallel=2",
     "build": "nx run-many -t build",
+    "vercel-build": "bash scripts/vercel-build.sh",
     "test": "nx run-many -t test",
     "lint": "nx run-many -t lint",
     "test:e2e": "playwright test"
