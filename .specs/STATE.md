@@ -22,31 +22,29 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `sandbox-panel-drawers` — Execute done; Verify next |
-| **Próximo passo** | Independent Verifier → PR → merge → `vercel deploy --prod` |
-| **Feature ativa** | `sandbox-panel-drawers` |
-| **Branch** | `feature/sandbox-panel-drawers` |
+| **Fase atual** | `sandbox-panel-drawers` shipped |
+| **Próximo passo** | Smoke UI: Study Mode → free canvas → CARGA/MENTOR FAB open/close |
+| **Feature ativa** | none (`sandbox-panel-drawers` shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035 |
-| **Gate** | `nx run-many -t lint test` — GREEN (438 tests) |
-| **PR** | pending |
+| **Gate** | `nx run-many -t lint test` green pre-merge |
+| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/7 (squash `d973ac9`) |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | pre-feature: `dpl_8XTES2vo299ESnRtqbr8BfLuSXJB` READY |
+| **Deployment** | `dpl_8cVp8EABw1PUMxWDuExq8VdpVaA4` READY |
 
-### Context Checkpoint (2026-07-28 sandbox-panel-drawers execute done)
+### Context Checkpoint (2026-07-28 sandbox-panel-drawers ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — single feature |
-| Uncommitted | GREEN after T7 |
+| Chat length | GREEN — feature shipped |
+| Uncommitted | docs commit |
 | Spec drift | GREEN |
-| Gate confidence | GREEN — full gate |
-| Task clarity | GREEN — Verify → ship |
+| Gate confidence | GREEN |
+| Task clarity | GREEN — done |
 
-**Veredito:** GREEN
+**Veredito:** GREEN — shipped
 
-**Commits:** T1–T6 on branch; T7 this docs commit
-**Gate:** `nx run-many -t lint test`
 
 ### Deploy note (Hobby)
 
