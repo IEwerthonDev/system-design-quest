@@ -22,10 +22,10 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` Design A approved (AD-027/028); Tasks drafted — await approve |
-| **Próximo passo** | User approves `.specs/features/judge-realism/tasks.md` → Execute T1 on `feature/judge-realism` |
+| **Fase atual** | `judge-realism` Execute Batch 1 (T1–T7 / P1+P2) via sub-agent |
+| **Próximo passo** | Await Batch 1 compact summary → Batch 2 (T8–T13) → Batch 3 (T14–T19) → Verifier |
 | **Feature ativa** | `judge-realism` (Complex) |
-| **Branch** | `main` (create `feature/judge-realism` at Execute) |
+| **Branch** | `feature/judge-realism` |
 | **Bloqueios** | Judge mock uses URL-shortener golden tiers for ALL problems when `LLM_API_KEY` missing — same graph can “pass” videoconference |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
