@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Execute — Batch 2 (Phase 2 T6–T10) in progress via sub-agent |
-| **Próximo passo** | Await Batch 2 summary → dispatch Batch 3 (T11–T15) |
+| **Fase atual** | Execute — Batch 3 (Phase 3 T11–T15) in progress via sub-agent |
+| **Próximo passo** | Await Batch 3 summary → dispatch Batch 4 (T16–T20) |
 | **Feature ativa** | `hobby-platform` |
 | **Branch** | `feature/hobby-platform` |
 | **Bloqueios** | Vercel KV/Blob/Edge/Cron env for durable path in prod |
