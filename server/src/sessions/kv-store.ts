@@ -10,6 +10,26 @@ export interface KvClient {
   sadd(key: string, ...members: string[]): Promise<number>;
   smembers(key: string): Promise<string[]>;
   srem(key: string, ...members: string[]): Promise<number>;
+  /** Optional SCAN/KEYS for cron cleanup (pattern e.g. `sess:*`). */
+  keys?(pattern: string): Promise<string[]>;
+  /** Optional INCR for daily stats aggregates. */
+  incr?(key: string): Promise<number>;
+}
+
+export const SESSION_MAX_AGE_DAYS = 90;
+
+/** True when session `updatedAt` is older than maxAgeDays relative to nowMs. */
+export function isSessionOlderThan(
+  updatedAt: string,
+  nowMs: number,
+  maxAgeDays: number = SESSION_MAX_AGE_DAYS,
+): boolean {
+  const updatedMs = Date.parse(updatedAt);
+  if (Number.isNaN(updatedMs)) {
+    return false;
+  }
+  const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+  return updatedMs < nowMs - maxAgeMs;
 }
 
 function sessionKey(id: string): string {
@@ -77,6 +97,38 @@ export class KvSessionStore implements SessionStore {
     this.trackedSessionIds.delete(id);
   }
 
+  /**
+   * Delete sessions whose updatedAt is older than maxAgeDays.
+   * Uses `keys('sess:*')` when available; otherwise scans in-memory tracked ids.
+   */
+  async deleteOlderThan(
+    nowMs: number = Date.now(),
+    maxAgeDays: number = SESSION_MAX_AGE_DAYS,
+  ): Promise<{ deleted: number; scanned: number }> {
+    let ids: string[] = [];
+    if (this.kv.keys) {
+      const keys = await this.kv.keys('sess:*');
+      ids = keys
+        .map((key) => (key.startsWith('sess:') ? key.slice('sess:'.length) : ''))
+        .filter((id) => id.length > 0);
+    } else {
+      ids = [...this.trackedSessionIds];
+    }
+
+    let deleted = 0;
+    for (const id of ids) {
+      const session = await this.getById(id);
+      if (!session) {
+        continue;
+      }
+      if (isSessionOlderThan(session.updatedAt, nowMs, maxAgeDays)) {
+        await this.delete(id);
+        deleted += 1;
+      }
+    }
+    return { deleted, scanned: ids.length };
+  }
+
   async reset(): Promise<void> {
     for (const id of [...this.trackedSessionIds]) {
       await this.delete(id);
@@ -97,6 +149,11 @@ export function createKvSessionStore(
     return new KvSessionStore(client);
   }
 
+  return new KvSessionStore(createKvClient(env));
+}
+
+/** Build Upstash/Vercel KV client from env (throws when missing). */
+export function createKvClient(env: NodeJS.ProcessEnv = process.env): KvClient {
   const url = env.KV_REST_API_URL;
   const token = env.KV_REST_API_TOKEN;
   if (!url || !token) {
@@ -106,7 +163,7 @@ export function createKvSessionStore(
   }
 
   const kv = createClient({ url, token });
-  return new KvSessionStore(kv as unknown as KvClient);
+  return kv as unknown as KvClient;
 }
 
 function cloneRecord(record: DesignSessionRecord): DesignSessionRecord {
