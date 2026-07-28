@@ -235,6 +235,31 @@ describe('Core Medium/Hard Deep rubrics (JR-25 / JR-28)', () => {
   });
 });
 
+describe('Epic pack coverage (JR-26 / JR-27)', () => {
+  it('Baseline 27/27 + Deep Core 13/13', () => {
+    const problems = listProblems();
+    expect(problems).toHaveLength(27);
+
+    for (const problem of problems) {
+      expect(problem.rubric.expectedComponents.length).toBeGreaterThanOrEqual(1);
+    }
+
+    expect(CORE_REALISM_IDS).toHaveLength(13);
+    for (const id of CORE_REALISM_IDS) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth === 'deep' || isCoreRealismProblem(id)).toBe(true);
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.['pt-BR']?.length ?? 0).toBeGreaterThanOrEqual(1);
+    }
+  });
+});
+
 describe('Difficulty distribution', () => {
   it.each<[Difficulty, number]>([
     ['easy', 7],
