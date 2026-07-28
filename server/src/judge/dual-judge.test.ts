@@ -3,6 +3,7 @@ import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { JudgeInput } from '@sdq/shared';
 import {
   buildRequirementCoverage,
+  judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
   UnknownProblemError,
@@ -110,6 +111,38 @@ describe('mergeConsensus', () => {
     expect(merged.score).toBe(Math.min(rigorous.score, pragmatic.score));
     expect(merged.judgeDebate.rigorous).toBe(rigorous.rationale);
     expect(merged.judgeDebate.pragmatic).toBe(pragmatic.rationale);
+  });
+});
+
+describe('judgeStructuralOnly', () => {
+  it('FAILS shortener-good graph on zoom-conference with missing_component codes', () => {
+    const result = judgeStructuralOnly({
+      problemId: 'zoom-conference',
+      requirements: { functional: [], nonFunctional: [] },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'en',
+    });
+
+    expect(result.verdict).toBe('FAIL');
+    expect(result.structuralCodes).toContain('missing_component');
+    expect(result.criticalIssues.some((i) => i.severity === 'blocker')).toBe(true);
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
+    expect(result.summary).toContain('LLM_API_KEY');
+  });
+
+  it('PASSes url-shortener good graph on structural Baseline', () => {
+    const result = judgeStructuralOnly({
+      problemId: URL_SHORTENER_ID,
+      requirements: { functional: [], nonFunctional: [] },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'en',
+    });
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.structuralCodes ?? []).not.toContain('missing_component');
+    expect(result.scaleNarrative.length).toBeGreaterThan(0);
   });
 });
 

@@ -132,9 +132,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Shortener-good graph judged as `zoom-conference` ⇒ not PASS and not PARTIAL
-- [ ] Uses structural path only (no live LLM)
-- [ ] Commit: `test(shared): discriminate url-shortener graph on zoom-conference`
+- [x] Shortener-good graph judged as `zoom-conference` ⇒ not PASS and not PARTIAL
+- [x] Uses structural path only (no live LLM)
+- [x] Commit: `test(shared): discriminate url-shortener graph on zoom-conference`
 
 **Tests:** unit  
 **Gate:** quick shared  

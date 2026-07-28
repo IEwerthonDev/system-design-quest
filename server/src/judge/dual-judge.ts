@@ -1,5 +1,6 @@
 import {
   applyVerdictRules,
+  evaluateStructuralRubric,
   getProblem,
   type FeedbackItem,
   type GoldenGraphTier,
@@ -8,6 +9,7 @@ import {
   type JudgeResult,
   type Locale,
   type ReqCoverageItem,
+  type StructuralReport,
   type Verdict,
 } from '@sdq/shared';
 import type { LlmClient } from './mock-llm-client';
@@ -216,6 +218,85 @@ export class UnknownProblemError extends Error {
   }
 }
 
+function llmConfigNote(locale: Locale): string {
+  if (locale === 'en') {
+    return 'Configure LLM_API_KEY for richer dual-judge narrative. This result is structural-only.';
+  }
+  return 'Configure LLM_API_KEY para narrativa dual-judge mais rica. Este resultado é apenas estrutural.';
+}
+
+function structuralCoverage(
+  input: JudgeInput,
+  report: StructuralReport,
+  locale: Locale,
+): ReqCoverageItem[] {
+  const hasBlockers = report.blockers.length > 0;
+  const status: ReqCoverageItem['status'] = hasBlockers ? 'missing' : 'covered';
+  const explanation =
+    locale === 'en'
+      ? hasBlockers
+        ? 'Structural Baseline found missing must-have components for this problem.'
+        : 'Declared requirements align with present Baseline must-have components.'
+      : hasBlockers
+        ? 'O Baseline estrutural encontrou componentes obrigatórios faltando neste problema.'
+        : 'Os requisitos declarados alinham-se aos must-haves Baseline presentes.';
+
+  const declared: ReqCoverageItem[] = [];
+  for (const requirement of input.requirements.functional) {
+    declared.push({ requirement, type: 'functional', status, explanation });
+  }
+  for (const requirement of input.requirements.nonFunctional) {
+    declared.push({ requirement, type: 'nonFunctional', status, explanation });
+  }
+  return declared;
+}
+
+/** Build a JudgeResult from StructuralReport only (no LLM / no shortener golden fixtures). */
+export function buildStructuralOnlyResult(
+  report: StructuralReport,
+  input: JudgeInput,
+): JudgeResult {
+  const locale = resolveJudgeLocale(input);
+  const criticalIssues = [...report.blockers, ...report.majors];
+  const score = report.scoreHint;
+  const verdict = applyVerdictRules(score, criticalIssues);
+  const note = llmConfigNote(locale);
+  const scaleNarrative = report.scaleChecklistLines.join('\n');
+
+  return {
+    verdict,
+    score,
+    summary: `${buildSummary(verdict, score, locale)} ${note}`,
+    nextStep: buildNextStep(verdict, criticalIssues, locale),
+    strengths: report.strengths,
+    criticalIssues,
+    improvements: [],
+    requirementCoverage: structuralCoverage(input, report, locale),
+    judgeDebate: {
+      rigorous: note,
+      pragmatic: note,
+      consensus: note,
+    },
+    scaleNarrative,
+    structuralCodes: report.codes,
+  };
+}
+
+/** Deterministic structural-only judgment (mock / no LLM key path). */
+export function judgeStructuralOnly(input: JudgeInput): JudgeResult {
+  const problem = getProblem(input.problemId);
+  if (!problem) {
+    throw new UnknownProblemError(input.problemId);
+  }
+  const locale = resolveJudgeLocale(input);
+  const report = evaluateStructuralRubric({
+    problem,
+    graph: input.graph,
+    locale,
+  });
+  return buildStructuralOnlyResult(report, { ...input, locale });
+}
+
 /** Run dual-judge orchestration: parallel LLM calls → consensus merge → AD-016 verdict. */
 export async function judgeSubmission(input: JudgeInput, client: LlmClient): Promise<JudgeResult> {
   const problem = getProblem(input.problemId);
@@ -249,5 +330,6 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
     verdict,
     summary: buildSummary(verdict, merged.score, locale),
     nextStep: buildNextStep(verdict, merged.criticalIssues, locale),
+    scaleNarrative: '',
   };
 }

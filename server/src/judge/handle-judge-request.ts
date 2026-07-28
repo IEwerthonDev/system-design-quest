@@ -1,5 +1,5 @@
 import type { JudgeResult } from '@sdq/shared';
-import { judgeSubmission, UnknownProblemError } from './dual-judge';
+import { judgeStructuralOnly, judgeSubmission, UnknownProblemError } from './dual-judge';
 import { createLlmClient } from './llm-client';
 import { createMockLlmClient, shouldUseMock, type LlmClient } from './mock-llm-client';
 import { LlmParseError } from './parse-llm-json';
@@ -73,15 +73,42 @@ export async function handleJudgeRequest(
     };
   }
 
+  // Mock / no key: structural-only — never map arbitrary graphs to URL-shortener golden tiers (JR-02).
+  if (shouldUseMock(env) && !options.llmClient) {
+    try {
+      const result = judgeStructuralOnly(parsed.input);
+      return { status: 200, body: result };
+    } catch (error) {
+      if (error instanceof UnknownProblemError) {
+        return {
+          status: 400,
+          body: {
+            error: 'Invalid request',
+            message: error.message,
+          },
+        };
+      }
+      throw error;
+    }
+  }
+
   const client = createJudgeLlmClient(env, options.llmClient);
   if (!client) {
-    return {
-      status: 503,
-      body: {
-        error: 'Service unavailable',
-        message: 'LLM_API_KEY is not configured on the server.',
-      },
-    };
+    try {
+      const result = judgeStructuralOnly(parsed.input);
+      return { status: 200, body: result };
+    } catch (error) {
+      if (error instanceof UnknownProblemError) {
+        return {
+          status: 400,
+          body: {
+            error: 'Invalid request',
+            message: error.message,
+          },
+        };
+      }
+      throw error;
+    }
   }
 
   try {
