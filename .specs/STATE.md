@@ -22,39 +22,43 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | UI hotfix live — Stop contrast + Share header styles |
-| **Próximo passo** | Optional human nick smoke; pick next polish/feature |
-| **Feature ativa** | polish / UI hotfix (done) |
+| **Fase atual** | UI chrome fixes shipping; next = `judge-realism` (Complex — discuss pending) |
+| **Próximo passo** | Discuss gray areas for problem-specific judge + meaningful configs; then TLC Specify |
+| **Feature ativa** | `judge-realism` (planned) |
 | **Branch** | `main` |
-| **Bloqueios** | none |
+| **Bloqueios** | Judge mock uses URL-shortener golden tiers for ALL problems when `LLM_API_KEY` missing — same graph can “pass” videoconference |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
-| **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
+| **Decisões discuss** | pending for judge-realism |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_GRa7WkmhEBHbkyn8htDALCFLGNgB` — READY (`5330f15`) |
+| **Deployment** | `dpl_99JVXdfuakhwUv9u8WFo4XYi31DZ` — READY (`b555df7` canvas-clear + paper icon + header gap) |
 | **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET (rotated) |
-| **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
-| **Bugfix** | Stop text contrast on danger; Share matches header settings button |
-| **UI fix** | Voltar in session-header leading; Componentes palette minimizable; Stop/Share chrome |
-| **Neon** | Deferred (NEON-01): KV sufficient for session history, leaderboard, progress %, daily stats |
+| **Skills** | `ddia-systems` + `interview-system-designer` installed (~/.agents/skills) |
+| **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip; compact header; tap-to-add |
+| **Bugfix** | Canvas cleared on new challenge; Stop contrast; Share styles; paper config icon; header gap |
+| **UI fix** | Voltar in header; palette minimizable; Stop/Share/config chrome |
+| **Neon** | Deferred (NEON-01) |
 
 ### Context Checkpoint (2026-07-28)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — ops + UI hotfix in same thread |
-| Uncommitted done work | current hotfix only |
-| Spec drift | GREEN |
-| Gate confidence | running blueprint-chrome + deploy |
-| Task clarity | GREEN — contrast + share style → push → Vercel |
+| Chat length | AMBER/RED — ops + hotfixes + large judge overhaul in one thread |
+| Uncommitted | GREEN after chrome commit |
+| Spec drift | GREEN for UI; judge-realism not yet specified |
+| Gate confidence | GREEN for UI tests; judge rigor unproven |
+| Task clarity | AMBER — Complex feature needs discuss before execute |
 
-**Veredito:** GREEN for scoped UI hotfix (user asked push/deploy).
+**Veredito:** AMBER — ship UI; **do not invent** judge/config architecture until discuss answers. Prefer **new session** for `judge-realism` Execute.
 
 **Prompt para nova sessão:**
 ```
-Branch main. Auth shipped; UI hotfix Stop contrast + Share header styles.
-Read .specs/STATE.md Handoff.
-Next: pick polish/feature work or human nick smoke.
+Branch main. UI chrome shipped (canvas clear on new challenge, paper config icon, header gap).
+Skills: ddia-systems + interview-system-designer installed.
+Read .specs/STATE.md Handoff. Root cause of weak judging: mock LLM maps ANY problem graph to URL-shortener golden tiers when LLM_API_KEY missing.
+Feature: judge-realism — problem-specific judging + configs that affect pass/fail + DDIA-grounded rigor.
+Discuss answers from prior chat (or ask again), then TLC Specify → Design → Tasks → Execute.
+Gate: problem A PASS must FAIL on problem B with same graph; configs change score/sim.
 ```
 
 ### Deploy note (Hobby)
