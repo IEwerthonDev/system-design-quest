@@ -69,4 +69,19 @@ describe('workload-panel', () => {
     expect(host.querySelector('[data-testid="workload-fab"]')).toBeNull();
     expect(host.querySelector('[data-testid="workload-backdrop"]')).toBeNull();
   });
+
+  it('setVisible(false) collapses panel and hides FAB', () => {
+    const panel = mount();
+    panel.open();
+    expect(panel.isOpen()).toBe(true);
+    panel.setVisible(false);
+    expect(panel.isOpen()).toBe(false);
+    expect(panel.fab.hidden).toBe(true);
+    expect(panel.root.hidden).toBe(true);
+    panel.setVisible(true);
+    expect(panel.root.hidden).toBe(false);
+    expect(panel.isOpen()).toBe(false);
+    expect(panel.fab.hidden).toBe(false);
+    panel.destroy();
+  });
 });
