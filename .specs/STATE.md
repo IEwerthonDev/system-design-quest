@@ -22,16 +22,16 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | UI hotfix: Stop contrast + Share button styles |
-| **Próximo passo** | Push/deploy hotfix; optional human nick smoke |
-| **Feature ativa** | polish / UI hotfix |
+| **Fase atual** | UI hotfix live — Stop contrast + Share header styles |
+| **Próximo passo** | Optional human nick smoke; pick next polish/feature |
+| **Feature ativa** | polish / UI hotfix (done) |
 | **Branch** | `main` |
 | **Bloqueios** | none |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | (pending hotfix deploy) |
+| **Deployment** | `dpl_GRa7WkmhEBHbkyn8htDALCFLGNgB` — READY (`5330f15`) |
 | **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET (rotated) |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Stop text contrast on danger; Share matches header settings button |
