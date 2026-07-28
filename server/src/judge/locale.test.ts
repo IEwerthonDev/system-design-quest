@@ -71,9 +71,10 @@ describe('judge locale', () => {
       },
       client,
     );
-    expect(result.criticalIssues.some((item) => /cache|load balancer/i.test(item.title))).toBe(
+    expect(result.criticalIssues.some((item) => /cache|load.?balancer|load_balancer/i.test(item.title))).toBe(
       true,
     );
-    expect(result.criticalIssues[0]?.title).toMatch(/Sem /);
+    // Structural hard-gate prepends localized blockers (e.g. "Falta …"); LLM majors use "Sem …"
+    expect(result.criticalIssues[0]?.title).toMatch(/^(Falta |Sem )/);
   });
 });

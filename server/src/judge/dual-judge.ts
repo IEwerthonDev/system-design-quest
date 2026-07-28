@@ -288,7 +288,37 @@ export function judgeStructuralOnly(input: JudgeInput): JudgeResult {
   return buildStructuralOnlyResult(report, { ...input, locale });
 }
 
-/** Run dual-judge orchestration: parallel LLM calls → consensus merge → AD-016 verdict. */
+type LlmConsensus = ReturnType<typeof mergeConsensus>;
+
+/**
+ * Inject structural blockers/majors into LLM consensus (JR-10–JR-12).
+ * LLM cannot clear structural blockers into PASS/PARTIAL.
+ */
+export function mergeWithStructuralHardGate(
+  llmConsensus: LlmConsensus,
+  report: StructuralReport,
+  input: JudgeInput,
+): JudgeResult {
+  const locale = resolveJudgeLocale(input);
+  const criticalIssues = dedupeFeedbackItems([
+    ...report.blockers,
+    ...report.majors,
+    ...llmConsensus.criticalIssues,
+  ]);
+  const verdict = applyVerdictRules(llmConsensus.score, criticalIssues);
+
+  return {
+    ...llmConsensus,
+    criticalIssues,
+    verdict,
+    summary: buildSummary(verdict, llmConsensus.score, locale),
+    nextStep: buildNextStep(verdict, criticalIssues, locale),
+    scaleNarrative: '',
+    structuralCodes: report.codes,
+  };
+}
+
+/** Run dual-judge orchestration: structural → LLM → hard-gate merge → AD-016 verdict. */
 export async function judgeSubmission(input: JudgeInput, client: LlmClient): Promise<JudgeResult> {
   const problem = getProblem(input.problemId);
   if (!problem) {
@@ -297,6 +327,12 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
 
   const locale = resolveJudgeLocale(input);
   const normalizedInput: JudgeInput = { ...input, locale };
+
+  const report = evaluateStructuralRubric({
+    problem,
+    graph: input.graph,
+    locale,
+  });
 
   const [rigorous, pragmatic] = await Promise.all([
     client.completeJson<JudgePartialResult>({
@@ -316,13 +352,5 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
   ]);
 
   const merged = mergeConsensus(rigorous, pragmatic, normalizedInput);
-  const verdict = applyVerdictRules(merged.score, merged.criticalIssues);
-
-  return {
-    ...merged,
-    verdict,
-    summary: buildSummary(verdict, merged.score, locale),
-    nextStep: buildNextStep(verdict, merged.criticalIssues, locale),
-    scaleNarrative: '',
-  };
+  return mergeWithStructuralHardGate(merged, report, normalizedInput);
 }

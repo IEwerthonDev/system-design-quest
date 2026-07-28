@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getGoldenGraph, URL_SHORTENER_ID } from '@sdq/shared';
 import type { JudgeInput } from '@sdq/shared';
+import type { FeedbackItem, JudgePartialResult } from '@sdq/shared';
 import {
   buildRequirementCoverage,
   judgeStructuralOnly,
@@ -8,9 +9,33 @@ import {
   mergeConsensus,
   UnknownProblemError,
 } from './dual-judge';
-import { createMockLlmClient, mockJudgePartial } from './mock-llm-client';
+import { createMockLlmClient, mockJudgePartial, type LlmClient } from './mock-llm-client';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 import { getProblem } from '@sdq/shared';
+
+const PASS_STRENGTH: FeedbackItem = {
+  title: 'LLM invented strength',
+  explanation: 'Stub says architecture is excellent.',
+  howToImprove: 'None',
+  whyItMatters: 'Tests narrative preservation',
+};
+
+function createPassStubClient(overrides: Partial<JudgePartialResult> = {}): LlmClient {
+  const partial: JudgePartialResult = {
+    score: 95,
+    strengths: [PASS_STRENGTH],
+    criticalIssues: [],
+    improvements: [],
+    requirementCoverage: [],
+    rationale: 'Stub LLM would PASS this design.',
+    ...overrides,
+  };
+  return {
+    async completeJson<T>(): Promise<T> {
+      return partial as T;
+    },
+  };
+}
 
 function makeInput(
   graph: JudgeInput['graph'],
@@ -227,5 +252,34 @@ describe('judgeSubmission', () => {
         status: 'missing',
       }),
     ]);
+  });
+
+  it('FAILS when stub LLM returns PASS but structural blockers exist (JR-11)', async () => {
+    const result = await judgeSubmission(
+      {
+        problemId: 'zoom-conference',
+        requirements: { functional: [], nonFunctional: [] },
+        graph: getGoldenGraph('good'),
+        mode: 'study',
+        locale: 'en',
+      },
+      createPassStubClient(),
+    );
+
+    expect(result.verdict).toBe('FAIL');
+    expect(result.criticalIssues.some((i) => i.severity === 'blocker')).toBe(true);
+    expect(result.structuralCodes).toContain('missing_component');
+  });
+
+  it('preserves LLM narrative fields when structural has no blockers (JR-12)', async () => {
+    const result = await judgeSubmission(makeInput(getGoldenGraph('good')), createPassStubClient());
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.score).toBe(95);
+    expect(result.strengths).toEqual(
+      expect.arrayContaining([expect.objectContaining({ title: PASS_STRENGTH.title })]),
+    );
+    expect(result.judgeDebate.rigorous).toContain('Stub LLM would PASS');
+    expect(result.judgeDebate.pragmatic).toContain('Stub LLM would PASS');
   });
 });
