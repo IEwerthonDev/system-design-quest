@@ -3,6 +3,8 @@ import type {
   ArchitectureGraph,
   ComponentConfig,
   ComponentNode,
+  LbAlgorithm,
+  MqDurability,
   SimulationSettings,
 } from './architecture-graph';
 
@@ -13,8 +15,23 @@ export const DEFAULT_SIMULATION: SimulationSettings = {
   readRatio: 80,
 };
 
+export const DEFAULT_CDN_TTL_SECONDS = 3600;
+export const DEFAULT_MQ_PARTITION_COUNT = 3;
+export const DEFAULT_WS_FAN_OUT = 10_000;
+
+const LB_ALGORITHMS: readonly LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
+const MQ_DURABILITIES: readonly MqDurability[] = ['memory', 'disk'];
+
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
+}
+
+function isLbAlgorithm(value: unknown): value is LbAlgorithm {
+  return typeof value === 'string' && (LB_ALGORITHMS as readonly string[]).includes(value);
+}
+
+function isMqDurability(value: unknown): value is MqDurability {
+  return typeof value === 'string' && (MQ_DURABILITIES as readonly string[]).includes(value);
 }
 
 export function defaultConfigForType(type: ComponentType): ComponentConfig | undefined {
@@ -22,7 +39,7 @@ export function defaultConfigForType(type: ComponentType): ComponentConfig | und
     return { kind: 'cache', hitRate: 90 };
   }
   if (type === 'cdn') {
-    return { kind: 'cdn', hitRate: 99 };
+    return { kind: 'cdn', hitRate: 99, ttlSeconds: DEFAULT_CDN_TTL_SECONDS };
   }
   if (type === 'sql_db') {
     return {
@@ -31,6 +48,19 @@ export function defaultConfigForType(type: ComponentType): ComponentConfig | und
       partitioningStrategy: 'hash',
       keySkew: 0,
     };
+  }
+  if (type === 'message_queue' || type === 'kafka' || type === 'pub_sub') {
+    return {
+      kind: 'mq',
+      durability: 'disk',
+      partitionCount: DEFAULT_MQ_PARTITION_COUNT,
+    };
+  }
+  if (type === 'websocket_gateway') {
+    return { kind: 'ws', fanOutLimit: DEFAULT_WS_FAN_OUT };
+  }
+  if (type === 'load_balancer') {
+    return { kind: 'lb', algorithm: 'round_robin' };
   }
   return undefined;
 }
@@ -41,10 +71,22 @@ function normalizeConfig(node: ComponentNode): ComponentConfig | undefined {
     return fallback;
   }
 
-  if (node.config.kind === 'cache' || node.config.kind === 'cdn') {
+  if (node.config.kind === 'cache') {
     return {
-      kind: node.config.kind,
+      kind: 'cache',
       hitRate: clamp(node.config.hitRate, 0, 100),
+    };
+  }
+
+  if (node.config.kind === 'cdn') {
+    const ttlRaw =
+      typeof (node.config as { ttlSeconds?: number }).ttlSeconds === 'number'
+        ? (node.config as { ttlSeconds: number }).ttlSeconds
+        : DEFAULT_CDN_TTL_SECONDS;
+    return {
+      kind: 'cdn',
+      hitRate: clamp(node.config.hitRate, 0, 100),
+      ttlSeconds: clamp(Math.round(ttlRaw), 1, 86_400),
     };
   }
 
@@ -55,6 +97,28 @@ function normalizeConfig(node: ComponentNode): ComponentConfig | undefined {
       partitioningStrategy: node.config.partitioningStrategy,
       partitionKey: node.config.partitionKey,
       keySkew: clamp(node.config.keySkew, 0, 100),
+    };
+  }
+
+  if (node.config.kind === 'mq') {
+    return {
+      kind: 'mq',
+      durability: isMqDurability(node.config.durability) ? node.config.durability : 'disk',
+      partitionCount: clamp(Math.round(node.config.partitionCount), 1, 256),
+    };
+  }
+
+  if (node.config.kind === 'ws') {
+    return {
+      kind: 'ws',
+      fanOutLimit: clamp(Math.round(node.config.fanOutLimit), 1, 1_000_000),
+    };
+  }
+
+  if (node.config.kind === 'lb') {
+    return {
+      kind: 'lb',
+      algorithm: isLbAlgorithm(node.config.algorithm) ? node.config.algorithm : 'round_robin',
     };
   }
 

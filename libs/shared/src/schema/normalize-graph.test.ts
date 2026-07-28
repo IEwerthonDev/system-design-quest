@@ -42,8 +42,27 @@ describe('normalizeGraph', () => {
     });
     expect(node.replicas).toBe(1);
     expect(node.config).toEqual({ kind: 'cache', hitRate: 90 });
-    expect(defaultConfigForType('cdn')).toEqual({ kind: 'cdn', hitRate: 99 });
+    expect(defaultConfigForType('cdn')).toEqual({
+      kind: 'cdn',
+      hitRate: 99,
+      ttlSeconds: 3600,
+    });
     expect(defaultConfigForType('sql_db')?.kind).toBe('sql_db');
+    expect(defaultConfigForType('message_queue')).toEqual({
+      kind: 'mq',
+      durability: 'disk',
+      partitionCount: 3,
+    });
+    expect(defaultConfigForType('kafka')?.kind).toBe('mq');
+    expect(defaultConfigForType('pub_sub')?.kind).toBe('mq');
+    expect(defaultConfigForType('websocket_gateway')).toEqual({
+      kind: 'ws',
+      fanOutLimit: 10_000,
+    });
+    expect(defaultConfigForType('load_balancer')).toEqual({
+      kind: 'lb',
+      algorithm: 'round_robin',
+    });
   });
 
   it('clamps simulation speed and traffic to 1–5', () => {
@@ -94,5 +113,47 @@ describe('normalizeGraph', () => {
       partitioningStrategy: 'geographic',
       keySkew: 0,
     });
+  });
+
+  it('clamps scale-critical cdn/mq/ws/lb configs (JR-22)', () => {
+    const cdn = normalizeNode({
+      id: 'cdn',
+      type: 'cdn',
+      label: 'CDN',
+      replicas: 1,
+      position: { x: 0, y: 0 },
+      config: { kind: 'cdn', hitRate: -10, ttlSeconds: 999_999 },
+    });
+    expect(cdn.config).toEqual({ kind: 'cdn', hitRate: 0, ttlSeconds: 86_400 });
+
+    const mq = normalizeNode({
+      id: 'mq',
+      type: 'message_queue',
+      label: 'MQ',
+      replicas: 1,
+      position: { x: 0, y: 0 },
+      config: { kind: 'mq', durability: 'memory', partitionCount: 0 },
+    });
+    expect(mq.config).toEqual({ kind: 'mq', durability: 'memory', partitionCount: 1 });
+
+    const ws = normalizeNode({
+      id: 'ws',
+      type: 'websocket_gateway',
+      label: 'WS',
+      replicas: 1,
+      position: { x: 0, y: 0 },
+      config: { kind: 'ws', fanOutLimit: 0 },
+    });
+    expect(ws.config).toEqual({ kind: 'ws', fanOutLimit: 1 });
+
+    const lb = normalizeNode({
+      id: 'lb',
+      type: 'load_balancer',
+      label: 'LB',
+      replicas: 1,
+      position: { x: 0, y: 0 },
+      config: { kind: 'lb', algorithm: 'least_conn' },
+    });
+    expect(lb.config).toEqual({ kind: 'lb', algorithm: 'least_conn' });
   });
 });
