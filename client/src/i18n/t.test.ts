@@ -78,8 +78,10 @@ describe('UI string catalogs + t()', () => {
   });
 
   it('keeps industry jargon English in both locales', () => {
-    expect(t('library.action.study', 'pt-BR')).toBe('Study');
+    expect(t('library.action.study', 'pt-BR')).toBe('Praticar');
     expect(t('library.action.speedrun', 'pt-BR')).toBe('Speedrun');
-    expect(t('library.action.study', 'en')).toBe('Study');
+    expect(t('library.action.study', 'en')).toBe('Practice');
+    expect(t('library.action.sandbox', 'en')).toBe('Study Mode');
+    expect(t('library.action.sandbox', 'pt-BR')).toBe('Modo Estudo');
   });
 });

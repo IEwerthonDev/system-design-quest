@@ -15,4 +15,5 @@ bundle_api server/src/vercel/api-sessions.ts api/sessions.js
 bundle_api server/src/vercel/api-leaderboard.ts api/leaderboard.js
 bundle_api server/src/vercel/api-cron.ts api/cron.js
 bundle_api server/src/vercel/api-auth.ts api/auth.js
+bundle_api server/src/vercel/api-mentor.ts api/mentor.js
 npx nx run client:build

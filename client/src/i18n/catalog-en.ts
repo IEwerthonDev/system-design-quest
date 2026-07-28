@@ -15,6 +15,8 @@ export type UiStringKey =
   | 'library.action.study'
   | 'library.action.speedrun'
   | 'library.action.ranking'
+  | 'library.action.sandbox'
+  | 'library.sandbox.blurb'
   | 'library.warn.hard'
   | 'library.warn.speedrunMedium'
   | 'library.locale.en'
@@ -157,7 +159,27 @@ export type UiStringKey =
   | 'palette.title'
   | 'palette.fab'
   | 'palette.hint'
-  | 'palette.collapse';
+  | 'palette.collapse'
+  | 'findings.title'
+  | 'workload.title'
+  | 'workload.rps'
+  | 'workload.readRps'
+  | 'workload.writeRps'
+  | 'workload.concurrentUsers'
+  | 'workload.avgObjectKb'
+  | 'workload.avgResponseKb'
+  | 'workload.networkLatencyMs'
+  | 'workload.bandwidthMbps'
+  | 'workload.targetAvailability'
+  | 'workload.growthFactor'
+  | 'workload.dailyDataGb'
+  | 'mentor.title'
+  | 'mentor.evaluate'
+  | 'mentor.hint'
+  | 'mentor.bottlenecks'
+  | 'mentor.improve'
+  | 'mentor.missing'
+  | 'mentor.error';
 
 export type UiCatalog = Record<UiStringKey, string>;
 
@@ -173,13 +195,16 @@ export const CATALOG_EN: UiCatalog = {
   'library.badge.recommended': 'Recommended',
   'library.badge.tutorial': 'Tutorial',
   'library.badge.completed': 'Completed',
-  'library.action.study': 'Study',
+  'library.action.study': 'Practice',
   'library.action.speedrun': 'Speedrun',
   'library.action.ranking': 'Ranking',
+  'library.action.sandbox': 'Study Mode',
+  'library.sandbox.blurb':
+    'Freeform canvas — set RPS, users, and NFRs, then ask the AI mentor on demand.',
   'library.warn.hard':
     'This is a hard problem — we recommend completing at least one 🟢 Easy first. You can continue anyway.',
   'library.warn.speedrunMedium':
-    'Speedrun on Medium problems works better after completing 2 Easy in Study. Full timer arrives in Phase 4.',
+    'Speedrun on Medium problems works better after completing 2 Easy in Practice. Full timer arrives in Phase 4.',
   'library.locale.en': 'EN',
   'library.locale.ptBR': 'PT-BR',
   'library.badge.new': 'New',
@@ -325,6 +350,26 @@ export const CATALOG_EN: UiCatalog = {
   'palette.hint':
     'Tap a component to place it on the canvas. Drag cards and use the ○→ handle to connect.',
   'palette.collapse': 'Minimize components',
+  'findings.title': 'Findings',
+  'workload.title': 'Workload',
+  'workload.rps': 'RPS',
+  'workload.readRps': 'Reads/s',
+  'workload.writeRps': 'Writes/s',
+  'workload.concurrentUsers': 'Concurrent users',
+  'workload.avgObjectKb': 'Avg object (KB)',
+  'workload.avgResponseKb': 'Avg response (KB)',
+  'workload.networkLatencyMs': 'Network latency (ms)',
+  'workload.bandwidthMbps': 'Bandwidth (Mbps)',
+  'workload.targetAvailability': 'Target availability %',
+  'workload.growthFactor': 'Growth factor',
+  'workload.dailyDataGb': 'Daily data (GB)',
+  'mentor.title': 'AI Mentor',
+  'mentor.evaluate': 'Evaluate architecture',
+  'mentor.hint': 'Give me a hint',
+  'mentor.bottlenecks': 'Find bottlenecks',
+  'mentor.improve': 'How to improve?',
+  'mentor.missing': 'Am I missing something?',
+  'mentor.error': 'Mentor error',
 };
 
 export type { Locale };

@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import { registerHealthRoutes } from './routes/health';
 import { registerJudgeRoutes } from './routes/judge';
+import { registerMentorRoutes } from './routes/mentor';
 import { registerLeaderboardRoutes } from './routes/leaderboard';
 import { registerSessionRoutes } from './routes/sessions';
 import type { LlmClient } from './judge/mock-llm-client';
@@ -23,6 +24,7 @@ export async function buildApp(options: BuildAppOptions = {}) {
   const app = Fastify({ logger: false });
   await registerHealthRoutes(app, VERSION);
   await registerJudgeRoutes(app, { env, llmClient: options.llmClient });
+  await registerMentorRoutes(app, { env, llmClient: options.llmClient });
   await registerLeaderboardRoutes(app, { store: options.leaderboardStore });
   await registerSessionRoutes(app, { env, store: options.sessionStore });
   return app;

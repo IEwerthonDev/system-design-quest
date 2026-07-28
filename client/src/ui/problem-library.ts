@@ -10,6 +10,7 @@ import type { LeaderboardEntry, DesignSessionRecord } from '@sdq/shared';
 import { getLocale, setLocale, type Locale } from '../i18n/locale';
 import { t } from '../i18n/t';
 import type { GameMode } from '../test-hook';
+import { SANDBOX_PROBLEM_ID } from '@sdq/shared';
 import { DIFFICULTY_LABELS } from './briefing-panel';
 import {
   completionPercentByDifficulty,
@@ -420,6 +421,28 @@ function injectLibraryStyles(root: HTMLElement): void {
       opacity: 0.45;
       cursor: not-allowed;
     }
+    .sdq-library__sandbox {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 0 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--sdq-accent-border, rgba(56, 189, 248, 0.35));
+      background: rgba(56, 189, 248, 0.08);
+    }
+    .sdq-library__sandbox-blurb {
+      margin: 0;
+      flex: 1 1 220px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      color: var(--sdq-text-subtle, #a1a1aa);
+    }
+    .sdq-library__sandbox-btn {
+      flex: 0 0 auto;
+    }
   `;
   root.append(style);
 }
@@ -530,6 +553,28 @@ export function mountProblemLibrary(
     }
   });
 
+  const sandboxHero = document.createElement('div');
+  sandboxHero.className = 'sdq-library__sandbox';
+  sandboxHero.setAttribute('data-testid', 'library-sandbox');
+
+  const sandboxBlurb = document.createElement('p');
+  sandboxBlurb.className = 'sdq-library__sandbox-blurb';
+  sandboxBlurb.setAttribute('data-testid', 'library-sandbox-blurb');
+
+  const sandboxBtn = document.createElement('button');
+  sandboxBtn.type = 'button';
+  sandboxBtn.className = 'sdq-library__action sdq-library__action--primary sdq-library__sandbox-btn';
+  sandboxBtn.setAttribute('data-testid', 'library-sandbox-cta');
+  sandboxBtn.addEventListener('click', () => {
+    if (edgeFlags.maintenance) {
+      syncEdgeBanner();
+      return;
+    }
+    callbacks.onSelect({ problemId: SANDBOX_PROBLEM_ID, mode: 'sandbox' });
+  });
+
+  sandboxHero.append(sandboxBlurb, sandboxBtn);
+
   const filters = document.createElement('div');
   filters.className = 'sdq-library__filters';
 
@@ -541,7 +586,17 @@ export function mountProblemLibrary(
   grid.className = 'sdq-library__grid';
   grid.setAttribute('data-testid', 'library-grid');
 
-  inner.append(header, subtitle, edgeBanner, warning, continueBtn, filters, progressRow, grid);
+  inner.append(
+    header,
+    subtitle,
+    sandboxHero,
+    edgeBanner,
+    warning,
+    continueBtn,
+    filters,
+    progressRow,
+    grid,
+  );
   scroll.append(inner);
   panel.append(scroll);
   container.append(panel);
@@ -581,6 +636,9 @@ export function mountProblemLibrary(
     subtitle.textContent = t('library.subtitle', currentLocale, storage);
     sessionsButton.textContent = t('library.sessions', currentLocale, storage);
     continueBtn.textContent = t('continue.cta', currentLocale, storage);
+    sandboxBlurb.textContent = t('library.sandbox.blurb', currentLocale, storage);
+    sandboxBtn.textContent = t('library.action.sandbox', currentLocale, storage);
+    sandboxBtn.disabled = edgeFlags.maintenance;
     renderLocaleButtons();
   };
 
@@ -780,7 +838,7 @@ export function mountProblemLibrary(
 
     const meta = document.createElement('p');
     meta.className = 'sdq-library__meta';
-    meta.textContent = `~${problem.estimatedMinutes.study} min Study`;
+    meta.textContent = `~${problem.estimatedMinutes.study} min`;
 
     const actions = document.createElement('div');
     actions.className = 'sdq-library__actions';

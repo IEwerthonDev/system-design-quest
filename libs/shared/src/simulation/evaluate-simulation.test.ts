@@ -272,4 +272,58 @@ describe('evaluateSimulation', () => {
     const high = evaluateSimulation(wsGraph(10_000));
     expect(order[low.nodes.ws!]).toBeGreaterThan(order[high.nodes.ws!]);
   });
+
+  it('marks uncached SQL hot under absolute 50k read-heavy RPS', () => {
+    const graph: ArchitectureGraph = {
+      nodes: [
+        {
+          id: 'client',
+          type: 'client_web',
+          label: 'Client',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'app',
+          type: 'app_server',
+          label: 'App',
+          replicas: 1,
+          position: { x: 100, y: 0 },
+        },
+        {
+          id: 'db',
+          type: 'sql_db',
+          label: 'SQL',
+          replicas: 1,
+          position: { x: 200, y: 0 },
+          config: {
+            kind: 'sql_db',
+            shardCount: 1,
+            partitioningStrategy: 'hash',
+            keySkew: 0,
+            accessPattern: 'read_write',
+            topologyRole: 'primary',
+            replicationFactor: 1,
+            consistency: 'strong',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1', from: 'client', to: 'app', direction: 'forward', label: 'REQ' },
+        { id: 'e2', from: 'app', to: 'db', direction: 'forward', label: 'DB' },
+      ],
+      simulation: {
+        running: true,
+        speed: 1,
+        traffic: 1,
+        readRatio: 90,
+        rps: 50_000,
+        readRps: 45_000,
+        writeRps: 5_000,
+      },
+    };
+    const result = evaluateSimulation(graph);
+    expect(result.ingressRps).toBe(50_000);
+    expect(result.nodes.db).toBe('hot');
+  });
 });

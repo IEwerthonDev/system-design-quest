@@ -17,3 +17,4 @@ api/sessions.js
 api/leaderboard.js
 api/cron.js
 api/auth.js
+api/mentor.js

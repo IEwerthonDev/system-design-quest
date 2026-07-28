@@ -28,6 +28,31 @@ export const DEFAULT_SIMULATION: SimulationSettings = {
   readRatio: 80,
 };
 
+/** Maps traffic=1 → this many RPS when absolute workload fields are set. */
+export const BASE_RPS = 200;
+
+export const SANDBOX_PROBLEM_ID = '__sandbox__';
+
+export function hasAbsoluteWorkload(sim: SimulationSettings): boolean {
+  return (
+    (sim.rps != null && sim.rps > 0) ||
+    (sim.readRps != null && sim.readRps > 0) ||
+    (sim.writeRps != null && sim.writeRps > 0)
+  );
+}
+
+export function resolveIngressRps(sim: SimulationSettings): number {
+  const read = sim.readRps ?? 0;
+  const write = sim.writeRps ?? 0;
+  if (read + write > 0) {
+    return read + write;
+  }
+  if (sim.rps != null && sim.rps > 0) {
+    return sim.rps;
+  }
+  return BASE_RPS * sim.traffic;
+}
+
 export const DEFAULT_CDN_TTL_SECONDS = 3600;
 export const DEFAULT_MQ_PARTITION_COUNT = 3;
 export const DEFAULT_WS_FAN_OUT = 10_000;
@@ -427,15 +452,57 @@ export function normalizeNode(node: ComponentNode): ComponentNode {
   return normalized;
 }
 
+function optionalPositive(value: unknown, max: number): number | undefined {
+  if (value == null || value === '') {
+    return undefined;
+  }
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n) || n < 0) {
+    return undefined;
+  }
+  return clamp(n, 0, max);
+}
+
 export function normalizeSimulation(
   simulation?: Partial<SimulationSettings> | null,
 ): SimulationSettings {
-  return {
+  const readRps = optionalPositive(simulation?.readRps, 10_000_000);
+  const writeRps = optionalPositive(simulation?.writeRps, 10_000_000);
+  let readRatio = clamp(simulation?.readRatio ?? DEFAULT_SIMULATION.readRatio, 0, 100);
+  if ((readRps ?? 0) + (writeRps ?? 0) > 0) {
+    const total = (readRps ?? 0) + (writeRps ?? 0);
+    readRatio = clamp(Math.round((100 * (readRps ?? 0)) / total), 0, 100);
+  }
+
+  const result: SimulationSettings = {
     running: Boolean(simulation?.running),
     speed: clamp(simulation?.speed ?? DEFAULT_SIMULATION.speed, 1, 5),
     traffic: clamp(simulation?.traffic ?? DEFAULT_SIMULATION.traffic, 1, 5),
-    readRatio: clamp(simulation?.readRatio ?? DEFAULT_SIMULATION.readRatio, 0, 100),
+    readRatio,
   };
+
+  const rps = optionalPositive(simulation?.rps, 10_000_000);
+  if (rps != null) result.rps = rps;
+  const concurrentUsers = optionalPositive(simulation?.concurrentUsers, 100_000_000);
+  if (concurrentUsers != null) result.concurrentUsers = concurrentUsers;
+  if (readRps != null) result.readRps = readRps;
+  if (writeRps != null) result.writeRps = writeRps;
+  const avgObjectKb = optionalPositive(simulation?.avgObjectKb, 1_000_000);
+  if (avgObjectKb != null) result.avgObjectKb = avgObjectKb;
+  const avgResponseKb = optionalPositive(simulation?.avgResponseKb, 1_000_000);
+  if (avgResponseKb != null) result.avgResponseKb = avgResponseKb;
+  const networkLatencyMs = optionalPositive(simulation?.networkLatencyMs, 60_000);
+  if (networkLatencyMs != null) result.networkLatencyMs = networkLatencyMs;
+  const bandwidthMbps = optionalPositive(simulation?.bandwidthMbps, 1_000_000);
+  if (bandwidthMbps != null) result.bandwidthMbps = bandwidthMbps;
+  const targetAvailability = optionalPositive(simulation?.targetAvailability, 100);
+  if (targetAvailability != null) result.targetAvailability = targetAvailability;
+  const growthFactor = optionalPositive(simulation?.growthFactor, 10_000);
+  if (growthFactor != null) result.growthFactor = growthFactor;
+  const dailyDataGb = optionalPositive(simulation?.dailyDataGb, 1_000_000);
+  if (dailyDataGb != null) result.dailyDataGb = dailyDataGb;
+
+  return result;
 }
 
 /** Fill defaults for legacy graphs missing replicas / simulation / notes. */
