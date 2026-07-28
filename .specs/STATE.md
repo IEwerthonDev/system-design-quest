@@ -29,7 +29,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Bloqueios** | None — Baseline 27 + Deep Core 13 + discrimination ≥3 pairs + scale UI + Hobby rebuild verified |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
 | **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
-| **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 (esbuild rebuild; `api/judge.js` gitignored — see T19 commit) |
+| **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 `59a9c94` |
 | **Gate** | shared 115 + server 137 + client 408 = 660 passed (0 failed); lint green |
 | **T19 note** | Rebuilt via `esbuild` from `scripts/vercel-build.sh` entry; bundle contains `evaluateStructuralRubric` / `scaleNarrative`; artifact not committed (`.gitignore`) |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
