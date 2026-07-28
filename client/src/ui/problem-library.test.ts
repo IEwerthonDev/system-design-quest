@@ -333,6 +333,86 @@ describe('problem library UI', () => {
     });
     expect(container.querySelector('[data-testid="continue-session"]')?.hidden).toBe(true);
   });
+
+  it('shows maintenance banner and blocks new session start', () => {
+    const onSelect = vi.fn();
+    mountProblemLibrary(
+      container,
+      {
+        onSelect,
+        edgeFlags: {
+          maintenance: true,
+          newProblemIds: [],
+          bannerText: 'Down for maintenance',
+        },
+      },
+      storage,
+    );
+
+    const banner = container.querySelector('[data-testid="library-edge-banner"]') as HTMLElement;
+    expect(banner.hidden).toBe(false);
+    expect(banner.textContent).toContain('Down for maintenance');
+
+    const study = container.querySelector(
+      '[data-testid="problem-study-url-shortener"]',
+    ) as HTMLButtonElement;
+    expect(study.disabled).toBe(true);
+    study.click();
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it('reflects newProblemIds badge and bannerText when present', () => {
+    mountProblemLibrary(
+      container,
+      {
+        onSelect: () => undefined,
+        edgeFlags: {
+          maintenance: false,
+          newProblemIds: ['url-shortener'],
+          bannerText: 'Fresh problems landed',
+        },
+      },
+      storage,
+    );
+
+    const banner = container.querySelector('[data-testid="library-edge-banner"]') as HTMLElement;
+    expect(banner.hidden).toBe(false);
+    expect(banner.textContent).toContain('Fresh problems landed');
+    expect(
+      container.querySelector('[data-testid="library-new-badge-url-shortener"]'),
+    ).toBeTruthy();
+
+    const study = container.querySelector(
+      '[data-testid="problem-study-url-shortener"]',
+    ) as HTMLButtonElement;
+    expect(study.disabled).toBe(false);
+  });
+
+  it('fail-open when edge config loader rejects — app stays playable', async () => {
+    const onSelect = vi.fn();
+    mountProblemLibrary(
+      container,
+      {
+        onSelect,
+        loadEdgeFlagsFn: async () => {
+          throw new Error('unreachable');
+        },
+      },
+      storage,
+    );
+
+    await vi.waitFor(() => {
+      const study = container.querySelector(
+        '[data-testid="problem-study-url-shortener"]',
+      ) as HTMLButtonElement;
+      expect(study.disabled).toBe(false);
+    });
+
+    container
+      .querySelector<HTMLButtonElement>('[data-testid="problem-study-url-shortener"]')!
+      .click();
+    expect(onSelect).toHaveBeenCalledWith({ problemId: 'url-shortener', mode: 'study' });
+  });
 });
 
 function librarySetHardAndClick(container: ParentNode): void {

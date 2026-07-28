@@ -19,6 +19,11 @@ import {
 } from '../storage/progress';
 import { loadNickname } from '../storage/nickname';
 import { listSessions, type ListSessionsQuery, type SessionsApiOptions } from '../sessions/sessions-api';
+import {
+  DEFAULT_EDGE_FLAGS,
+  loadEdgeFlags,
+  type EdgeFlags,
+} from '../config/edge-flags';
 import { mountLeaderboardPanel } from './leaderboard-panel';
 
 export type LibraryFilter = Difficulty | 'all';
@@ -42,6 +47,10 @@ export interface ProblemLibraryCallbacks {
   fetchLeaderboard?: (
     problemId: string,
   ) => Promise<{ problemId: string; entries: LeaderboardEntry[] }>;
+  /** Preloaded Edge Config flags (tests / bootstrap). */
+  edgeFlags?: EdgeFlags;
+  /** Injectable Edge Config loader; defaults to loadEdgeFlags. */
+  loadEdgeFlagsFn?: () => Promise<EdgeFlags>;
 }
 
 export interface ProblemLibraryPanel {
@@ -382,6 +391,32 @@ function injectLibraryStyles(root: HTMLElement): void {
     .sdq-library__continue[hidden] {
       display: none !important;
     }
+    .sdq-library__edge-banner {
+      margin: 0 0 0.75rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: rgba(234, 179, 8, 0.15);
+      border: 1px solid rgba(234, 179, 8, 0.45);
+      color: #fde68a;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .sdq-library__edge-banner[hidden] {
+      display: none !important;
+    }
+    .sdq-library__edge-banner--maintenance {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.45);
+      color: #fecaca;
+    }
+    .sdq-library__badge--new {
+      background: rgba(56, 189, 248, 0.2);
+      color: #7dd3fc;
+    }
+    .sdq-library__action:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
   `;
   root.append(style);
 }
@@ -397,6 +432,9 @@ export function mountProblemLibrary(
   let warningMessage: string | null = null;
   let warningKind: 'hard' | 'speedrunMedium' | null = null;
   let currentLocale: Locale = getLocale(storage);
+  let edgeFlags: EdgeFlags = callbacks.edgeFlags
+    ? { ...callbacks.edgeFlags }
+    : { ...DEFAULT_EDGE_FLAGS };
 
   const panel = document.createElement('div');
   panel.className = 'sdq-library';
@@ -463,6 +501,11 @@ export function mountProblemLibrary(
   warning.setAttribute('data-testid', 'library-warning');
   warning.hidden = true;
 
+  const edgeBanner = document.createElement('div');
+  edgeBanner.className = 'sdq-library__edge-banner';
+  edgeBanner.setAttribute('data-testid', 'library-edge-banner');
+  edgeBanner.hidden = true;
+
   const continueBtn = document.createElement('button');
   continueBtn.type = 'button';
   continueBtn.className = 'sdq-library__continue';
@@ -486,7 +529,7 @@ export function mountProblemLibrary(
   grid.className = 'sdq-library__grid';
   grid.setAttribute('data-testid', 'library-grid');
 
-  inner.append(header, subtitle, warning, continueBtn, filters, progressRow, grid);
+  inner.append(header, subtitle, edgeBanner, warning, continueBtn, filters, progressRow, grid);
   scroll.append(inner);
   panel.append(scroll);
   container.append(panel);
@@ -609,6 +652,11 @@ export function mountProblemLibrary(
   };
 
   const handleSelect = (problem: Problem, mode: GameMode): void => {
+    if (edgeFlags.maintenance) {
+      syncEdgeBanner();
+      return;
+    }
+
     const completedEasy = getCompletedEasyCount();
 
     if (shouldWarnHardSelection(problem, completedEasy)) {
@@ -626,6 +674,30 @@ export function mountProblemLibrary(
     }
 
     callbacks.onSelect({ problemId: problem.id, mode });
+  };
+
+  const syncEdgeBanner = (): void => {
+    const parts: string[] = [];
+    if (edgeFlags.maintenance) {
+      parts.push(
+        edgeFlags.bannerText.trim() ||
+          t('library.maintenance', currentLocale, storage),
+      );
+    } else if (edgeFlags.bannerText.trim()) {
+      parts.push(edgeFlags.bannerText.trim());
+    }
+    if (parts.length === 0) {
+      edgeBanner.hidden = true;
+      edgeBanner.textContent = '';
+      edgeBanner.classList.remove('sdq-library__edge-banner--maintenance');
+      return;
+    }
+    edgeBanner.hidden = false;
+    edgeBanner.textContent = parts.join(' ');
+    edgeBanner.classList.toggle(
+      'sdq-library__edge-banner--maintenance',
+      edgeFlags.maintenance,
+    );
   };
 
   const renderProblemCard = (problem: Problem): HTMLElement => {
@@ -675,6 +747,14 @@ export function mountProblemLibrary(
       badges.append(tutorial);
     }
 
+    if (edgeFlags.newProblemIds.includes(problem.id)) {
+      const neu = document.createElement('span');
+      neu.className = 'sdq-library__badge sdq-library__badge--new';
+      neu.setAttribute('data-testid', `library-new-badge-${problem.id}`);
+      neu.textContent = t('library.badge.new', currentLocale, storage);
+      badges.append(neu);
+    }
+
     if (completed) {
       const done = document.createElement('span');
       done.className = 'sdq-library__badge sdq-library__badge--completed';
@@ -698,6 +778,7 @@ export function mountProblemLibrary(
     studyButton.className = 'sdq-library__action sdq-library__action--primary';
     studyButton.setAttribute('data-testid', `problem-study-${problem.id}`);
     studyButton.textContent = t('library.action.study', currentLocale, storage);
+    studyButton.disabled = edgeFlags.maintenance;
     studyButton.addEventListener('click', () => handleSelect(problem, 'study'));
 
     const speedrunButton = document.createElement('button');
@@ -705,6 +786,7 @@ export function mountProblemLibrary(
     speedrunButton.className = 'sdq-library__action';
     speedrunButton.setAttribute('data-testid', `problem-speedrun-${problem.id}`);
     speedrunButton.textContent = t('library.action.speedrun', currentLocale, storage);
+    speedrunButton.disabled = edgeFlags.maintenance;
     speedrunButton.addEventListener('click', () => handleSelect(problem, 'speedrun'));
 
     const rankingButton = document.createElement('button');
@@ -737,6 +819,7 @@ export function mountProblemLibrary(
   const refreshLocale = (): void => {
     currentLocale = getLocale(storage);
     renderChrome();
+    syncEdgeBanner();
     renderFilters();
     renderProgress();
     syncWarning();
@@ -755,6 +838,21 @@ export function mountProblemLibrary(
 
   refreshLocale();
   void loadProgress(storage);
+
+  const applyEdgeFlags = (flags: EdgeFlags): void => {
+    edgeFlags = { ...flags };
+    syncEdgeBanner();
+    renderGrid();
+  };
+
+  if (!callbacks.edgeFlags) {
+    const loader = callbacks.loadEdgeFlagsFn ?? (() => loadEdgeFlags());
+    void loader()
+      .then(applyEdgeFlags)
+      .catch(() => {
+        applyEdgeFlags({ ...DEFAULT_EDGE_FLAGS });
+      });
+  }
 
   const resolveContinueSession = async (): Promise<void> => {
     continueSession = null;

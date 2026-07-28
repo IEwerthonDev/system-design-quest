@@ -19,6 +19,8 @@ export type UiStringKey =
   | 'library.warn.speedrunMedium'
   | 'library.locale.en'
   | 'library.locale.ptBR'
+  | 'library.badge.new'
+  | 'library.maintenance'
   | 'sessions.title'
   | 'sessions.back'
   | 'sessions.empty'
@@ -59,6 +61,8 @@ export const CATALOG_EN: UiCatalog = {
     'Speedrun on Medium problems works better after completing 2 Easy in Study. Full timer arrives in Phase 4.',
   'library.locale.en': 'EN',
   'library.locale.ptBR': 'PT-BR',
+  'library.badge.new': 'New',
+  'library.maintenance': 'Maintenance in progress — new sessions are temporarily unavailable.',
   'sessions.title': 'My sessions',
   'sessions.back': 'Back',
   'sessions.empty': 'No sessions in this status.',

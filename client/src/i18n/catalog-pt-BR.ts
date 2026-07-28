@@ -21,6 +21,9 @@ export const CATALOG_PT_BR: UiCatalog = {
     'Speedrun em problemas Médios funciona melhor após concluir 2 Easy em Study. Timer completo chega na Fase 4.',
   'library.locale.en': 'EN',
   'library.locale.ptBR': 'PT-BR',
+  'library.badge.new': 'Novo',
+  'library.maintenance':
+    'Manutenção em andamento — novas sessões estão temporariamente indisponíveis.',
   'sessions.title': 'Minhas sessões',
   'sessions.back': 'Voltar',
   'sessions.empty': 'Nenhuma sessão neste status.',
