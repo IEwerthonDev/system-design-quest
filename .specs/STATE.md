@@ -22,28 +22,28 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `study-mode` merged to `main` + production READY |
-| **Próximo passo** | Smoke UI: Study Mode CTA → workload → Start → mentor buttons |
-| **Feature ativa** | none (`study-mode` shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `link-validity-sim-realism` — Execute done, ship pending |
+| **Próximo passo** | Merge PR → production deploy; smoke: link preview colors + mentor bottlenecks |
+| **Feature ativa** | `link-validity-sim-realism` |
+| **Branch** | `feature/link-validity-sim-realism` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033 |
-| **Gate** | lint+test green pre-merge |
-| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/5 (squash `82af861`) |
+| **Decisões** | AD-031·032·033·034 |
+| **Gate** | `nx run-many -t lint test` |
+| **PR** | (pending) |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_7sWPkg6sn75AFHVDwPGroNrywe8F` READY (`api/mentor` live) |
+| **Deployment** | previous study-mode READY; this feature not yet production |
 
-### Context Checkpoint (2026-07-28 study-mode ship)
+### Context Checkpoint (2026-07-28 link-validity)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — epic shipped |
-| Uncommitted | docs commit |
+| Chat length | AMBER — multi-task ship (user continued) |
+| Uncommitted | docs only after T7 |
 | Spec drift | GREEN |
-| Gate confidence | GREEN |
-| Task clarity | GREEN — done |
+| Gate confidence | pending full gate |
+| Task clarity | GREEN — T1–T6 committed |
 
-**Veredito:** GREEN — shipped
+**Veredito:** GREEN — proceed to gate + ship
 
 ### Deploy note (Hobby)
 
@@ -111,6 +111,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-031 | active | **Sim v2** — absolute workload fields on `SimulationSettings`; path-aware RPS mode when absolute set; traffic 1–5 back-compat; edge intent weights; topology findings via `analyzeTopology` | Extends AD-020; study-mode realism |
 | AD-032 | active | **Sandbox Study Mode** — `GameMode` += `sandbox`; `__sandbox__` sentinel problem; library CTA; skip briefing/requirements; Practice rename for problem `study` | Freeform lab; AD-005 extended |
 | AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
+| AD-034 | active | **Link validity + sim realism** — `assessConnectionPair` ok/warn/invalid; live preview colors; invalid blocked; warn yellow edges; findings always-on; async MQ write relief; primary write concentration; `QUEUE_BACKLOG` + `HOT_PARTITION` | Pedagogue canvas + interview-realistic bottlenecks without discrete-event sim |
 
 ---
 
