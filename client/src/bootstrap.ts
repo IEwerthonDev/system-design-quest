@@ -130,6 +130,25 @@ function showLibrary(
         clearAppUi(container, blueprintHost);
         showSessionsDashboard(container, blueprintHost, preferences);
       },
+      onContinueSession: (record) => {
+        clearAppUi(container, blueprintHost);
+        mountPhaseNavigation(container, {
+          canvas: blueprintHost,
+          problemId: record.problemId,
+          mode: record.mode ?? 'study',
+          designSession: record,
+          experienceLevel: preferences.experienceLevel,
+          storage: optionsStorage,
+          onExitToLibrary: () => {
+            clearAppUi(container, blueprintHost);
+            showLibrary(container, blueprintHost, preferences);
+          },
+          onOpenSessions: (status) => {
+            clearAppUi(container, blueprintHost);
+            showSessionsDashboard(container, blueprintHost, preferences, status);
+          },
+        });
+      },
       fetchLeaderboard,
     },
     optionsStorage,

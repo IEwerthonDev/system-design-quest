@@ -237,6 +237,102 @@ describe('problem library UI', () => {
       container.querySelector('[data-testid="problem-title-url-shortener"]')?.textContent,
     ).toBe('URL Shortener');
   });
+
+  it('shows continue-session for latest in_progress and opens it on click', async () => {
+    const older = {
+      id: 'old',
+      problemId: 'rate-limiter',
+      playerNickname: 'alice',
+      status: 'in_progress' as const,
+      graph: { nodes: [], edges: [] },
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    const latest = {
+      id: 'new',
+      problemId: 'url-shortener',
+      playerNickname: 'alice',
+      status: 'in_progress' as const,
+      graph: {
+        nodes: [
+          {
+            id: 'n1',
+            type: 'app_server' as const,
+            label: 'App',
+            position: { x: 0, y: 0, z: 0 },
+          },
+        ],
+        edges: [],
+      },
+      createdAt: '2026-02-01T00:00:00.000Z',
+      updatedAt: '2026-02-02T00:00:00.000Z',
+      mode: 'study' as const,
+    };
+    const listSessionsFn = vi.fn().mockResolvedValue([older, latest]);
+    const onContinueSession = vi.fn();
+
+    mountProblemLibrary(
+      container,
+      {
+        onSelect: () => undefined,
+        onContinueSession,
+        listSessionsFn,
+        getNickname: () => 'alice',
+      },
+      storage,
+    );
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-testid="continue-session"]')?.hidden).toBe(false);
+    });
+    expect(listSessionsFn).toHaveBeenCalledWith(
+      { nickname: 'alice', status: 'in_progress' },
+      expect.anything(),
+    );
+
+    container.querySelector<HTMLButtonElement>('[data-testid="continue-session"]')!.click();
+    expect(onContinueSession).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'new', problemId: 'url-shortener' }),
+    );
+  });
+
+  it('hides continue-session when nickname is empty without listing sessions', async () => {
+    const listSessionsFn = vi.fn();
+    mountProblemLibrary(
+      container,
+      {
+        onSelect: () => undefined,
+        onContinueSession: () => undefined,
+        listSessionsFn,
+        getNickname: () => '',
+      },
+      storage,
+    );
+
+    await vi.waitFor(() => {
+      expect(container.querySelector('[data-testid="continue-session"]')?.hidden).toBe(true);
+    });
+    expect(listSessionsFn).not.toHaveBeenCalled();
+  });
+
+  it('hides continue-session when there is no in_progress session', async () => {
+    const listSessionsFn = vi.fn().mockResolvedValue([]);
+    mountProblemLibrary(
+      container,
+      {
+        onSelect: () => undefined,
+        onContinueSession: () => undefined,
+        listSessionsFn,
+        getNickname: () => 'alice',
+      },
+      storage,
+    );
+
+    await vi.waitFor(() => {
+      expect(listSessionsFn).toHaveBeenCalled();
+    });
+    expect(container.querySelector('[data-testid="continue-session"]')?.hidden).toBe(true);
+  });
 });
 
 function librarySetHardAndClick(container: ParentNode): void {

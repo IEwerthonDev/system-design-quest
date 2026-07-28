@@ -6,7 +6,7 @@ import {
   type Difficulty,
   type Problem,
 } from '@sdq/shared';
-import type { LeaderboardEntry } from '@sdq/shared';
+import type { LeaderboardEntry, DesignSessionRecord } from '@sdq/shared';
 import { getLocale, setLocale, type Locale } from '../i18n/locale';
 import { t } from '../i18n/t';
 import type { GameMode } from '../test-hook';
@@ -17,6 +17,8 @@ import {
   isProblemCompleted,
   loadProgress,
 } from '../storage/progress';
+import { loadNickname } from '../storage/nickname';
+import { listSessions, type ListSessionsQuery, type SessionsApiOptions } from '../sessions/sessions-api';
 import { mountLeaderboardPanel } from './leaderboard-panel';
 
 export type LibraryFilter = Difficulty | 'all';
@@ -29,6 +31,14 @@ export interface LibrarySelection {
 export interface ProblemLibraryCallbacks {
   onSelect: (selection: LibrarySelection) => void;
   onOpenSessions?: () => void;
+  /** Resume latest in_progress session (same path as dashboard reopen). */
+  onContinueSession?: (session: DesignSessionRecord) => void;
+  listSessionsFn?: (
+    query: ListSessionsQuery,
+    options?: SessionsApiOptions,
+  ) => Promise<DesignSessionRecord[]>;
+  /** Return null/empty to hide continue shortcut without remote calls. */
+  getNickname?: () => string | null;
   fetchLeaderboard?: (
     problemId: string,
   ) => Promise<{ problemId: string; entries: LeaderboardEntry[] }>;
@@ -356,6 +366,22 @@ function injectLibraryStyles(root: HTMLElement): void {
     .sdq-library__warning[hidden] {
       display: none;
     }
+    .sdq-library__continue {
+      width: 100%;
+      margin: 0 0 8px;
+      border: 1px solid var(--sdq-accent-border);
+      background: var(--sdq-accent-muted, rgba(201,169,98,0.15));
+      color: var(--sdq-accent);
+      border-radius: var(--sdq-radius-sm);
+      padding: 12px 14px;
+      font: 600 14px var(--sdq-font);
+      cursor: pointer;
+      touch-action: manipulation;
+      text-align: left;
+    }
+    .sdq-library__continue[hidden] {
+      display: none !important;
+    }
   `;
   root.append(style);
 }
@@ -437,6 +463,18 @@ export function mountProblemLibrary(
   warning.setAttribute('data-testid', 'library-warning');
   warning.hidden = true;
 
+  const continueBtn = document.createElement('button');
+  continueBtn.type = 'button';
+  continueBtn.className = 'sdq-library__continue';
+  continueBtn.setAttribute('data-testid', 'continue-session');
+  continueBtn.hidden = true;
+  let continueSession: DesignSessionRecord | null = null;
+  continueBtn.addEventListener('click', () => {
+    if (continueSession) {
+      callbacks.onContinueSession?.(continueSession);
+    }
+  });
+
   const filters = document.createElement('div');
   filters.className = 'sdq-library__filters';
 
@@ -448,7 +486,7 @@ export function mountProblemLibrary(
   grid.className = 'sdq-library__grid';
   grid.setAttribute('data-testid', 'library-grid');
 
-  inner.append(header, subtitle, warning, filters, progressRow, grid);
+  inner.append(header, subtitle, warning, continueBtn, filters, progressRow, grid);
   scroll.append(inner);
   panel.append(scroll);
   container.append(panel);
@@ -487,6 +525,7 @@ export function mountProblemLibrary(
     title.textContent = t('library.title', currentLocale, storage);
     subtitle.textContent = t('library.subtitle', currentLocale, storage);
     sessionsButton.textContent = t('library.sessions', currentLocale, storage);
+    continueBtn.textContent = t('continue.cta', currentLocale, storage);
     renderLocaleButtons();
   };
 
@@ -717,9 +756,42 @@ export function mountProblemLibrary(
   refreshLocale();
   void loadProgress(storage);
 
+  const resolveContinueSession = async (): Promise<void> => {
+    continueSession = null;
+    continueBtn.hidden = true;
+
+    const nickname =
+      callbacks.getNickname?.() ?? loadNickname(storage);
+    if (!nickname || nickname.trim() === '') {
+      return;
+    }
+
+    const listFn = callbacks.listSessionsFn ?? listSessions;
+    try {
+      const sessions = await listFn(
+        { nickname, status: 'in_progress' },
+        { storage },
+      );
+      const latest = [...sessions].sort((a, b) =>
+        b.updatedAt.localeCompare(a.updatedAt),
+      )[0];
+      if (!latest || !callbacks.onContinueSession) {
+        return;
+      }
+      continueSession = latest;
+      continueBtn.hidden = false;
+      continueBtn.textContent = t('continue.cta', currentLocale, storage);
+    } catch {
+      continueSession = null;
+      continueBtn.hidden = true;
+    }
+  };
+
+  void resolveContinueSession();
+
   return {
     root: panel,
-    setFilter(filter: LibraryFilter) {
+    setFilter(filter) {
       currentFilter = filter;
       renderFilters();
       renderGrid();
