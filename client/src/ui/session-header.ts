@@ -61,6 +61,9 @@ function injectStyles(): void {
       justify-content: center;
       flex: 1;
     }
+    .sdq-session-header__row {
+      display: contents;
+    }
     .sdq-session-header[hidden] { display: none !important; }
   `;
   document.head.append(style);
@@ -73,18 +76,23 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
   root.setAttribute('data-testid', 'session-header');
   root.hidden = true;
 
+  const row = document.createElement('div');
+  row.className = 'sdq-session-header__row';
+
   const leadingSlot = document.createElement('div');
   leadingSlot.className = 'sdq-session-header__leading';
   leadingSlot.setAttribute('data-testid', 'session-header-leading');
 
   const brand = document.createElement('div');
   brand.className = 'sdq-session-header__brand';
-  brand.innerHTML = `SYSTEM DESIGN QUEST<strong data-testid="session-title">DESIGN SESSION: ${problemTitle}</strong>`;
+  brand.innerHTML = `<span class="sdq-session-header__brand-sub">SYSTEM DESIGN QUEST</span><strong data-testid="session-title">${problemTitle}</strong>`;
+
+  row.append(leadingSlot, brand);
 
   const controlsSlot = document.createElement('div');
   controlsSlot.className = 'sdq-session-header__controls';
 
-  root.append(leadingSlot, brand, controlsSlot);
+  root.append(row, controlsSlot);
   container.append(root);
 
   return {
@@ -94,7 +102,7 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
     setTitle(title) {
       const el = root.querySelector('[data-testid="session-title"]');
       if (el) {
-        el.textContent = `DESIGN SESSION: ${title}`;
+        el.textContent = title;
       }
     },
     setVisible(visible) {

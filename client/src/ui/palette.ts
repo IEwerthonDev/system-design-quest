@@ -5,7 +5,11 @@ import {
   type ComponentType,
 } from '@sdq/shared';
 import { bindComponentTooltip } from './glossary';
-import { isCoarsePointer, PHONE_MAX_WIDTH } from './responsive';
+import {
+  applyPaletteCollapsed,
+  isCoarsePointer,
+  PHONE_MAX_WIDTH,
+} from './responsive';
 
 export const PALETTE_DROP_EVENT = 'palette:drop';
 export const PALETTE_MIME_TYPE = 'application/x-sdq-component';
@@ -54,8 +58,17 @@ export interface PaletteDropDetail {
 export interface MountPaletteOptions {
   tier?: CatalogTier;
   dropTarget?: HTMLElement;
-  /** Called after a tap-to-add so chrome can collapse the phone dock. */
+  /** Called after a tap-to-add so chrome can collapse the phone drawer. */
   onTapPlace?: (type: ComponentType) => void;
+}
+
+export interface PaletteHandle {
+  root: HTMLElement;
+  fab: HTMLButtonElement;
+  open(): void;
+  close(): void;
+  toggle(): void;
+  isOpen(): boolean;
 }
 
 export function resolvePaletteDropTarget(explicit?: HTMLElement): HTMLElement | null {
@@ -240,18 +253,52 @@ function attachDropTarget(dropTarget: HTMLElement): () => void {
   };
 }
 
+function isPhoneLayout(): boolean {
+  return typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX_WIDTH;
+}
+
 export function mountPalette(
   container: HTMLElement,
   options: MountPaletteOptions = {},
-): HTMLElement {
+): PaletteHandle {
   const tier = options.tier ?? 1;
   const grouped = getComponentsByCategory(tier);
 
   injectPaletteStyles(document.head);
 
+  const backdrop = document.createElement('div');
+  backdrop.className = 'sdq-palette-backdrop';
+  backdrop.setAttribute('data-testid', 'palette-backdrop');
+
+  const fab = document.createElement('button');
+  fab.type = 'button';
+  fab.className = 'sdq-palette-fab';
+  fab.setAttribute('data-testid', 'palette-fab');
+  fab.textContent = 'COMPONENTES';
+  fab.setAttribute('aria-label', 'Abrir componentes');
+
   const palette = document.createElement('aside');
   palette.className = 'sdq-palette';
   palette.setAttribute('data-testid', 'component-palette');
+
+  const closeDrawer = (): void => {
+    applyPaletteCollapsed(true, isPhoneLayout());
+  };
+
+  const openDrawer = (): void => {
+    applyPaletteCollapsed(false, isPhoneLayout());
+  };
+
+  const toggleDrawer = (): void => {
+    if (palette.classList.contains('sdq-palette--collapsed')) {
+      openDrawer();
+    } else {
+      closeDrawer();
+    }
+  };
+
+  backdrop.addEventListener('click', closeDrawer);
+  fab.addEventListener('click', openDrawer);
 
   const header = document.createElement('div');
   header.className = 'sdq-palette__header';
@@ -269,17 +316,12 @@ export function mountPalette(
   collapseBtn.title = 'Minimizar';
   collapseBtn.textContent = '«';
   collapseBtn.addEventListener('click', () => {
+    if (isPhoneLayout()) {
+      closeDrawer();
+      return;
+    }
     const collapsed = !palette.classList.contains('sdq-palette--collapsed');
-    const phone = window.innerWidth <= PHONE_MAX_WIDTH;
-    palette.classList.toggle('sdq-palette--collapsed', collapsed);
-    collapseBtn.textContent = collapsed ? (phone ? '▲' : '»') : phone ? '▼' : '«';
-    collapseBtn.title = collapsed ? 'Expandir' : 'Minimizar';
-    collapseBtn.setAttribute(
-      'aria-label',
-      collapsed ? 'Expandir componentes' : 'Minimizar componentes',
-    );
-    collapseBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
-    document.documentElement.classList.toggle('sdq-palette-is-collapsed', collapsed);
+    applyPaletteCollapsed(collapsed, false);
   });
 
   header.append(title, collapseBtn);
@@ -353,12 +395,7 @@ export function mountPalette(
         const point = centerOf(target);
         dispatchPalettePlace(target, meta.type, point.clientX, point.clientY, 'tap');
         options.onTapPlace?.(meta.type);
-        palette.classList.add('sdq-palette--collapsed');
-        document.documentElement.classList.add('sdq-palette-is-collapsed');
-        collapseBtn.textContent = phone ? '▲' : '»';
-        collapseBtn.setAttribute('aria-expanded', 'false');
-        collapseBtn.setAttribute('aria-label', 'Expandir componentes');
-        collapseBtn.title = 'Expandir';
+        closeDrawer();
       });
 
       // Desktop keeps hover glossary; touch devices skip sticky tooltips on tap-add.
@@ -373,11 +410,22 @@ export function mountPalette(
     palette.append(section);
   }
 
-  container.append(palette);
+  container.append(backdrop, fab, palette);
 
   if (options.dropTarget) {
     attachDropTarget(options.dropTarget);
   }
 
-  return palette;
+  if (isPhoneLayout()) {
+    closeDrawer();
+  }
+
+  return {
+    root: palette,
+    fab,
+    open: openDrawer,
+    close: closeDrawer,
+    toggle: toggleDrawer,
+    isOpen: () => !palette.classList.contains('sdq-palette--collapsed'),
+  };
 }

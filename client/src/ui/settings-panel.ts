@@ -40,6 +40,17 @@ function injectSettingsStyles(): void {
       cursor: pointer;
       font: 600 13px system-ui, sans-serif;
     }
+    @media (max-width: 768px) {
+      .sdq-settings-fab {
+        top: calc(6px + env(safe-area-inset-top, 0px));
+        right: 10px;
+        padding: 6px 10px;
+        font-size: 11px;
+        border-radius: 10px;
+        border-color: rgba(56, 120, 180, 0.4);
+        background: rgba(8, 20, 38, 0.92);
+      }
+    }
     .sdq-settings-panel {
       position: fixed;
       top: 52px;

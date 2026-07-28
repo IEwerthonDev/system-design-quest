@@ -29,7 +29,7 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
-| **Mobile UX** | Phone ≤768: bottom palette dock; tap component to place; touch-action none for drag/pan; larger handles; link hint; node delete (×) |
+| **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
 
@@ -49,7 +49,7 @@ Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full
 
 ### AD-023 (active)
 
-Mobile web playability: phone layout uses bottom thumb-zone component dock; palette tap places nodes (HTML5 drag unreliable on touch); canvas/nodes use `touch-action: none` for pan/drag; connection via out-handle arm + second tap (or drag); selected nodes expose delete control for no-keyboard devices.
+Mobile web playability: phone layout uses left overlay drawer + COMPONENTS FAB (canvas-first, Playground-style); sim controls strip always shows Start, Speed, Traffic, and Reads vs Writes sliders; palette tap places nodes; canvas/nodes use `touch-action: none` for pan/drag; connection via out-handle + second tap; selected nodes expose delete control.
 
 ---
 

@@ -25,7 +25,7 @@ describe('responsive layout', () => {
     expect(root.classList.contains(LAYOUT_TABLET_CLASS)).toBe(false);
   });
 
-  it('applies phone class at width <= 768 with bottom-dock styles', () => {
+  it('applies phone class at width <= 768 with left-drawer styles', () => {
     const root = document.createElement('div');
     applyLayoutForWidth(PHONE_MAX_WIDTH, root);
     expect(root.classList.contains(LAYOUT_PHONE_CLASS)).toBe(true);
@@ -35,7 +35,8 @@ describe('responsive layout', () => {
     expect(root.classList.contains(LAYOUT_PHONE_CLASS)).toBe(false);
 
     const css = document.getElementById('sdq-responsive-styles')?.textContent ?? '';
-    expect(css).toMatch(/\.sdq-layout--phone\s+\.sdq-palette\s*\{[^}]*bottom:\s*0/);
+    expect(css).toMatch(/\.sdq-layout--phone\s+\.sdq-palette\s*\{[^}]*transform:\s*translateX/);
+    expect(css).toMatch(/\.sdq-palette-fab/);
     expect(css).toMatch(/min-height:\s*44px/);
   });
 

@@ -270,6 +270,7 @@ export function mountPhaseNavigation(
   const palette = mountPalette(shell, {
     tier: 2,
     dropTarget: options.canvas ?? undefined,
+    onTapPlace: () => palette.close(),
   });
 
   const sessionHeader = mountSessionHeader(shell, problem.title);
@@ -363,7 +364,7 @@ export function mountPhaseNavigation(
 
     briefingPanel.root.hidden = !visibility.briefing;
     requirementsPanel.root.hidden = !visibility.requirements;
-    palette.hidden = !visibility.palette;
+    palette.root.hidden = !visibility.palette;
     submitPanel.root.hidden = !visibility.submit;
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);

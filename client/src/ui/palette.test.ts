@@ -74,7 +74,7 @@ describe('component palette', () => {
     expect(btn?.getAttribute('aria-expanded')).toBe('true');
 
     btn!.click();
-    expect(palette.classList.contains('sdq-palette--collapsed')).toBe(true);
+    expect(palette.root.classList.contains('sdq-palette--collapsed')).toBe(true);
     expect(btn?.textContent).toBe('»');
     expect(btn?.getAttribute('aria-expanded')).toBe('false');
     expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(true);
@@ -83,7 +83,7 @@ describe('component palette', () => {
     expect(css).toMatch(/\.sdq-palette\.sdq-palette--collapsed\s*\{[^}]*width:\s*52px/);
 
     btn!.click();
-    expect(palette.classList.contains('sdq-palette--collapsed')).toBe(false);
+    expect(palette.root.classList.contains('sdq-palette--collapsed')).toBe(false);
     expect(btn?.textContent).toBe('«');
     expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(false);
   });
@@ -182,6 +182,26 @@ describe('component palette', () => {
       true,
     );
 
+    vi.unstubAllGlobals();
+  });
+
+  it('opens drawer via FAB and closes on backdrop on phone', () => {
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
+    document.documentElement.classList.add('sdq-layout--phone');
+
+    const handle = mountPalette(container, { tier: 1, dropTarget });
+    expect(handle.isOpen()).toBe(false);
+    expect(container.querySelector('[data-testid="palette-fab"]')).toBeTruthy();
+
+    handle.fab.click();
+    expect(handle.isOpen()).toBe(true);
+    expect(document.documentElement.classList.contains('sdq-palette-is-collapsed')).toBe(false);
+
+    const backdrop = container.querySelector('[data-testid="palette-backdrop"]') as HTMLElement;
+    backdrop.click();
+    expect(handle.isOpen()).toBe(false);
+
+    document.documentElement.classList.remove('sdq-layout--phone');
     vi.unstubAllGlobals();
   });
 });

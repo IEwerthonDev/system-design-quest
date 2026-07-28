@@ -54,56 +54,106 @@ function injectResponsiveStyles(): void {
       max-width: none !important;
     }
 
-    /* Phone: bottom thumb-zone dock */
-    .sdq-layout--phone .sdq-palette {
+    /* Phone: left overlay drawer (Playground-style) */
+    .sdq-palette-fab,
+    .sdq-palette-backdrop {
+      display: none;
+    }
+    .sdq-layout--phone .sdq-palette-fab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: fixed;
       top: auto;
+      left: 12px;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      z-index: 19;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(56, 120, 180, 0.5);
+      background: linear-gradient(180deg, rgba(18, 42, 74, 0.98), rgba(10, 25, 48, 0.98));
+      color: #e2e8f0;
+      font: 700 10px ui-monospace, Menlo, monospace;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      touch-action: manipulation;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    }
+    .sdq-layout--phone .sdq-palette-fab::before {
+      content: "▦";
+      font-size: 14px;
+    }
+    html.sdq-layout--phone:not(.sdq-palette-is-collapsed) .sdq-palette-fab {
+      display: none;
+    }
+    .sdq-layout--phone .sdq-palette-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 21;
+      background: rgba(2, 8, 23, 0.55);
+      backdrop-filter: blur(2px);
+    }
+    html.sdq-layout--phone:not(.sdq-palette-is-collapsed) .sdq-palette-backdrop {
+      display: block;
+    }
+    .sdq-layout--phone .sdq-palette {
+      top: 0;
       bottom: 0;
       left: 0;
-      right: 0;
-      width: 100%;
-      height: auto;
-      max-height: min(42vh, 320px);
-      border-right: none;
+      right: auto;
+      width: min(340px, 88vw) !important;
+      height: 100% !important;
+      max-height: none !important;
+      padding: calc(12px + env(safe-area-inset-top, 0px)) 12px calc(16px + env(safe-area-inset-bottom, 0px));
+      border-right: 1px solid rgba(148, 163, 184, 0.35);
+      border-top: none;
       border-bottom: none;
-      border-top: 1px solid rgba(148, 163, 184, 0.35);
-      padding: 8px 12px calc(12px + env(safe-area-inset-bottom, 0px));
       z-index: 22;
-      background: rgba(10, 22, 40, 0.96);
-      backdrop-filter: blur(10px);
-      box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
+      background: rgba(10, 22, 40, 0.98);
+      backdrop-filter: blur(12px);
+      box-shadow: 8px 0 32px rgba(0, 0, 0, 0.4);
+      transform: translateX(-105%);
+      transition: transform 0.22s ease, visibility 0.22s ease;
+      overflow-y: auto;
+    }
+    .sdq-layout--phone .sdq-palette:not(.sdq-palette--collapsed) {
+      transform: translateX(0);
+      visibility: visible;
     }
     .sdq-layout--phone .sdq-palette.sdq-palette--collapsed {
-      max-height: none;
-      height: calc(52px + env(safe-area-inset-bottom, 0px));
-      overflow: hidden;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      pointer-events: none;
+      visibility: hidden;
     }
-    .sdq-layout--phone .sdq-palette.sdq-palette--collapsed .sdq-palette__section {
+    .sdq-layout--phone .sdq-palette.sdq-palette--collapsed .sdq-palette__section,
+    .sdq-layout--phone .sdq-palette.sdq-palette--collapsed .sdq-palette__hint {
       display: none;
+    }
+    .sdq-layout--phone .sdq-palette:not(.sdq-palette--collapsed) {
+      pointer-events: auto;
     }
     .sdq-layout--phone .sdq-palette__header {
       margin-bottom: 8px;
     }
+    .sdq-layout--phone .sdq-palette__title::after {
+      content: none;
+    }
     .sdq-layout--phone .sdq-palette__hint {
       display: block;
-    }
-    .sdq-layout--phone .sdq-palette__title::after {
-      content: " · toque para adicionar";
-      font-weight: 500;
-      letter-spacing: 0;
-      text-transform: none;
+      font-size: 12px;
       color: #64748b;
+      margin-bottom: 12px;
+      line-height: 1.4;
     }
     .sdq-layout--phone .sdq-palette__collapse {
       min-width: 44px;
       min-height: 44px;
       padding: 8px 12px;
-      font-size: 14px;
+      font-size: 16px;
     }
     .sdq-layout--phone .sdq-palette__list {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 8px;
+      flex-direction: column;
+      gap: 6px;
     }
     .sdq-layout--phone .sdq-palette__item {
       min-height: 44px;
@@ -115,47 +165,68 @@ function injectResponsiveStyles(): void {
       touch-action: manipulation;
     }
     .sdq-layout--phone .sdq-palette__section {
-      margin-bottom: 10px;
+      margin-bottom: 12px;
     }
+
+    /* Phone: compact header card + sim panel (sim styles in sim-controls.css @media) */
     .sdq-layout--phone .sdq-session-header {
       left: 0 !important;
       right: 0;
+      top: 0;
       height: auto;
-      min-height: 52px;
-      padding: 8px 10px;
-      flex-wrap: wrap;
+      min-height: 0;
+      padding: calc(6px + env(safe-area-inset-top, 0px)) 10px 8px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      background: transparent;
+      pointer-events: none;
+    }
+    .sdq-layout--phone .sdq-session-header__row {
+      display: flex;
+      align-items: center;
       gap: 8px;
-      background: linear-gradient(180deg, rgba(10,25,48,0.95), rgba(10,25,48,0.55) 70%, transparent);
+      pointer-events: auto;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(8, 20, 38, 0.92);
+      border: 1px solid rgba(56, 120, 180, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+    }
+    .sdq-layout--phone .sdq-session-header__brand-sub {
+      display: none;
+    }
+    .sdq-layout--phone .sdq-session-header__brand {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .sdq-layout--phone .sdq-session-header__brand strong {
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
     }
     .sdq-layout--phone .sdq-session-header__controls {
-      flex: 1 1 100%;
-      order: 3;
+      flex: none;
+      width: 100%;
+      order: 0;
       justify-content: stretch;
-    }
-    .sdq-layout--phone .sdq-sim-controls {
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-start;
-    }
-    .sdq-layout--phone .sdq-sim-controls__start {
-      min-height: 44px;
-      min-width: 72px;
+      pointer-events: auto;
     }
     .sdq-layout--phone .sdq-blueprint-zoom {
       left: auto;
       right: 12px;
-      bottom: calc(64px + env(safe-area-inset-bottom, 0px));
-    }
-    html.sdq-layout--phone.sdq-palette-is-collapsed .sdq-blueprint-zoom {
-      bottom: calc(68px + env(safe-area-inset-bottom, 0px));
-    }
-    html.sdq-layout--phone:not(.sdq-palette-is-collapsed) .sdq-blueprint-zoom {
-      bottom: calc(min(42vh, 320px) + 12px);
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
     }
     .sdq-layout--phone .sdq-blueprint-zoom button {
       width: 44px;
       height: 44px;
       font-size: 18px;
+    }
+    .sdq-layout--phone .sdq-blueprint-link-hint {
+      top: calc(200px + env(safe-area-inset-top, 0px));
     }
     .sdq-layout--phone .sdq-node__handle {
       width: 18px;
@@ -180,20 +251,30 @@ function injectResponsiveStyles(): void {
   document.head.appendChild(style);
 }
 
-function syncCollapseButton(collapsed: boolean, phoneMode: boolean): void {
+export function syncPaletteCollapseButton(collapsed: boolean, phoneMode: boolean): void {
   const btn = document.querySelector(
     '[data-testid="palette-collapse"]',
   ) as HTMLButtonElement | null;
   if (!btn) {
     return;
   }
-  btn.textContent = collapsed ? (phoneMode ? '▲' : '»') : phoneMode ? '▼' : '«';
-  btn.title = collapsed ? 'Expandir' : 'Minimizar';
+  btn.textContent = collapsed ? (phoneMode ? '✕' : '»') : phoneMode ? '✕' : '«';
+  btn.title = collapsed ? 'Fechar' : phoneMode ? 'Fechar' : 'Minimizar';
   btn.setAttribute(
     'aria-label',
-    collapsed ? 'Expandir componentes' : 'Minimizar componentes',
+    collapsed || phoneMode ? 'Fechar componentes' : 'Minimizar componentes',
   );
   btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+}
+
+export function applyPaletteCollapsed(collapsed: boolean, phoneMode?: boolean): void {
+  const phone =
+    phoneMode ??
+    document.documentElement.classList.contains(LAYOUT_PHONE_CLASS);
+  const palette = document.querySelector('.sdq-palette');
+  palette?.classList.toggle(PALETTE_COLLAPSED_CLASS, collapsed);
+  document.documentElement.classList.toggle('sdq-palette-is-collapsed', collapsed);
+  syncPaletteCollapseButton(collapsed, phone);
 }
 
 export function applyLayoutForWidth(
@@ -221,10 +302,7 @@ export function startResponsiveLayout(options?: {
 
   const setPaletteCollapsed = (collapsed: boolean): void => {
     paletteCollapsed = collapsed;
-    const palette = document.querySelector('.sdq-palette');
-    palette?.classList.toggle(PALETTE_COLLAPSED_CLASS, collapsed);
-    document.documentElement.classList.toggle('sdq-palette-is-collapsed', collapsed);
-    syncCollapseButton(collapsed, getWidth() <= PHONE_MAX_WIDTH);
+    applyPaletteCollapsed(collapsed, getWidth() <= PHONE_MAX_WIDTH);
   };
 
   const maybeCollapsePhonePalette = (): void => {
