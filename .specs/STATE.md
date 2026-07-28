@@ -22,8 +22,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Execute — Batch 4 (Phase 4 T16–T20) complete; awaiting Verifier |
-| **Próximo passo** | Automatic Verifier (author ≠ verifier) → merge to `main` on PASS |
+| **Fase atual** | Execute complete — Verifier running |
+| **Próximo passo** | Verifier → fix gaps if FAIL (max 3 loops) → merge on PASS |
 | **Feature ativa** | `hobby-platform` |
 | **Branch** | `feature/hobby-platform` |
 | **Bloqueios** | Vercel env checklist for prod: see `.env.example` (KV/Blob/Edge/Cron/LLM) |
