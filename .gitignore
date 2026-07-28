@@ -16,3 +16,4 @@ api/judge.js
 api/sessions.js
 api/leaderboard.js
 api/cron.js
+api/auth.js

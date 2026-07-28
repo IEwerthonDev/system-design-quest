@@ -36,7 +36,22 @@ export type UiStringKey =
   | 'share.copied'
   | 'share.oversized'
   | 'undo.label'
-  | 'redo.label';
+  | 'redo.label'
+  | 'auth.signIn'
+  | 'auth.signOut'
+  | 'auth.nick.title'
+  | 'auth.nick.hint'
+  | 'auth.nick.submit'
+  | 'auth.nick.taken'
+  | 'auth.nick.invalid'
+  | 'auth.merge.title'
+  | 'auth.merge.body'
+  | 'auth.merge.yes'
+  | 'auth.merge.no'
+  | 'auth.merge.failed'
+  | 'auth.error'
+  | 'auth.ok'
+  | 'speedrun.signInToRank';
 
 export type UiCatalog = Record<UiStringKey, string>;
 
@@ -79,6 +94,23 @@ export const CATALOG_EN: UiCatalog = {
   'share.oversized': 'Design is too large to share via URL. Export JSON instead.',
   'undo.label': 'Undo',
   'redo.label': 'Redo',
+  'auth.signIn': 'Sign in with Google',
+  'auth.signOut': 'Sign out',
+  'auth.nick.title': 'Choose a public nickname',
+  'auth.nick.hint':
+    'This unique handle appears on the leaderboard and your saved sessions (3–20 letters, numbers, _ or -).',
+  'auth.nick.submit': 'Save nickname',
+  'auth.nick.taken': 'That nickname is already taken. Try another.',
+  'auth.nick.invalid': 'Invalid nickname. Use 3–20 characters: letters, numbers, _ or -.',
+  'auth.merge.title': 'Import guest progress?',
+  'auth.merge.body':
+    'This device has local sessions from guest play. Import them into your Google account?',
+  'auth.merge.yes': 'Import',
+  'auth.merge.no': 'Skip',
+  'auth.merge.failed': 'Could not import some sessions. You can keep playing.',
+  'auth.error': 'Google sign-in failed. You can keep playing as a guest.',
+  'auth.ok': 'Signed in successfully.',
+  'speedrun.signInToRank': 'Sign in with a public nickname to appear on the ranking.',
 };
 
 export type { Locale };

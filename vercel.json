@@ -11,6 +11,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/auth/:action", "destination": "/api/auth?action=:action" },
     { "source": "/api/sessions/:id", "destination": "/api/sessions?id=:id" },
     { "source": "/api/leaderboard/:problemId", "destination": "/api/leaderboard?problemId=:problemId" },
     { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }

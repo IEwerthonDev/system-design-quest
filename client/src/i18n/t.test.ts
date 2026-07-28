@@ -42,6 +42,8 @@ describe('UI string catalogs + t()', () => {
       'share.',
       'undo.',
       'redo.',
+      'auth.',
+      'speedrun.',
     ];
     const keys = Object.keys(CATALOG_EN);
     for (const prefix of requiredPrefixes) {

@@ -3,6 +3,8 @@ import type { DesignSessionStatus } from '@sdq/shared';
 import { parseSessionUpsertBody } from '../routes/sessions';
 import { createKvSessionStore } from '../sessions/kv-store';
 import { createSessionService, type SessionService } from '../sessions/service';
+import type { AuthService } from '../auth/service';
+import { cookieFromHeaders, requireAuthedUserWithNick } from '../auth/require-user';
 
 export const config = {
   maxDuration: 30,
@@ -24,8 +26,10 @@ export interface HandleSessionsRequestOptions {
   method?: string;
   url?: string;
   query?: Record<string, string | string[] | undefined>;
+  headers?: Record<string, string | string[] | undefined>;
   body?: unknown;
   service?: SessionService;
+  authService?: AuthService;
   env?: NodeJS.ProcessEnv;
 }
 
@@ -38,7 +42,10 @@ function firstQueryValue(
   return value;
 }
 
-function sessionIdFromRequest(url: string | undefined, query: HandleSessionsRequestOptions['query']): string | undefined {
+function sessionIdFromRequest(
+  url: string | undefined,
+  query: HandleSessionsRequestOptions['query'],
+): string | undefined {
   const fromQuery = firstQueryValue(query?.id) ?? firstQueryValue(query?.sessionId);
   if (fromQuery && fromQuery.trim()) {
     return fromQuery.trim();
@@ -89,6 +96,15 @@ export async function handleSessionsRequest(
   options: HandleSessionsRequestOptions,
 ): Promise<SessionsHttpResponse> {
   const method = (options.method ?? 'GET').toUpperCase();
+  const env = options.env ?? process.env;
+  const cookie = cookieFromHeaders(options.headers);
+  const authed = await requireAuthedUserWithNick(cookie, env, options.authService);
+  if (!authed.ok) {
+    return { status: authed.status, body: authed.body };
+  }
+  const { user } = authed;
+  const publicNickname = user.publicNickname!;
+
   const resolved = resolveService(options);
   if (!resolved.ok) {
     return resolved.response;
@@ -117,7 +133,11 @@ export async function handleSessionsRequest(
         },
       };
     }
-    const result = await service.upsert(parsed.input);
+    const result = await service.upsert({
+      ...parsed.input,
+      playerNickname: publicNickname,
+      userId: user.userId,
+    });
     if (!result.ok) {
       return {
         status: 400,
@@ -134,7 +154,7 @@ export async function handleSessionsRequest(
   if (method === 'GET') {
     if (sessionId) {
       const session = await service.get(sessionId);
-      if (!session) {
+      if (!session || session.userId !== user.userId) {
         return {
           status: 404,
           body: {
@@ -144,17 +164,6 @@ export async function handleSessionsRequest(
         };
       }
       return { status: 200, body: session as unknown as Record<string, unknown> };
-    }
-
-    const nickname = firstQueryValue(query.nickname);
-    if (typeof nickname !== 'string' || nickname.trim() === '') {
-      return {
-        status: 400,
-        body: {
-          error: 'Invalid request',
-          message: 'nickname query parameter is required',
-        },
-      };
     }
 
     const statusRaw = firstQueryValue(query.status);
@@ -172,10 +181,10 @@ export async function handleSessionsRequest(
       status = statusRaw as DesignSessionStatus;
     }
 
-    const sessions = await service.list(nickname, status);
+    const sessions = await service.list(publicNickname, status);
     return {
       status: 200,
-      body: { nickname, sessions },
+      body: { nickname: publicNickname, sessions },
     };
   }
 
@@ -193,6 +202,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     method: req.method,
     url: req.url,
     query: req.query as Record<string, string | string[] | undefined>,
+    headers: req.headers as Record<string, string | string[] | undefined>,
     body: req.body,
     env: process.env,
   });

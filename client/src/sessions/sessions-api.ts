@@ -146,6 +146,7 @@ export async function upsertSession(
   try {
     const response = await fetchFn(`${baseUrl}/api/sessions/${encodeURIComponent(input.id)}`, {
       method: 'PUT',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -207,7 +208,9 @@ export async function listSessions(
   }
 
   try {
-    const response = await fetchFn(`${baseUrl}/api/sessions?${params.toString()}`);
+    const response = await fetchFn(`${baseUrl}/api/sessions?${params.toString()}`, {
+      credentials: 'include',
+    });
 
     if (isRemoteSessionsMissing(response)) {
       remoteSessionsUnavailable = true;
@@ -255,7 +258,9 @@ export async function getSession(
   const baseUrl = resolveBaseUrl(options.baseUrl);
 
   try {
-    const response = await fetchFn(`${baseUrl}/api/sessions/${encodeURIComponent(id)}`);
+    const response = await fetchFn(`${baseUrl}/api/sessions/${encodeURIComponent(id)}`, {
+      credentials: 'include',
+    });
 
     if (isRemoteSessionsMissing(response)) {
       remoteSessionsUnavailable = true;

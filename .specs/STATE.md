@@ -22,13 +22,15 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `hobby-platform` on production |
-| **Próximo passo** | Configure Vercel env (KV/Blob/Edge/Cron) from `.env.example` for durable sessions/leaderboard |
-| **Feature ativa** | `hobby-platform` merged via [PR #2](https://github.com/IEwerthonDev/system-design-quest/pull/2) |
-| **Branch** | `main` |
-| **Bloqueios** | Without KV env, sessions stay on localStorage fallback |
+| **Fase atual** | `auth-google` Execute → ship |
+| **Próximo passo** | Add `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` in Vercel (Google Cloud OAuth Web client); verify Sign in on prod |
+| **Feature ativa** | `auth-google` |
+| **Branch** | `feature/auth-google` → merge `main` |
+| **Bloqueios** | Google OAuth client credentials (user must create in Google Cloud Console) |
+| **KV** | `sdq-sessions-kv` + user/nick maps |
+| **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*`; sessions + LB POST gated |
+| **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_HS1bb4ppxot4QHeFpy5VQQRYEMaU` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
@@ -86,11 +88,12 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-018 | active | **Canvas de sessão = DOM node cards + SVG edges** sobre grid CSS blueprint; pan/zoom no world container | Paridade System Design Playground; supersede AD-002/008/009 no path de jogo |
 | AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
-| AD-021 | active | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
+| AD-021 | superseded by AD-026 (Hobby durable) | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
 | AD-022 | superseded by AD-025 | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
 | AD-023 | active | **Mobile web canvas** = phone bottom dock + tap-to-add; `touch-action: none` drag/pan; arm+tap (or drag) connect; delete control on selected nodes | HTML5 DnD fails on touch; thumb-zone / 44px targets from mobile-app-ui-design + mobile-touch |
 | AD-024 | active | **Bilingual EN/PT-BR** — UI + problem copy + Judge narrative; `sdq-locale`; default `pt-BR`; jargon stays English; library locale buttons | Supersedes AD-011; user request full-system locale including AI Judge |
 | AD-025 | active | **Hobby durable platform** — thin `api/*.js` (judge/sessions/leaderboard/cron/export); KV for sessions+leaderboard; localStorage fallback; Fastify+DI for local; Neon deferred | Supersedes AD-022; KV-first Hobby ROI without full Fastify on Vercel |
+| AD-026 | active | **Google OAuth identity** — guest play OK; durable sessions + leaderboard POST require Google session cookie + unique public nickname; nickname-alone is no longer ownership on Hobby APIs | User chose real OAuth over nickname surrogate; supersedes AD-021 auth surrogate for Hobby durable path |
 
 ---
 

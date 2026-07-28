@@ -72,6 +72,7 @@ describe('sessions-api', () => {
       'http://localhost:3000/api/sessions/sess-1',
       expect.objectContaining({
         method: 'PUT',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sampleInput),
       }),
@@ -94,6 +95,7 @@ describe('sessions-api', () => {
     expect(listed[0]?.playerNickname).toBe('alice');
     expect(fetchFn).toHaveBeenCalledWith(
       'http://localhost:3000/api/sessions?nickname=alice&status=approved',
+      expect.objectContaining({ credentials: 'include' }),
     );
   });
 
@@ -110,7 +112,10 @@ describe('sessions-api', () => {
     });
 
     expect(record.id).toBe('sess-1');
-    expect(fetchFn).toHaveBeenCalledWith('http://localhost:3000/api/sessions/sess-1');
+    expect(fetchFn).toHaveBeenCalledWith(
+      'http://localhost:3000/api/sessions/sess-1',
+      expect.objectContaining({ credentials: 'include' }),
+    );
   });
 
   it('surfaces API errors via SessionsApiError', async () => {

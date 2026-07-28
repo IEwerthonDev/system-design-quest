@@ -51,6 +51,7 @@ export async function submitLeaderboardScore(
   const baseUrl = resolveBaseUrl(options.baseUrl);
   const response = await fetchFn(`${baseUrl}/api/leaderboard`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });

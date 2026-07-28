@@ -53,6 +53,12 @@ export {
   NICKNAME_MIN_LENGTH,
 } from './schema/leaderboard';
 export type {
+  AuthMeResponse,
+  AuthMergeInput,
+  AuthNicknameClaimInput,
+  AuthUser,
+} from './schema/auth';
+export type {
   DesignSessionRecord,
   DesignSessionStatus,
   DesignSessionUpsertInput,

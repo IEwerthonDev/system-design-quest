@@ -55,11 +55,21 @@ describe('problem library UI', () => {
     document.body.append(container);
     storage = new MemoryStorage();
     resetProgress(storage);
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({ authenticated: false }),
+      }),
+    );
   });
 
   afterEach(() => {
     container.remove();
     document.getElementById('sdq-library-styles')?.remove();
+    document.getElementById('sdq-auth-styles')?.remove();
+    document.querySelectorAll('.sdq-auth-modal, .sdq-auth__toast').forEach((el) => el.remove());
+    vi.unstubAllGlobals();
   });
 
   it('renders library with 27 problem cards by default', () => {

@@ -51,7 +51,7 @@ describe('leaderboard-api', () => {
     expect(entry?.playerNickname).toBe('player');
     expect(fetchFn).toHaveBeenCalledWith(
       'http://localhost:3000/api/leaderboard',
-      expect.objectContaining({ method: 'POST' }),
+      expect.objectContaining({ method: 'POST', credentials: 'include' }),
     );
   });
 

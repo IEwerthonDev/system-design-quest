@@ -6,6 +6,8 @@ import {
   createLeaderboardService,
   type LeaderboardService,
 } from '../leaderboard/service';
+import type { AuthService } from '../auth/service';
+import { cookieFromHeaders, requireAuthedUserWithNick } from '../auth/require-user';
 
 export const config = {
   maxDuration: 30,
@@ -20,8 +22,10 @@ export interface HandleLeaderboardRequestOptions {
   method?: string;
   url?: string;
   query?: Record<string, string | string[] | undefined>;
+  headers?: Record<string, string | string[] | undefined>;
   body?: unknown;
   service?: LeaderboardService;
+  authService?: AuthService;
   env?: NodeJS.ProcessEnv;
 }
 
@@ -94,8 +98,14 @@ export async function handleLeaderboardRequest(
   }
   const { service } = resolved;
   const query = options.query ?? {};
+  const env = options.env ?? process.env;
 
   if (method === 'POST') {
+    const cookie = cookieFromHeaders(options.headers);
+    const authed = await requireAuthedUserWithNick(cookie, env, options.authService);
+    if (!authed.ok) {
+      return { status: authed.status, body: authed.body };
+    }
     const parsed = parseLeaderboardSubmitBody(options.body);
     if (!parsed.ok) {
       return {
@@ -107,7 +117,10 @@ export async function handleLeaderboardRequest(
       };
     }
 
-    const result = await service.submit(parsed.input);
+    const result = await service.submit({
+      ...parsed.input,
+      playerNickname: authed.user.publicNickname!,
+    });
     if (!result.ok) {
       if (result.code === 'NOT_QUALIFYING') {
         return {
@@ -188,6 +201,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     method: req.method,
     url: req.url,
     query: req.query as Record<string, string | string[] | undefined>,
+    headers: req.headers as Record<string, string | string[] | undefined>,
     body: req.body,
     env: process.env,
   });

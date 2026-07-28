@@ -1,6 +1,8 @@
+import type { AuthMeResponse } from '@sdq/shared';
 import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
 import type { DesignSessionRecord, DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
+import { fetchMe } from '../auth/auth-api';
 import { getLocale } from '../i18n/locale';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
@@ -75,6 +77,10 @@ export interface MountPhaseNavigationOptions {
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
   upsertSessionFn?: typeof upsertSession;
   getNickname?: () => string;
+  /** Auth check before speedrun leaderboard submit (defaults to fetchMe). */
+  getAuth?: () => Promise<AuthMeResponse>;
+  /** Non-blocking notice when speedrun qualify skips LB (guest / no nick). */
+  onLeaderboardSkipped?: (reason: 'unauthenticated') => void;
   /** Injectable analytics emitter (tests). */
   trackFn?: typeof track;
   now?: () => number;
@@ -104,7 +110,24 @@ function injectPhaseNavigationStyles(): void {
 
   const style = document.createElement('style');
   style.id = 'sdq-phase-nav-styles';
-  style.textContent = `/* phase-back styles live in theme/global.css */`;
+  style.textContent = `
+    /* phase-back styles live in theme/global.css */
+    .sdq-phase-auth-notice {
+      position: fixed;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 35;
+      max-width: min(420px, calc(100vw - 24px));
+      padding: 12px 16px;
+      border-radius: var(--sdq-radius-sm, 6px);
+      background: var(--sdq-bg-elevated, #1a1a1e);
+      border: 1px solid var(--sdq-border, rgba(255,255,255,0.12));
+      color: var(--sdq-text, #f4f4f5);
+      font: 500 13px var(--sdq-font, system-ui, sans-serif);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  `;
   document.head.append(style);
 }
 
@@ -141,6 +164,7 @@ export function mountPhaseNavigation(
 
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
   const getNickname = options.getNickname ?? getOrCreateNickname;
+  const getAuth = options.getAuth ?? (() => fetchMe());
   const upsertSessionFn = options.upsertSessionFn ?? upsertSession;
   const emitTrack = options.trackFn ?? track;
 
@@ -404,6 +428,57 @@ export function mountPhaseNavigation(
     });
   }
 
+  let leaderboardSubmitAttempted = false;
+
+  const showLeaderboardSkipNotice = (): void => {
+    options.onLeaderboardSkipped?.('unauthenticated');
+    if (shell.querySelector('[data-testid="speedrun-auth-notice"]')) {
+      return;
+    }
+    const notice = document.createElement('div');
+    notice.className = 'sdq-phase-auth-notice';
+    notice.setAttribute('data-testid', 'speedrun-auth-notice');
+    notice.setAttribute('role', 'status');
+    notice.textContent = t('speedrun.signInToRank');
+    shell.append(notice);
+    window.setTimeout(() => {
+      notice.remove();
+    }, 4500);
+  };
+
+  const trySubmitLeaderboard = async (): Promise<void> => {
+    const judgeResult = getJudgeResult();
+    const active = getSession();
+    if (!judgeResult || !active) {
+      return;
+    }
+    if (!isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
+      return;
+    }
+    let me: AuthMeResponse;
+    try {
+      me = await getAuth();
+    } catch {
+      showLeaderboardSkipNotice();
+      return;
+    }
+    if (!me.authenticated || !me.publicNickname) {
+      showLeaderboardSkipNotice();
+      return;
+    }
+    try {
+      await submitScore({
+        problemId,
+        playerNickname: me.publicNickname,
+        elapsedMs: getElapsedMs(active, now),
+        score: judgeResult.score,
+        verdict: judgeResult.verdict,
+      });
+    } catch {
+      // Non-blocking — ranking submit must not break result UI
+    }
+  };
+
   const sync = (): void => {
     const session = getSession();
     const phase = session?.phase ?? 'briefing';
@@ -442,17 +517,13 @@ export function mountPhaseNavigation(
       if (isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
         recordCompletion(problemId, judgeResult.verdict, judgeResult.score);
       }
-      if (mode === 'speedrun' && isQualifyingCompletion(judgeResult.verdict, judgeResult.score)) {
-        const active = getSession();
-        if (active) {
-          void submitScore({
-            problemId,
-            playerNickname: getNickname(),
-            elapsedMs: getElapsedMs(active, now),
-            score: judgeResult.score,
-            verdict: judgeResult.verdict,
-          });
-        }
+      if (
+        mode === 'speedrun' &&
+        !leaderboardSubmitAttempted &&
+        isQualifyingCompletion(judgeResult.verdict, judgeResult.score)
+      ) {
+        leaderboardSubmitAttempted = true;
+        void trySubmitLeaderboard();
       }
       if (!resultPanel) {
         resultPanel = mountResultPanel(resultHost, judgeResult, {

@@ -41,4 +41,21 @@ export const CATALOG_PT_BR: UiCatalog = {
     'O design é grande demais para compartilhar via URL. Exporte JSON em vez disso.',
   'undo.label': 'Desfazer',
   'redo.label': 'Refazer',
+  'auth.signIn': 'Entrar com Google',
+  'auth.signOut': 'Sair',
+  'auth.nick.title': 'Escolha um apelido público',
+  'auth.nick.hint':
+    'Este handle único aparece no ranking e nas suas sessões salvas (3–20 letras, números, _ ou -).',
+  'auth.nick.submit': 'Salvar apelido',
+  'auth.nick.taken': 'Esse apelido já está em uso. Tente outro.',
+  'auth.nick.invalid': 'Apelido inválido. Use 3–20 caracteres: letras, números, _ ou -.',
+  'auth.merge.title': 'Importar progresso de convidado?',
+  'auth.merge.body':
+    'Este dispositivo tem sessões locais do modo convidado. Importar para sua conta Google?',
+  'auth.merge.yes': 'Importar',
+  'auth.merge.no': 'Pular',
+  'auth.merge.failed': 'Não foi possível importar algumas sessões. Você pode continuar jogando.',
+  'auth.error': 'Falha no login com Google. Você pode continuar como convidado.',
+  'auth.ok': 'Login realizado com sucesso.',
+  'speedrun.signInToRank': 'Entre com um apelido público para aparecer no ranking.',
 };

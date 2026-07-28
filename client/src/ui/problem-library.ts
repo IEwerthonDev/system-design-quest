@@ -24,6 +24,7 @@ import {
   loadEdgeFlags,
   type EdgeFlags,
 } from '../config/edge-flags';
+import { mountAuthUi, type AuthUi } from '../auth/auth-ui';
 import { mountLeaderboardPanel } from './leaderboard-panel';
 
 export type LibraryFilter = Difficulty | 'all';
@@ -51,6 +52,8 @@ export interface ProblemLibraryCallbacks {
   edgeFlags?: EdgeFlags;
   /** Injectable Edge Config loader; defaults to loadEdgeFlags. */
   loadEdgeFlagsFn?: () => Promise<EdgeFlags>;
+  /** Skip mounting auth UI (tests that only exercise library chrome). */
+  skipAuthUi?: boolean;
 }
 
 export interface ProblemLibraryPanel {
@@ -490,8 +493,17 @@ export function mountProblemLibrary(
     callbacks.onOpenSessions?.();
   });
 
-  headerActions.append(localeGroup, sessionsButton);
+  const authHost = document.createElement('div');
+  authHost.className = 'sdq-library__auth';
+  authHost.setAttribute('data-testid', 'library-auth');
+
+  headerActions.append(authHost, localeGroup, sessionsButton);
   header.append(headerText, headerActions);
+
+  let authUi: AuthUi | null = null;
+  if (!callbacks.skipAuthUi) {
+    authUi = mountAuthUi(authHost, { storage });
+  }
 
   const subtitle = document.createElement('p');
   subtitle.className = 'sdq-library__subtitle';

@@ -91,6 +91,7 @@ export function createSessionService(store: SessionStore): SessionService {
         id: input.id,
         problemId: input.problemId,
         playerNickname: nickname,
+        userId: input.userId,
         status,
         graph: normalizeGraph(input.graph),
         createdAt: existing?.createdAt ?? timestamp,

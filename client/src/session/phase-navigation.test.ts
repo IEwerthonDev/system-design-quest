@@ -612,5 +612,62 @@ describe('phase navigation', () => {
 
       nav.destroy();
     });
+
+    it('speedrun qualifying submit calls leaderboard when authenticated with nick', async () => {
+      const submitLeaderboardScoreFn = vi.fn().mockResolvedValue(null);
+      const passResult: JudgeResult = { ...sampleJudgeResult, verdict: 'PASS', score: 90 };
+
+      mountPhaseNavigation(container, {
+        mode: 'speedrun',
+        submitForJudging: vi.fn().mockResolvedValue(passResult),
+        submitLeaderboardScoreFn,
+        getAuth: async () => ({
+          authenticated: true,
+          userId: 'u1',
+          publicNickname: 'Hero',
+        }),
+        now: () => 1_000_000,
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      await vi.waitFor(() => expect(submitLeaderboardScoreFn).toHaveBeenCalled());
+      expect(submitLeaderboardScoreFn).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerNickname: 'Hero',
+          verdict: 'PASS',
+          score: 90,
+        }),
+      );
+      expect(container.querySelector('[data-testid="speedrun-auth-notice"]')).toBeNull();
+    });
+
+    it('speedrun qualifying skips leaderboard for guest', async () => {
+      const submitLeaderboardScoreFn = vi.fn();
+      const onLeaderboardSkipped = vi.fn();
+      const passResult: JudgeResult = { ...sampleJudgeResult, verdict: 'PASS', score: 90 };
+
+      mountPhaseNavigation(container, {
+        mode: 'speedrun',
+        submitForJudging: vi.fn().mockResolvedValue(passResult),
+        submitLeaderboardScoreFn,
+        getAuth: async () => ({ authenticated: false }),
+        onLeaderboardSkipped,
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      setGraph(sampleGraph);
+      container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+      await vi.waitFor(() => expect(getSession()?.phase).toBe('result'));
+
+      await vi.waitFor(() => expect(onLeaderboardSkipped).toHaveBeenCalledWith('unauthenticated'));
+      expect(submitLeaderboardScoreFn).not.toHaveBeenCalled();
+      expect(container.querySelector('[data-testid="speedrun-auth-notice"]')).not.toBeNull();
+    });
   });
 });
