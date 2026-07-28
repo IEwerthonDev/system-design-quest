@@ -9,6 +9,7 @@ import {
   listProblems,
   listProblemsByDifficulty,
 } from './index';
+import { CORE_REALISM_IDS, isCoreRealismProblem } from './structural-depth';
 
 const EXPECTED_EASY_IDS = [
   'url-shortener',
@@ -163,6 +164,35 @@ describe('Baseline structural coverage (JR-04 / JR-23)', () => {
       expect(report.blockers.length + report.strengths.length).toBeGreaterThanOrEqual(1);
       expect(report.scaleChecklistLines.length).toBeGreaterThanOrEqual(1);
       expect(report.scaleChecklistLines.every((line) => line.length > 0)).toBe(true);
+    }
+  });
+});
+
+describe('Core Easy Deep rubrics (JR-24 / JR-30)', () => {
+  const easyCoreIds = EXPECTED_EASY_IDS.filter((id) => isCoreRealismProblem(id));
+
+  it('covers all 7 Easy Core Realism ids', () => {
+    expect(easyCoreIds).toHaveLength(7);
+    expect(easyCoreIds.every((id) => CORE_REALISM_IDS.includes(id))).toBe(true);
+  });
+
+  it('each Easy Core id has deep depth and ≥1 antiPattern or configRule', () => {
+    for (const id of easyCoreIds) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth === 'deep' || isCoreRealismProblem(id)).toBe(true);
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+
+      const enLines = problem.rubric.scaleChecklist?.en ?? [];
+      const ptLines = problem.rubric.scaleChecklist?.['pt-BR'] ?? [];
+      expect(enLines.length).toBeGreaterThanOrEqual(1);
+      expect(ptLines.length).toBeGreaterThanOrEqual(1);
+      expect(enLines.every((l) => l.length > 0)).toBe(true);
+      expect(ptLines.every((l) => l.length > 0)).toBe(true);
     }
   });
 });
