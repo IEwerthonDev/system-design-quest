@@ -13,3 +13,6 @@ test-results/
 .vercel
 .env*
 api/judge.js
+api/sessions.js
+api/leaderboard.js
+api/cron.js
