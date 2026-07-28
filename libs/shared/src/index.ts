@@ -30,8 +30,13 @@ export type {
   ProblemCopy,
   ProblemDefinition,
   ProblemMetrics,
+  StructuralAntiPattern,
+  StructuralConfigRule,
+  StructuralDepth,
   SuggestedRequirements,
 } from './schema/problem';
+export { CORE_REALISM_IDS, isCoreRealismProblem } from './problems/structural-depth';
+export type { CoreRealismId } from './problems/structural-depth';
 export { attachBilingualCopy, localizeProblem } from './i18n/localize-problem';
 export type {
   FeedbackItem,

@@ -3,11 +3,44 @@ export type Difficulty = 'easy' | 'medium' | 'hard';
 /** UI / problem narrative locale */
 export type Locale = 'en' | 'pt-BR';
 
+export type StructuralDepth = 'baseline' | 'deep';
+
+export interface StructuralAntiPattern {
+  code: string;
+  /** If any of these types present, pattern does not fire */
+  unlessAnyOf?: string[];
+  /** Fire when none of requiredAnyOf are present (and graph non-empty) */
+  requiredAnyOf?: string[];
+  /** Fire when forbidden type present */
+  forbiddenType?: string;
+  severity: 'blocker' | 'major';
+  messageKey: string;
+}
+
+export interface StructuralConfigRule {
+  code: string;
+  componentType: string;
+  minHitRate?: number;
+  minShardCount?: number;
+  minTtlSeconds?: number;
+  minPartitionCount?: number;
+  minFanOutLimit?: number;
+  requireMqDurability?: 'disk';
+  severity: 'blocker' | 'major';
+  messageKey: string;
+}
+
 /** Hidden scoring guidance for the AI judge — not shown to the player */
 export interface JudgeRubric {
   expectedComponents: string[];
   criticalPatterns: string[];
   commonMistakes: string[];
+  /** default baseline; core set forced to deep at runtime even if omitted */
+  structuralDepth?: StructuralDepth;
+  antiPatterns?: StructuralAntiPattern[];
+  configRules?: StructuralConfigRule[];
+  /** Explicit scale lines; if empty, engine derives from metrics */
+  scaleChecklist?: { en: string[]; 'pt-BR': string[] };
 }
 
 export interface EstimatedMinutes {
