@@ -44,6 +44,11 @@ describe('sim controls', () => {
     start.click();
     expect(settings.running).toBe(true);
     expect(start.textContent).toBe('Stop');
+    expect(start.dataset.running).toBe('true');
+    const simStyles = document.getElementById('sdq-sim-controls-styles')?.textContent ?? '';
+    expect(simStyles).toMatch(
+      /\.sdq-sim-controls__start\[data-running="true"\][\s\S]*?color:\s*#0c0c0e/,
+    );
 
     const hint = host.querySelector('[data-testid="sim-rw-hint"]');
     expect(hint?.textContent).toMatch(/Read-heavy/i);

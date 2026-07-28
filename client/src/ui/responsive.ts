@@ -197,7 +197,8 @@ function injectResponsiveStyles(): void {
     .sdq-layout--phone .sdq-session-header__trailing {
       flex-shrink: 0;
     }
-    .sdq-layout--phone .sdq-settings-btn--in-header {
+    .sdq-layout--phone .sdq-settings-btn--in-header,
+    .sdq-layout--phone .sdq-phase-share {
       padding: 6px 10px;
       font-size: 11px;
       white-space: nowrap;

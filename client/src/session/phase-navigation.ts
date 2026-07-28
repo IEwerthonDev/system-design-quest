@@ -316,7 +316,7 @@ export function mountPhaseNavigation(
 
   const shareBtn = document.createElement('button');
   shareBtn.type = 'button';
-  shareBtn.className = 'sdq-phase-share';
+  shareBtn.className = 'sdq-settings-btn--in-header sdq-phase-share';
   shareBtn.setAttribute('data-testid', 'share-design');
   shareBtn.textContent = t('share.cta');
   shareBtn.addEventListener('click', () => {

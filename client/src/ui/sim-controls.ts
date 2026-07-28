@@ -49,6 +49,8 @@ function injectStyles(): void {
     }
     .sdq-sim-controls__start[data-running="true"] {
       background: var(--sdq-danger);
+      color: #0c0c0e;
+      border-color: rgba(0, 0, 0, 0.25);
     }
     .sdq-sim-controls__field {
       display: flex;

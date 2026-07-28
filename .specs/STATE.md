@@ -22,42 +22,39 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `auth-google` shipped — secret rotated; agent smoke PASS; human nick/import optional confirm |
-| **Próximo passo** | Optional human: Sign in → claim nick → import guest progress. Next product work: pick next feature (e.g. polish) |
-| **Feature ativa** | `auth-google` (done on prod) |
+| **Fase atual** | UI hotfix: Stop contrast + Share button styles |
+| **Próximo passo** | Push/deploy hotfix; optional human nick smoke |
+| **Feature ativa** | polish / UI hotfix |
 | **Branch** | `main` |
 | **Bloqueios** | none |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_7zYQKSTcwNcaVNSLV9i8fQCCWboL` — READY (`75f3af5`; prior rotation redeploy `dpl_8HEqwdJ9LefY1ap2y5HWXDfiFKrd`) |
+| **Deployment** | (pending hotfix deploy) |
 | **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET (rotated) |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
-| **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
-| **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
+| **Bugfix** | Stop text contrast on danger; Share matches header settings button |
+| **UI fix** | Voltar in session-header leading; Componentes palette minimizable; Stop/Share chrome |
 | **Neon** | Deferred (NEON-01): KV sufficient for session history, leaderboard, progress %, daily stats |
 
 ### Context Checkpoint (2026-07-28)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — ops thread (smoke + rotate + commit/push/deploy) |
-| Uncommitted done work | GREEN after this commit — STATE only; `.agents/` / `skills-lock.json` stay untracked |
-| Spec drift | GREEN — Handoff matches prod (secret rotated + redeploy) |
-| Gate confidence | GREEN — agent smoke re-PASS post-rotation; nick/import needs human Google account |
-| Task clarity | GREEN — commit STATE → push → Vercel prod |
+| Chat length | AMBER — ops + UI hotfix in same thread |
+| Uncommitted done work | current hotfix only |
+| Spec drift | GREEN |
+| Gate confidence | running blueprint-chrome + deploy |
+| Task clarity | GREEN — contrast + share style → push → Vercel |
 
-**Veredito:** GREEN for ops close-out (user asked commit/push/deploy).
-
-**Agent smoke (post-rotation):** home 200 · `/api/auth/me` guest · “Entrar com Google” → Google OAuth (PKCE + prod callback). Latest prod `dpl_8HEqwdJ9LefY1ap2y5HWXDfiFKrd` READY.
+**Veredito:** GREEN for scoped UI hotfix (user asked push/deploy).
 
 **Prompt para nova sessão:**
 ```
-Branch main. auth-google on prod; STATE handoff committed after secret rotation.
+Branch main. Auth shipped; UI hotfix Stop contrast + Share header styles.
 Read .specs/STATE.md Handoff.
-Optional: human Sign in → nick → guest import smoke.
-Next product: pick feature (polish or other). No auth feature work unless human smoke fails.
+Next: pick polish/feature work or human nick smoke.
 ```
 
 ### Deploy note (Hobby)
