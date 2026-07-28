@@ -420,16 +420,20 @@ export function mountPhaseNavigation(
 
   const problemDrawer = isSandbox ? null : mountProblemDrawer(shell, problem);
 
+  let mentorPanel: ReturnType<typeof mountMentorPanel> | null = null;
+
   workloadPanel = isSandbox
     ? mountWorkloadPanel(shell, {
         getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
         onChange: applySimPartial,
+        onOpen: () => mentorPanel?.close(),
       })
     : null;
 
-  const mentorPanel = isSandbox
+  mentorPanel = isSandbox
     ? mountMentorPanel(shell, {
         getFindings: () => latestFindings,
+        onOpen: () => workloadPanel?.close(),
       })
     : null;
 
@@ -570,10 +574,10 @@ export function mountPhaseNavigation(
       }
     }
     if (workloadPanel) {
-      workloadPanel.root.hidden = phase !== 'canvas';
+      workloadPanel.setVisible(phase === 'canvas');
     }
     if (mentorPanel) {
-      mentorPanel.root.hidden = phase !== 'canvas';
+      mentorPanel.setVisible(phase === 'canvas');
     }
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);
