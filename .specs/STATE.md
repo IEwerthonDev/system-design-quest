@@ -22,25 +22,28 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `config-depth` on `feature/config-depth` — ship to main + production |
-| **Próximo passo** | Merge/push + Vercel production deploy; smoke paper-icon Advanced configs |
-| **Feature ativa** | `config-depth` |
-| **Branch** | `feature/config-depth` |
+| **Fase atual** | `config-depth` merged to `main` + production READY |
+| **Próximo passo** | Smoke: paper-icon Advanced on cache/SQL/Kafka/rate_limiter; rich notes → higher score |
+| **Feature ativa** | none (`config-depth` shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | 1B·2B·3B·4A; AD-030 detailBonus cap 15 |
-| **Gate** | `npx nx run-many -t lint test` green (this session) |
+| **Gate** | lint+test green pre-merge |
+| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/4 (squash `4d65deb`) |
+| **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_DSCfQWXFmk6tteVWkom4KNZypWaL` READY |
 
-### Context Checkpoint (2026-07-28 config-depth)
+### Context Checkpoint (2026-07-28 config-depth ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — multi-step epic (user said just do it) |
-| Uncommitted | shipping |
-| Spec drift | GREEN — context locked |
-| Gate confidence | GREEN — lint+test passed |
-| Task clarity | GREEN — agent decisions locked |
+| Chat length | AMBER — epic shipped this session |
+| Uncommitted | none after docs commit |
+| Spec drift | GREEN |
+| Gate confidence | GREEN |
+| Task clarity | GREEN — done |
 
-**Veredito:** GREEN (continuation unlocked)
+**Veredito:** GREEN — shipped
 
 ### Deploy note (Hobby)
 
