@@ -21,6 +21,28 @@ const STATUS_RANK: Record<ReqCoverageItem['status'], number> = {
   covered: 2,
 };
 
+function asArray<T>(value: unknown): T[] {
+  return Array.isArray(value) ? (value as T[]) : [];
+}
+
+/**
+ * Coerce LLM JSON into a safe JudgePartialResult.
+ * Live models sometimes omit arrays or return objects — that used to crash mergeConsensus.
+ */
+export function normalizeJudgePartialResult(raw: unknown): JudgePartialResult {
+  const value =
+    raw !== null && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
+  const score = typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : 0;
+  return {
+    score: Math.max(0, Math.min(100, Math.round(score))),
+    strengths: asArray<FeedbackItem>(value.strengths),
+    criticalIssues: asArray<FeedbackItem>(value.criticalIssues),
+    improvements: asArray<FeedbackItem>(value.improvements),
+    requirementCoverage: asArray<ReqCoverageItem>(value.requirementCoverage),
+    rationale: typeof value.rationale === 'string' ? value.rationale : '',
+  };
+}
+
 function dedupeFeedbackItems(items: FeedbackItem[]): FeedbackItem[] {
   const seen = new Set<string>();
   const merged: FeedbackItem[] = [];
@@ -86,8 +108,8 @@ export function buildRequirementCoverage(
 ): ReqCoverageItem[] {
   const locale = resolveJudgeLocale(input);
   const merged = mergeReqCoverageItems([
-    ...rigorous.requirementCoverage,
-    ...pragmatic.requirementCoverage,
+    ...asArray<ReqCoverageItem>(rigorous.requirementCoverage),
+    ...asArray<ReqCoverageItem>(pragmatic.requirementCoverage),
   ]);
   const byRequirement = new Map(merged.map((item) => [item.requirement, item]));
 
@@ -175,25 +197,24 @@ export function mergeConsensus(
   JudgeResult,
   'score' | 'strengths' | 'criticalIssues' | 'improvements' | 'requirementCoverage' | 'judgeDebate'
 > {
-  const score = Math.min(rigorous.score, pragmatic.score);
+  const left = normalizeJudgePartialResult(rigorous);
+  const right = normalizeJudgePartialResult(pragmatic);
+  const score = Math.min(left.score, right.score);
   const locale = resolveJudgeLocale(input);
   const criticalIssues = dedupeFeedbackItems([
-    ...rigorous.criticalIssues,
-    ...pragmatic.criticalIssues,
+    ...left.criticalIssues,
+    ...right.criticalIssues,
   ]);
 
   return {
     score,
-    strengths: dedupeFeedbackItems([...rigorous.strengths, ...pragmatic.strengths]),
+    strengths: dedupeFeedbackItems([...left.strengths, ...right.strengths]),
     criticalIssues,
-    improvements: dedupeFeedbackItems([
-      ...rigorous.improvements,
-      ...pragmatic.improvements,
-    ]),
-    requirementCoverage: buildRequirementCoverage(input, rigorous, pragmatic),
+    improvements: dedupeFeedbackItems([...left.improvements, ...right.improvements]),
+    requirementCoverage: buildRequirementCoverage(input, left, right),
     judgeDebate: {
-      rigorous: rigorous.rationale,
-      pragmatic: pragmatic.rationale,
+      rigorous: left.rationale,
+      pragmatic: right.rationale,
       consensus:
         locale === 'en'
           ? `Both judges converged on score ${score}/100 after weighing scalability rigor against pragmatic trade-offs.`
@@ -356,15 +377,15 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
     locale,
   });
 
-  const [rigorous, pragmatic] = await Promise.all([
-    client.completeJson<JudgePartialResult>({
+  const [rigorousRaw, pragmaticRaw] = await Promise.all([
+    client.completeJson<unknown>({
       role: 'rigorous',
       graph: input.graph,
       locale,
       problemId: input.problemId,
       text: buildRigorousPrompt(problem, normalizedInput, report),
     }),
-    client.completeJson<JudgePartialResult>({
+    client.completeJson<unknown>({
       role: 'pragmatic',
       graph: input.graph,
       locale,
@@ -372,6 +393,9 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
       text: buildPragmaticPrompt(problem, normalizedInput, report),
     }),
   ]);
+
+  const rigorous = normalizeJudgePartialResult(rigorousRaw);
+  const pragmatic = normalizeJudgePartialResult(pragmaticRaw);
 
   const merged = mergeConsensus(rigorous, pragmatic, normalizedInput);
   const gated = mergeWithStructuralHardGate(

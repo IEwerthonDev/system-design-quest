@@ -139,7 +139,8 @@ function buildJudgePrompt(
     '',
     formatGraph(input),
     '',
-    'Return JSON matching JudgePartialResult: score (0-100), strengths, criticalIssues, improvements, requirementCoverage, rationale.',
+    'Return JSON matching JudgePartialResult: score (0-100), strengths (array), criticalIssues (array), improvements (array), requirementCoverage (array of {requirement,type,status,explanation}), rationale (string).',
+    'Every list field MUST be a JSON array (use [] when empty) — never omit them or return an object.',
     'In rationale and criticalIssues, honor structural blockers and include the required scale analysis.',
   ].join('\n');
 }

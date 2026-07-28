@@ -8,6 +8,7 @@ import {
   judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
+  normalizeJudgePartialResult,
   UnknownProblemError,
 } from './dual-judge';
 import type { JudgeResult } from '@sdq/shared';
@@ -189,6 +190,75 @@ describe('mergeConsensus', () => {
     expect(merged.score).toBe(Math.min(rigorous.score, pragmatic.score));
     expect(merged.judgeDebate.rigorous).toBe(rigorous.rationale);
     expect(merged.judgeDebate.pragmatic).toBe(pragmatic.rationale);
+  });
+
+  it('tolerates LLM partials missing requirementCoverage arrays (prod 500 regression)', () => {
+    const graph = getGoldenGraph('good');
+    const malformed = {
+      score: 72,
+      strengths: [],
+      criticalIssues: [],
+      improvements: [],
+      rationale: 'Coverage omitted by model',
+    } as unknown as JudgePartialResult;
+
+    const merged = mergeConsensus(
+      malformed,
+      { ...malformed, score: 80 },
+      makeInput(graph, {
+        functional: ['Encurtar URL'],
+        nonFunctional: [],
+      }),
+    );
+
+    expect(merged.score).toBe(72);
+    expect(merged.requirementCoverage).toEqual([
+      expect.objectContaining({
+        requirement: 'Encurtar URL',
+        status: 'missing',
+      }),
+    ]);
+  });
+});
+
+describe('normalizeJudgePartialResult', () => {
+  it('coerces omitted and non-array list fields to empty arrays', () => {
+    const normalized = normalizeJudgePartialResult({
+      score: 55.7,
+      requirementCoverage: { not: 'an array' },
+      strengths: 'oops',
+    });
+
+    expect(normalized).toEqual({
+      score: 56,
+      strengths: [],
+      criticalIssues: [],
+      improvements: [],
+      requirementCoverage: [],
+      rationale: '',
+    });
+  });
+});
+
+describe('judgeSubmission with malformed LLM JSON shape', () => {
+  it('returns 200-path JudgeResult when requirementCoverage is missing', async () => {
+    const client: LlmClient = {
+      async completeJson<T>(): Promise<T> {
+        return {
+          score: 70,
+          strengths: [],
+          criticalIssues: [],
+          improvements: [],
+          rationale: 'No coverage field',
+        } as T;
+      },
+    };
+
+    const result = await judgeSubmission(makeInput(getGoldenGraph('good')), client);
+
+    expect(result.score).toBeLessThanOrEqual(70);
+    expect(result.requirementCoverage).toEqual([]);
+    expect(result.judgeDebate.rigorous).toBe('No coverage field');
   });
 });
 
