@@ -1,4 +1,5 @@
 import type { ArchitectureGraph } from './architecture-graph';
+import type { Locale } from './problem';
 
 export type Verdict = 'PASS' | 'PARTIAL' | 'FAIL';
 
@@ -12,6 +13,8 @@ export interface JudgeInput {
   };
   graph: ArchitectureGraph;
   mode: GameMode;
+  /** Narrative language for prompts + mock; defaults to pt-BR when omitted */
+  locale?: Locale;
 }
 
 export interface FeedbackItem {

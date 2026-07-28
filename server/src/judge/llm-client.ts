@@ -34,7 +34,7 @@ export function createLlmClient(config: LlmConfig): LlmClient {
           messages: [
             {
               role: 'user',
-              content: JSON.stringify(prompt),
+              content: prompt.text ?? JSON.stringify(prompt),
             },
           ],
         }),

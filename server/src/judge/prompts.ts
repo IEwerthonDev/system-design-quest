@@ -1,5 +1,6 @@
 import type { JudgeInput, Problem } from '@sdq/shared';
 import { normalizeGraph } from '@sdq/shared';
+import { localeInstruction, resolveJudgeLocale } from './locale';
 
 function formatRequirements(input: JudgeInput): string {
   const { functional, nonFunctional } = input.requirements;
@@ -42,6 +43,7 @@ function formatGraph(input: JudgeInput): string {
 }
 
 function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, input: JudgeInput): string {
+  const locale = resolveJudgeLocale(input);
   const roleFocus =
     role === 'rigorous'
       ? 'Focus on requirements traceability, scalability, single points of failure, and consistency.'
@@ -63,6 +65,7 @@ function buildJudgePrompt(role: 'rigorous' | 'pragmatic', problem: Problem, inpu
   return [
     `You are the ${role} judge for a system design exercise.`,
     roleFocus,
+    localeInstruction(locale),
     '',
     `Problem: ${problem.title}`,
     problem.description,

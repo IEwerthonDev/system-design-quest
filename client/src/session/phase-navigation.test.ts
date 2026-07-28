@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import { getGoldenGraph, type ArchitectureGraph, type JudgeResult } from '@sdq/shared';
 import { clearCachedJudgePayload } from '../judge/judge-api';
+import { setLocale } from '../i18n/locale';
 import { VERDICT_LABELS } from '../ui/result-panel';
 import {
   canGoBackPhase,
@@ -450,6 +451,44 @@ describe('phase navigation', () => {
         expect(
           container.querySelector('[data-testid="result-critical-issues"]')?.textContent,
         ).toContain('Client talks directly to database');
+      } finally {
+        vi.unstubAllGlobals();
+        clearCachedJudgePayload();
+      }
+    });
+
+    it('POST /api/judge includes locale from getLocale()', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            verdict: 'PASS',
+            score: 85,
+            summary: 'ok',
+            nextStep: 'ok',
+            strengths: [],
+            criticalIssues: [],
+            improvements: [],
+            requirementCoverage: [],
+            judgeDebate: { rigorous: '', pragmatic: '', consensus: '' },
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } },
+        ),
+      );
+      vi.stubGlobal('fetch', fetchMock);
+      setLocale('en');
+
+      try {
+        mountPhaseNavigation(container);
+        container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+        container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+        setGraph(getGoldenGraph('good'));
+        container.querySelector<HTMLButtonElement>('[data-testid="submit-button"]')!.click();
+
+        await vi.waitFor(() => expect(fetchMock).toHaveBeenCalled());
+        const body = JSON.parse(fetchMock.mock.calls[0]![1].body as string) as {
+          locale?: string;
+        };
+        expect(body.locale).toBe('en');
       } finally {
         vi.unstubAllGlobals();
         clearCachedJudgePayload();

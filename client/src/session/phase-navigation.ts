@@ -1,6 +1,7 @@
 import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
 import type { DesignSessionRecord, DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
+import { getLocale } from '../i18n/locale';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
@@ -323,6 +324,7 @@ export function mountPhaseNavigation(
       requirements: getRequirements(),
       graph: normalizeGraph(graph),
       mode,
+      locale: getLocale(),
     }),
     onSubmitStart: () => {
       if (mode === 'speedrun') {

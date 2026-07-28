@@ -1,9 +1,12 @@
-import type { GoldenGraphTier } from '@sdq/shared';
+import type { GoldenGraphTier, Locale } from '@sdq/shared';
 import type { JudgePartialResult } from '@sdq/shared';
+import { DEFAULT_JUDGE_LOCALE } from '../locale';
 
 export type JudgeRole = 'rigorous' | 'pragmatic';
 
-const BASE_STRENGTHS: Record<GoldenGraphTier, JudgePartialResult['strengths']> = {
+type FeedbackBank = Record<GoldenGraphTier, JudgePartialResult['strengths']>;
+
+const STRENGTHS_EN: FeedbackBank = {
   good: [
     {
       title: 'Layered architecture',
@@ -23,7 +26,27 @@ const BASE_STRENGTHS: Record<GoldenGraphTier, JudgePartialResult['strengths']> =
   bad: [],
 };
 
-const BASE_CRITICAL: Record<GoldenGraphTier, JudgePartialResult['criticalIssues']> = {
+const STRENGTHS_PT: FeedbackBank = {
+  good: [
+    {
+      title: 'Arquitetura em camadas',
+      explanation: 'Load balancer, camada de app, cache e banco estão claramente separados.',
+      howToImprove: 'Documente a invalidação de cache nas escritas de URL.',
+      whyItMatters: 'Camadas sustentam escala e isolamento de falhas nas leituras do Encurtador.',
+    },
+  ],
+  medium: [
+    {
+      title: 'Fluxo básico em três camadas',
+      explanation: 'O cliente alcança um app server antes do banco de dados.',
+      howToImprove: 'Adicione um cache para lookups quentes de redirect.',
+      whyItMatters: 'Um cache reduz a latência de leitura em alto RPS.',
+    },
+  ],
+  bad: [],
+};
+
+const CRITICAL_EN: FeedbackBank = {
   good: [],
   medium: [
     {
@@ -53,7 +76,37 @@ const BASE_CRITICAL: Record<GoldenGraphTier, JudgePartialResult['criticalIssues'
   ],
 };
 
-const BASE_IMPROVEMENTS: Record<GoldenGraphTier, JudgePartialResult['improvements']> = {
+const CRITICAL_PT: FeedbackBank = {
+  good: [],
+  medium: [
+    {
+      title: 'Sem camada de cache',
+      explanation: 'Leituras de redirect vão bater no banco a cada requisição.',
+      howToImprove: 'Insira Redis entre o app server e o banco para URLs quentes.',
+      whyItMatters: 'O RPS de leitura do Encurtador domina o tráfego; cache é esperado.',
+      severity: 'major',
+    },
+    {
+      title: 'Sem load balancer',
+      explanation: 'Um único app server vira ponto único de falha.',
+      howToImprove: 'Coloque um load balancer na frente de várias instâncias de app.',
+      whyItMatters: 'A disponibilidade sofre sem redundância horizontal.',
+      severity: 'major',
+    },
+  ],
+  bad: [
+    {
+      title: 'Cliente fala diretamente com o banco',
+      explanation: 'Não há camada de aplicação para regras de negócio ou auth.',
+      howToImprove: 'Adicione um app server entre cliente e banco.',
+      whyItMatters: 'Acesso direto ao DB expõe dados e pula a lógica de redirect.',
+      severity: 'blocker',
+      relatedComponents: ['golden-bad-client', 'golden-bad-db'],
+    },
+  ],
+};
+
+const IMPROVEMENTS_EN: FeedbackBank = {
   good: [
     {
       title: 'Plan cache TTL strategy',
@@ -80,6 +133,33 @@ const BASE_IMPROVEMENTS: Record<GoldenGraphTier, JudgePartialResult['improvement
   ],
 };
 
+const IMPROVEMENTS_PT: FeedbackBank = {
+  good: [
+    {
+      title: 'Planeje a estratégia de TTL do cache',
+      explanation: 'URLs populares precisam de expiração e invalidação definidas.',
+      howToImprove: 'Defina TTL alinhado à retenção de analytics e invalide no update.',
+      whyItMatters: 'Redirects obsoletos confundem usuários e incham o storage.',
+    },
+  ],
+  medium: [
+    {
+      title: 'Adicione cache Redis',
+      explanation: 'Leituras dominam o tráfego do Encurtador de URL.',
+      howToImprove: 'Encaminhe lookups GET pelo cache antes do SQL.',
+      whyItMatters: 'O cache absorve picos de leitura e protege o banco.',
+    },
+  ],
+  bad: [
+    {
+      title: 'Introduza a camada de aplicação',
+      explanation: 'Regras de negócio e hashing pertencem a um serviço de app.',
+      howToImprove: 'Adicione app servers para gerar códigos curtos e validar redirects.',
+      whyItMatters: 'Sem camada de compute o design não escala nem fica seguro.',
+    },
+  ],
+};
+
 const ROLE_SCORE_ADJUST: Record<JudgeRole, number> = {
   rigorous: -2,
   pragmatic: 2,
@@ -91,7 +171,7 @@ const BASE_SCORE: Record<GoldenGraphTier, number> = {
   bad: 32,
 };
 
-const ROLE_RATIONALE: Record<JudgeRole, Record<GoldenGraphTier, string>> = {
+const RATIONALE_EN: Record<JudgeRole, Record<GoldenGraphTier, string>> = {
   rigorous: {
     good: 'Meets scalability and redundancy expectations for the tutorial problem.',
     medium: 'Functional path exists but misses cache and load balancing for production RPS.',
@@ -104,19 +184,34 @@ const ROLE_RATIONALE: Record<JudgeRole, Record<GoldenGraphTier, string>> = {
   },
 };
 
+const RATIONALE_PT: Record<JudgeRole, Record<GoldenGraphTier, string>> = {
+  rigorous: {
+    good: 'Atende expectativas de escalabilidade e redundância do problema tutorial.',
+    medium: 'Há caminho funcional, mas faltam cache e load balancing para RPS de produção.',
+    bad: 'Viola o layering básico; o cliente não deve falar direto com o banco.',
+  },
+  pragmatic: {
+    good: 'Arquitetura MVP sólida, com espaço para afinar a política de cache depois.',
+    medium: 'Aceitável como protótipo, insuficiente para pico de leitura.',
+    bad: 'Inviável mesmo como spike; falta a camada de aplicação obrigatória.',
+  },
+};
+
 /** Deterministic partial judge output for URL Shortener golden graph tiers. */
 export function getUrlShortenerPartialResult(
   role: JudgeRole,
   tier: GoldenGraphTier,
+  locale: Locale = DEFAULT_JUDGE_LOCALE,
 ): JudgePartialResult {
   const score = BASE_SCORE[tier] + ROLE_SCORE_ADJUST[role];
+  const useEn = locale === 'en';
 
   return {
     score,
-    strengths: BASE_STRENGTHS[tier],
-    criticalIssues: BASE_CRITICAL[tier],
-    improvements: BASE_IMPROVEMENTS[tier],
+    strengths: (useEn ? STRENGTHS_EN : STRENGTHS_PT)[tier],
+    criticalIssues: (useEn ? CRITICAL_EN : CRITICAL_PT)[tier],
+    improvements: (useEn ? IMPROVEMENTS_EN : IMPROVEMENTS_PT)[tier],
     requirementCoverage: [],
-    rationale: ROLE_RATIONALE[role][tier],
+    rationale: (useEn ? RATIONALE_EN : RATIONALE_PT)[role][tier],
   };
 }

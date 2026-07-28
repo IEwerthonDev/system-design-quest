@@ -6,11 +6,13 @@ import {
   type JudgeInput,
   type JudgePartialResult,
   type JudgeResult,
+  type Locale,
   type ReqCoverageItem,
   type Verdict,
 } from '@sdq/shared';
 import type { LlmClient } from './mock-llm-client';
 import { resolveGraphTier } from './mock-llm-client';
+import { resolveJudgeLocale } from './locale';
 import { buildPragmaticPrompt, buildRigorousPrompt } from './prompts';
 
 const STATUS_RANK: Record<ReqCoverageItem['status'], number> = {
@@ -56,16 +58,29 @@ function defaultCoverageStatus(tier: GoldenGraphTier, index: number): ReqCoverag
 function defaultCoverageExplanation(
   status: ReqCoverageItem['status'],
   type: ReqCoverageItem['type'],
+  locale: Locale,
 ): string {
+  if (locale === 'en') {
+    if (status === 'covered') {
+      return 'Declared requirement is reflected in the submitted architecture layers.';
+    }
+    if (status === 'partial') {
+      return type === 'functional'
+        ? 'Architecture hints at this behavior but lacks explicit components or paths.'
+        : 'Non-functional target is partially addressed; scaling or latency gaps remain.';
+    }
+    return 'No clear component or data path in the graph covers this declared requirement.';
+  }
+
   if (status === 'covered') {
-    return 'Declared requirement is reflected in the submitted architecture layers.';
+    return 'O requisito declarado aparece nas camadas da arquitetura enviada.';
   }
   if (status === 'partial') {
     return type === 'functional'
-      ? 'Architecture hints at this behavior but lacks explicit components or paths.'
-      : 'Non-functional target is partially addressed; scaling or latency gaps remain.';
+      ? 'A arquitetura sugere esse comportamento, mas faltam componentes ou caminhos explícitos.'
+      : 'O alvo não funcional está parcialmente coberto; ainda há lacunas de escala ou latência.';
   }
-  return 'No clear component or data path in the graph covers this declared requirement.';
+  return 'Não há componente ou caminho de dados claro cobrindo este requisito declarado.';
 }
 
 /** Fill requirementCoverage for every declared requirement, merging judge outputs first. */
@@ -75,6 +90,7 @@ export function buildRequirementCoverage(
   pragmatic: JudgePartialResult,
 ): ReqCoverageItem[] {
   const tier = resolveGraphTier(input.graph);
+  const locale = resolveJudgeLocale(input);
   const merged = mergeReqCoverageItems([
     ...rigorous.requirementCoverage,
     ...pragmatic.requirementCoverage,
@@ -94,7 +110,7 @@ export function buildRequirementCoverage(
         requirement,
         type: 'functional',
         status,
-        explanation: defaultCoverageExplanation(status, 'functional'),
+        explanation: defaultCoverageExplanation(status, 'functional', locale),
       });
     }
   }
@@ -109,7 +125,7 @@ export function buildRequirementCoverage(
         requirement,
         type: 'nonFunctional',
         status,
-        explanation: defaultCoverageExplanation(status, 'nonFunctional'),
+        explanation: defaultCoverageExplanation(status, 'nonFunctional', locale),
       });
     }
   }
@@ -117,24 +133,44 @@ export function buildRequirementCoverage(
   return declared;
 }
 
-function buildSummary(verdict: Verdict, score: number): string {
+function buildSummary(verdict: Verdict, score: number, locale: Locale): string {
+  if (locale === 'en') {
+    if (verdict === 'PASS') {
+      return `Your architecture scored ${score}/100 and meets the core expectations for this problem.`;
+    }
+    if (verdict === 'PARTIAL') {
+      return `Your design scored ${score}/100. It covers basics but still has gaps to close before production readiness.`;
+    }
+    return `Your design scored ${score}/100. Critical layering or scalability issues must be fixed before this solution is viable.`;
+  }
+
   if (verdict === 'PASS') {
-    return `Your architecture scored ${score}/100 and meets the core expectations for this problem.`;
+    return `Sua arquitetura fez ${score}/100 e atende as expectativas principais deste problema.`;
   }
   if (verdict === 'PARTIAL') {
-    return `Your design scored ${score}/100. It covers basics but still has gaps to close before production readiness.`;
+    return `Seu design fez ${score}/100. Cobre o básico, mas ainda há lacunas antes de estar pronto para produção.`;
   }
-  return `Your design scored ${score}/100. Critical layering or scalability issues must be fixed before this solution is viable.`;
+  return `Seu design fez ${score}/100. Problemas críticos de layering ou escalabilidade precisam ser corrigidos antes desta solução ser viável.`;
 }
 
-function buildNextStep(verdict: Verdict, criticalIssues: FeedbackItem[]): string {
+function buildNextStep(verdict: Verdict, criticalIssues: FeedbackItem[], locale: Locale): string {
+  if (locale === 'en') {
+    if (verdict === 'PASS') {
+      return 'Review improvements for polish, then try a harder problem or add redundancy details.';
+    }
+    if (criticalIssues.length > 0) {
+      return `Start with: ${criticalIssues[0]!.title} — ${criticalIssues[0]!.howToImprove}`;
+    }
+    return 'Add missing tiers (cache, load balancing, or app layer) and reconnect the data flow.';
+  }
+
   if (verdict === 'PASS') {
-    return 'Review improvements for polish, then try a harder problem or add redundancy details.';
+    return 'Revise as melhorias para polir o design e depois tente um problema mais difícil ou detalhe a redundância.';
   }
   if (criticalIssues.length > 0) {
-    return `Start with: ${criticalIssues[0]!.title} — ${criticalIssues[0]!.howToImprove}`;
+    return `Comece por: ${criticalIssues[0]!.title} — ${criticalIssues[0]!.howToImprove}`;
   }
-  return 'Add missing tiers (cache, load balancing, or app layer) and reconnect the data flow.';
+  return 'Adicione camadas faltantes (cache, load balancing ou app) e reconecte o fluxo de dados.';
 }
 
 /** Merge dual judge partial results into consensus fields (verdict applied in judgeSubmission). */
@@ -147,6 +183,7 @@ export function mergeConsensus(
   'score' | 'strengths' | 'criticalIssues' | 'improvements' | 'requirementCoverage' | 'judgeDebate'
 > {
   const score = Math.min(rigorous.score, pragmatic.score);
+  const locale = resolveJudgeLocale(input);
   const criticalIssues = dedupeFeedbackItems([
     ...rigorous.criticalIssues,
     ...pragmatic.criticalIssues,
@@ -164,7 +201,10 @@ export function mergeConsensus(
     judgeDebate: {
       rigorous: rigorous.rationale,
       pragmatic: pragmatic.rationale,
-      consensus: `Both judges converged on score ${score}/100 after weighing scalability rigor against pragmatic trade-offs.`,
+      consensus:
+        locale === 'en'
+          ? `Both judges converged on score ${score}/100 after weighing scalability rigor against pragmatic trade-offs.`
+          : `Os dois juízes convergiram na nota ${score}/100 após equilibrar rigor de escalabilidade e trade-offs pragmáticos.`,
     },
   };
 }
@@ -183,22 +223,31 @@ export async function judgeSubmission(input: JudgeInput, client: LlmClient): Pro
     throw new UnknownProblemError(input.problemId);
   }
 
-  // Prompts are consumed by the real LLM client (T5); mock uses role + graph only.
-  buildRigorousPrompt(problem, input);
-  buildPragmaticPrompt(problem, input);
+  const locale = resolveJudgeLocale(input);
+  const normalizedInput: JudgeInput = { ...input, locale };
 
   const [rigorous, pragmatic] = await Promise.all([
-    client.completeJson<JudgePartialResult>({ role: 'rigorous', graph: input.graph }),
-    client.completeJson<JudgePartialResult>({ role: 'pragmatic', graph: input.graph }),
+    client.completeJson<JudgePartialResult>({
+      role: 'rigorous',
+      graph: input.graph,
+      locale,
+      text: buildRigorousPrompt(problem, normalizedInput),
+    }),
+    client.completeJson<JudgePartialResult>({
+      role: 'pragmatic',
+      graph: input.graph,
+      locale,
+      text: buildPragmaticPrompt(problem, normalizedInput),
+    }),
   ]);
 
-  const merged = mergeConsensus(rigorous, pragmatic, input);
+  const merged = mergeConsensus(rigorous, pragmatic, normalizedInput);
   const verdict = applyVerdictRules(merged.score, merged.criticalIssues);
 
   return {
     ...merged,
     verdict,
-    summary: buildSummary(verdict, merged.score),
-    nextStep: buildNextStep(verdict, merged.criticalIssues),
+    summary: buildSummary(verdict, merged.score, locale),
+    nextStep: buildNextStep(verdict, merged.criticalIssues, locale),
   };
 }
