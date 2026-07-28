@@ -164,6 +164,37 @@ export function analyzeTopology(
     }
   }
 
+  // QUEUE_BACKLOG — warn pressure teaches interview "queueing" before hard bottleneck
+  for (const node of normalized.nodes) {
+    if (evalResult.nodes[node.id] === 'warn') {
+      findings.push(
+        finding(
+          'QUEUE_BACKLOG',
+          'major',
+          [node.id],
+          `${node.label || node.type} está perto da capacidade (queueing) — latência sobe antes do colapso.`,
+          `${node.label || node.type} is near capacity (queueing) — latency rises before collapse.`,
+        ),
+      );
+    }
+  }
+
+  // HOT_PARTITION — SQL key skew under hot pressure
+  for (const node of normalized.nodes) {
+    if (evalResult.nodes[node.id] !== 'hot') continue;
+    if (node.config?.kind !== 'sql_db') continue;
+    if ((node.config.keySkew ?? 0) < 40) continue;
+    findings.push(
+      finding(
+        'HOT_PARTITION',
+        'major',
+        [node.id],
+        `${node.label || node.type} com keySkew=${node.config.keySkew}% sob carga — partição quente (celebrity key).`,
+        `${node.label || node.type} with keySkew=${node.config.keySkew}% under load — hot partition (celebrity key).`,
+      ),
+    );
+  }
+
   // SPOF: critical types with replicas=1 and no peer of same type
   for (const node of normalized.nodes) {
     if (!CRITICAL_SPOF_TYPES.has(node.type)) continue;

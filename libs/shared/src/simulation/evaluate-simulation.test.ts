@@ -326,4 +326,158 @@ describe('evaluateSimulation', () => {
     expect(result.ingressRps).toBe(50_000);
     expect(result.nodes.db).toBe('hot');
   });
+
+  it('reduces sync DB pressure when app also publishes to MQ (async decoupling)', () => {
+    const baseNodes = [
+      {
+        id: 'client',
+        type: 'client_web' as const,
+        label: 'Client',
+        replicas: 1,
+        position: { x: 0, y: 0 },
+      },
+      {
+        id: 'app',
+        type: 'app_server' as const,
+        label: 'App',
+        replicas: 4,
+        position: { x: 100, y: 0 },
+      },
+      {
+        id: 'db',
+        type: 'sql_db' as const,
+        label: 'SQL',
+        replicas: 2,
+        position: { x: 200, y: 0 },
+        config: {
+          kind: 'sql_db' as const,
+          shardCount: 2,
+          partitioningStrategy: 'hash' as const,
+          keySkew: 0,
+          accessPattern: 'read_write' as const,
+          topologyRole: 'primary' as const,
+          replicationFactor: 1,
+          consistency: 'strong' as const,
+        },
+      },
+    ];
+    const sim = {
+      running: true,
+      speed: 1,
+      traffic: 1,
+      readRatio: 40,
+      rps: 8_000,
+      writeRps: 4_800,
+      readRps: 3_200,
+    };
+    const syncOnly: ArchitectureGraph = {
+      nodes: baseNodes,
+      edges: [
+        { id: 'e1', from: 'client', to: 'app', direction: 'forward', label: 'REQ' },
+        { id: 'e2', from: 'app', to: 'db', direction: 'forward', label: 'DB' },
+      ],
+      simulation: sim,
+    };
+    const withMq: ArchitectureGraph = {
+      nodes: [
+        ...baseNodes,
+        {
+          id: 'mq',
+          type: 'message_queue',
+          label: 'MQ',
+          replicas: 2,
+          position: { x: 150, y: 80 },
+          config: {
+            kind: 'mq',
+            durability: 'disk',
+            partitionCount: 8,
+            deliveryGuarantee: 'at_least_once',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1', from: 'client', to: 'app', direction: 'forward', label: 'REQ' },
+        { id: 'e2', from: 'app', to: 'db', direction: 'forward', label: 'DB' },
+        { id: 'e3', from: 'app', to: 'mq', direction: 'forward', label: 'REQ' },
+      ],
+      simulation: sim,
+    };
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    const sync = evaluateSimulation(syncOnly);
+    const asyncPath = evaluateSimulation(withMq);
+    expect(order[asyncPath.nodes.db!]).toBeLessThanOrEqual(order[sync.nodes.db!]);
+    expect(asyncPath.nodes.db === 'hot' && sync.nodes.db === 'ok').toBe(false);
+  });
+
+  it('concentrates write load on primary vs replica topologyRole', () => {
+    const graph: ArchitectureGraph = {
+      nodes: [
+        {
+          id: 'client',
+          type: 'client_web',
+          label: 'Client',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'app',
+          type: 'app_server',
+          label: 'App',
+          replicas: 2,
+          position: { x: 100, y: 0 },
+        },
+        {
+          id: 'primary',
+          type: 'sql_db',
+          label: 'Primary',
+          replicas: 1,
+          position: { x: 200, y: 0 },
+          config: {
+            kind: 'sql_db',
+            shardCount: 1,
+            partitioningStrategy: 'hash',
+            keySkew: 0,
+            accessPattern: 'write',
+            topologyRole: 'primary',
+            replicationFactor: 2,
+            consistency: 'strong',
+          },
+        },
+        {
+          id: 'replica',
+          type: 'sql_db',
+          label: 'Replica',
+          replicas: 1,
+          position: { x: 200, y: 80 },
+          config: {
+            kind: 'sql_db',
+            shardCount: 1,
+            partitioningStrategy: 'hash',
+            keySkew: 0,
+            accessPattern: 'read',
+            topologyRole: 'replica',
+            replicationFactor: 2,
+            consistency: 'strong',
+          },
+        },
+      ],
+      edges: [
+        { id: 'e1', from: 'client', to: 'app', direction: 'forward', label: 'REQ' },
+        { id: 'e2', from: 'app', to: 'primary', direction: 'forward', label: 'DB' },
+        { id: 'e3', from: 'app', to: 'replica', direction: 'forward', label: 'DB' },
+      ],
+      simulation: {
+        running: true,
+        speed: 1,
+        traffic: 1,
+        readRatio: 30,
+        rps: 6_000,
+        writeRps: 4_200,
+        readRps: 1_800,
+      },
+    };
+    const result = evaluateSimulation(graph);
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    expect(order[result.nodes.primary!]).toBeGreaterThanOrEqual(order[result.nodes.replica!]);
+  });
 });

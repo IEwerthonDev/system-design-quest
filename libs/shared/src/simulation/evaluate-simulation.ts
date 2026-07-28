@@ -522,6 +522,53 @@ function evaluateAbsoluteWorkload(normalized: ArchitectureGraph): Record<string,
     }
   }
 
+  // Async decoupling: compute → MQ/kafka/pub_sub reduces sync write pressure on direct DB edges
+  const computeWithMq = new Set<string>();
+  for (const edge of normalized.edges) {
+    const from = typeById.get(edge.from);
+    const to = typeById.get(edge.to);
+    if (
+      from &&
+      to &&
+      (from.type === 'app_server' || from.type === 'microservice' || from.type === 'serverless') &&
+      (to.type === 'message_queue' || to.type === 'kafka' || to.type === 'pub_sub')
+    ) {
+      computeWithMq.add(from.id);
+    }
+  }
+  if (computeWithMq.size > 0 && writeFrac > 0) {
+    for (const edge of normalized.edges) {
+      if (!computeWithMq.has(edge.from)) continue;
+      const to = typeById.get(edge.to);
+      if (!to || (to.type !== 'sql_db' && to.type !== 'nosql_db')) continue;
+      const relief = writeFrac * 0.5;
+      loadById[edge.to] = Math.max(0, (loadById[edge.to] ?? 0) * (1 - relief));
+    }
+  }
+
+  // Single-leader teaching: replicas shed write load onto primary/standalone peers
+  for (const node of normalized.nodes) {
+    if (node.type !== 'sql_db' && node.type !== 'nosql_db') continue;
+    const role =
+      node.config?.kind === 'sql_db' || node.config?.kind === 'nosql_db'
+        ? node.config.topologyRole
+        : 'primary';
+    if (role !== 'replica') continue;
+    const writeShare = (loadById[node.id] ?? 0) * writeFrac;
+    if (writeShare <= 0) continue;
+    loadById[node.id] = Math.max(0, (loadById[node.id] ?? 0) - writeShare * 0.85);
+    const primary = normalized.nodes.find(
+      (n) =>
+        n.type === node.type &&
+        n.id !== node.id &&
+        (n.config?.kind === 'sql_db' || n.config?.kind === 'nosql_db') &&
+        (n.config.topologyRole === 'primary' || n.config.topologyRole === 'standalone'),
+    );
+    if (primary) {
+      loadById[primary.id] = (loadById[primary.id] ?? 0) + writeShare * 0.85;
+    }
+  }
+
   // Growth factor stresses capacity scenario
   const growth = sim.growthFactor && sim.growthFactor > 1 ? sim.growthFactor : 1;
   if (growth > 1) {

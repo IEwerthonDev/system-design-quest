@@ -186,4 +186,76 @@ describe('analyzeTopology', () => {
     const codes = analyzeTopology(graph).map((f) => f.code);
     expect(codes).toContain('CACHE_OFF_PATH');
   });
+
+  it('emits QUEUE_BACKLOG for warn pressure nodes', () => {
+    const graph: ArchitectureGraph = {
+      nodes: [
+        {
+          id: 'client',
+          type: 'client_web',
+          label: 'Client',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+        },
+        {
+          id: 'app',
+          type: 'app_server',
+          label: 'App',
+          replicas: 1,
+          position: { x: 100, y: 0 },
+        },
+      ],
+      edges: [{ id: 'e1', from: 'client', to: 'app', direction: 'forward', label: 'REQ' }],
+      simulation: {
+        running: true,
+        speed: 1,
+        traffic: 1,
+        readRatio: 50,
+        rps: 1_600,
+      },
+    };
+    const evalResult = evaluateSimulation(graph);
+    const forced = {
+      ...evalResult,
+      nodes: { ...evalResult.nodes, app: 'warn' as const },
+    };
+    const codes = analyzeTopology(graph, forced).map((f) => f.code);
+    expect(codes).toContain('QUEUE_BACKLOG');
+  });
+
+  it('emits HOT_PARTITION when skewed SQL is hot', () => {
+    const graph: ArchitectureGraph = {
+      nodes: [
+        {
+          id: 'db',
+          type: 'sql_db',
+          label: 'SQL',
+          replicas: 1,
+          position: { x: 0, y: 0 },
+          config: {
+            kind: 'sql_db',
+            shardCount: 1,
+            partitioningStrategy: 'hash',
+            keySkew: 80,
+            accessPattern: 'read_write',
+            topologyRole: 'primary',
+            replicationFactor: 1,
+            consistency: 'strong',
+          },
+        },
+      ],
+      edges: [],
+      simulation: { running: true, speed: 1, traffic: 5, readRatio: 50 },
+    };
+    const forced = {
+      nodes: { db: 'hot' as const },
+      latencyMs: { db: 280 },
+      reasons: {},
+      hotReadPath: false,
+      ingressRps: 1000,
+    };
+    const codes = analyzeTopology(graph, forced).map((f) => f.code);
+    expect(codes).toContain('HOT_PARTITION');
+    expect(codes).toContain('BOTTLENECK');
+  });
 });
