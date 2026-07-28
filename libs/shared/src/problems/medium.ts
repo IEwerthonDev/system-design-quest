@@ -1,6 +1,6 @@
-import type { Problem } from '../schema/problem';
+import type { ProblemDefinition } from '../schema/problem';
 
-export const CHAT_SYSTEM: Problem = {
+export const CHAT_SYSTEM: ProblemDefinition = {
   id: 'chat-system',
   company: 'WhatsApp',
   title: 'Chat em Tempo Real',
@@ -52,7 +52,7 @@ export const CHAT_SYSTEM: Problem = {
   },
 };
 
-export const NEWS_FEED: Problem = {
+export const NEWS_FEED: ProblemDefinition = {
   id: 'news-feed',
   company: 'Meta / X',
   title: 'News Feed',
@@ -106,7 +106,7 @@ export const NEWS_FEED: Problem = {
   },
 };
 
-export const SEARCH_AUTOCOMPLETE: Problem = {
+export const SEARCH_AUTOCOMPLETE: ProblemDefinition = {
   id: 'search-autocomplete',
   company: 'Google',
   title: 'Autocomplete / Typeahead',
@@ -155,7 +155,7 @@ export const SEARCH_AUTOCOMPLETE: Problem = {
   },
 };
 
-export const INSTAGRAM: Problem = {
+export const INSTAGRAM: ProblemDefinition = {
   id: 'instagram',
   company: 'Instagram',
   title: 'Instagram',
@@ -206,7 +206,7 @@ export const INSTAGRAM: Problem = {
   },
 };
 
-export const GOOGLE_DRIVE: Problem = {
+export const GOOGLE_DRIVE: ProblemDefinition = {
   id: 'google-drive',
   company: 'Google Drive',
   title: 'Armazenamento em Nuvem',
@@ -255,7 +255,7 @@ export const GOOGLE_DRIVE: Problem = {
   },
 };
 
-export const YELP_NEARBY: Problem = {
+export const YELP_NEARBY: ProblemDefinition = {
   id: 'yelp-nearby',
   company: 'Yelp',
   title: 'Busca por Proximidade',
@@ -304,7 +304,7 @@ export const YELP_NEARBY: Problem = {
   },
 };
 
-export const HOTEL_BOOKING: Problem = {
+export const HOTEL_BOOKING: ProblemDefinition = {
   id: 'hotel-booking',
   company: 'Booking.com',
   title: 'Reserva de Hotel',
@@ -353,7 +353,7 @@ export const HOTEL_BOOKING: Problem = {
   },
 };
 
-export const YOUTUBE: Problem = {
+export const YOUTUBE: ProblemDefinition = {
   id: 'youtube',
   company: 'YouTube',
   title: 'Streaming de Vídeo',
@@ -406,7 +406,7 @@ export const YOUTUBE: Problem = {
   },
 };
 
-export const UBER_RIDE: Problem = {
+export const UBER_RIDE: ProblemDefinition = {
   id: 'uber-ride',
   company: 'Uber',
   title: 'Motoristas Próximos',
@@ -458,7 +458,7 @@ export const UBER_RIDE: Problem = {
   },
 };
 
-export const TIKTOK_FEED: Problem = {
+export const TIKTOK_FEED: ProblemDefinition = {
   id: 'tiktok-feed',
   company: 'TikTok',
   title: 'TikTok — Feed de Vídeos Curtos',

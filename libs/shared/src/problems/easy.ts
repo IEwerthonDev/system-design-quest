@@ -1,6 +1,6 @@
-import type { Problem } from '../schema/problem';
+import type { ProblemDefinition } from '../schema/problem';
 
-export const RATE_LIMITER: Problem = {
+export const RATE_LIMITER: ProblemDefinition = {
   id: 'rate-limiter',
   company: 'Stripe',
   title: 'Rate Limiter',
@@ -53,7 +53,7 @@ export const RATE_LIMITER: Problem = {
   },
 };
 
-export const PASTEBIN: Problem = {
+export const PASTEBIN: ProblemDefinition = {
   id: 'pastebin',
   company: 'Pastebin',
   title: 'Pastebin',
@@ -106,7 +106,7 @@ export const PASTEBIN: Problem = {
   },
 };
 
-export const UNIQUE_ID_GEN: Problem = {
+export const UNIQUE_ID_GEN: ProblemDefinition = {
   id: 'unique-id-gen',
   company: 'Twitter / X',
   title: 'Gerador de ID Distribuído',
@@ -155,7 +155,7 @@ export const UNIQUE_ID_GEN: Problem = {
   },
 };
 
-export const DISTRIBUTED_CACHE: Problem = {
+export const DISTRIBUTED_CACHE: ProblemDefinition = {
   id: 'distributed-cache',
   company: 'Meta',
   title: 'Cache Distribuído',
@@ -205,7 +205,7 @@ export const DISTRIBUTED_CACHE: Problem = {
   },
 };
 
-export const NOTIFICATION_SYSTEM: Problem = {
+export const NOTIFICATION_SYSTEM: ProblemDefinition = {
   id: 'notification-system',
   company: 'Uber',
   title: 'Sistema de Notificações',
@@ -255,7 +255,7 @@ export const NOTIFICATION_SYSTEM: Problem = {
   },
 };
 
-export const KEY_VALUE_STORE: Problem = {
+export const KEY_VALUE_STORE: ProblemDefinition = {
   id: 'key-value-store',
   company: 'Amazon',
   title: 'Key-Value Store',

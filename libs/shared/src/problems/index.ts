@@ -1,19 +1,31 @@
 import type { Difficulty, Problem } from '../schema/problem';
+import { attachBilingualCopy } from '../i18n/localize-problem';
+import { PROBLEM_COPY_EN } from './copy-en';
 import { EASY_PROBLEMS } from './easy';
 import { HARD_PROBLEMS } from './hard';
 import { MEDIUM_PROBLEMS } from './medium';
-import { URL_SHORTENER } from './url-shortener';
+import { URL_SHORTENER as URL_SHORTENER_DEF } from './url-shortener';
 
 export type ProblemFilter = {
   difficulty?: Difficulty | 'all';
   tag?: string;
 };
 
+function withCopy(definition: (typeof URL_SHORTENER_DEF)): Problem {
+  const en = PROBLEM_COPY_EN[definition.id];
+  if (!en) {
+    throw new Error(`Missing English problem copy for id: ${definition.id}`);
+  }
+  return attachBilingualCopy(definition, en);
+}
+
+export const URL_SHORTENER: Problem = withCopy(URL_SHORTENER_DEF);
+
 const ALL_PROBLEMS: readonly Problem[] = [
   URL_SHORTENER,
-  ...EASY_PROBLEMS,
-  ...MEDIUM_PROBLEMS,
-  ...HARD_PROBLEMS,
+  ...EASY_PROBLEMS.map(withCopy),
+  ...MEDIUM_PROBLEMS.map(withCopy),
+  ...HARD_PROBLEMS.map(withCopy),
 ];
 
 const PROBLEMS_BY_ID: Record<string, Problem> = Object.fromEntries(
@@ -61,4 +73,4 @@ export function countByDifficulty(): Record<Difficulty, number> {
   return counts;
 }
 
-export { URL_SHORTENER, URL_SHORTENER_ID } from './url-shortener';
+export { URL_SHORTENER_ID } from './url-shortener';

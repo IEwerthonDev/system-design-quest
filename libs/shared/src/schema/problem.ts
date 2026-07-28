@@ -1,5 +1,8 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 
+/** UI / problem narrative locale */
+export type Locale = 'en' | 'pt-BR';
+
 /** Hidden scoring guidance for the AI judge — not shown to the player */
 export interface JudgeRubric {
   expectedComponents: string[];
@@ -32,6 +35,14 @@ export interface SuggestedRequirements {
   nonFunctional: string[];
 }
 
+/** Per-locale player-facing problem text (rubric stays language-agnostic). */
+export interface ProblemCopy {
+  title: string;
+  description: string;
+  constraints: string[];
+  suggestedRequirements: SuggestedRequirements;
+}
+
 export interface Problem {
   id: string;
   /** Well-known company or product this problem is modeled after */
@@ -50,8 +61,13 @@ export interface Problem {
   orderInTrack?: number;
   /** Estimated completion time in minutes */
   estimatedMinutes: EstimatedMinutes;
-  /** Hidden rubric for AI judge prompts */
+  /** Hidden rubric for AI judge prompts (English / language-agnostic) */
   rubric: JudgeRubric;
   /** Badge "Recomendado" on the recommended learning track */
   isRecommended?: boolean;
+  /** Player-facing copy for each supported locale */
+  copy: Record<Locale, ProblemCopy>;
 }
+
+/** Catalog entry before bilingual copy is attached. */
+export type ProblemDefinition = Omit<Problem, 'copy'>;

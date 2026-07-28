@@ -1,6 +1,6 @@
-import type { Problem } from '../schema/problem';
+import type { ProblemDefinition } from '../schema/problem';
 
-export const NETFLIX_STREAMING: Problem = {
+export const NETFLIX_STREAMING: ProblemDefinition = {
   id: 'netflix-streaming',
   company: 'Netflix',
   title: 'Netflix — Streaming ABR',
@@ -51,7 +51,7 @@ export const NETFLIX_STREAMING: Problem = {
   },
 };
 
-export const TICKETMASTER: Problem = {
+export const TICKETMASTER: ProblemDefinition = {
   id: 'ticketmaster',
   company: 'Ticketmaster',
   title: 'Ticketmaster — Venda de Ingressos',
@@ -101,7 +101,7 @@ export const TICKETMASTER: Problem = {
   },
 };
 
-export const GOOGLE_MAPS: Problem = {
+export const GOOGLE_MAPS: ProblemDefinition = {
   id: 'google-maps',
   company: 'Google Maps',
   title: 'Google Maps',
@@ -151,7 +151,7 @@ export const GOOGLE_MAPS: Problem = {
   },
 };
 
-export const GOOGLE_DOCS: Problem = {
+export const GOOGLE_DOCS: ProblemDefinition = {
   id: 'google-docs',
   company: 'Google Docs',
   title: 'Edição Colaborativa',
@@ -201,7 +201,7 @@ export const GOOGLE_DOCS: Problem = {
   },
 };
 
-export const STRIPE_PAYMENTS: Problem = {
+export const STRIPE_PAYMENTS: ProblemDefinition = {
   id: 'stripe-payments',
   company: 'Stripe',
   title: 'Sistema de Pagamentos',
@@ -251,7 +251,7 @@ export const STRIPE_PAYMENTS: Problem = {
   },
 };
 
-export const ZOOM_CONFERENCE: Problem = {
+export const ZOOM_CONFERENCE: ProblemDefinition = {
   id: 'zoom-conference',
   company: 'Zoom',
   title: 'Videoconferência',
@@ -301,7 +301,7 @@ export const ZOOM_CONFERENCE: Problem = {
   },
 };
 
-export const DOORDASH_DELIVERY: Problem = {
+export const DOORDASH_DELIVERY: ProblemDefinition = {
   id: 'doordash-delivery',
   company: 'DoorDash',
   title: 'Delivery de Comida',
@@ -351,7 +351,7 @@ export const DOORDASH_DELIVERY: Problem = {
   },
 };
 
-export const DISTRIBUTED_KAFKA: Problem = {
+export const DISTRIBUTED_KAFKA: ProblemDefinition = {
   id: 'distributed-kafka',
   company: 'LinkedIn',
   title: 'Message Queue Distribuída',
@@ -400,7 +400,7 @@ export const DISTRIBUTED_KAFKA: Problem = {
   },
 };
 
-export const S3_STORAGE: Problem = {
+export const S3_STORAGE: ProblemDefinition = {
   id: 's3-storage',
   company: 'AWS',
   title: 'Object Storage (S3-like)',
@@ -449,7 +449,7 @@ export const S3_STORAGE: Problem = {
   },
 };
 
-export const DISTRIBUTED_LOCK: Problem = {
+export const DISTRIBUTED_LOCK: ProblemDefinition = {
   id: 'distributed-lock',
   company: 'Google',
   title: 'Distributed Lock',
