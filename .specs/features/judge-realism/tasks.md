@@ -151,11 +151,11 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] `shouldUseMock` path does not apply shortener fixtures to other `problemId`s
-- [ ] Result includes bilingual note about LLM for rich narrative
-- [ ] `scaleNarrative` filled from checklist
-- [ ] Tests: zoom + shortener graph → FAIL with structural codes
-- [ ] Commit: `feat(server): structural-only judge when mock or no LLM key`
+- [x] `shouldUseMock` path does not apply shortener fixtures to other `problemId`s
+- [x] Result includes bilingual note about LLM for rich narrative
+- [x] `scaleNarrative` filled from checklist
+- [x] Tests: zoom + shortener graph → FAIL with structural codes
+- [x] Commit: `feat(server): structural-only judge when mock or no LLM key`
 
 **Tests:** unit  
 **Gate:** quick server  
