@@ -585,5 +585,32 @@ describe('phase navigation', () => {
         clearCachedJudgePayload();
       }
     });
+
+    it('emits phase analytics events and abandon on pagehide', async () => {
+      const trackFn = vi.fn();
+      const nav = mountPhaseNavigation(container, {
+        trackFn,
+        submitForJudging: vi.fn().mockResolvedValue(sampleJudgeResult),
+      });
+
+      expect(trackFn).toHaveBeenCalledWith('problem_start', {
+        problemId: 'url-shortener',
+        mode: 'study',
+      });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      expect(trackFn).toHaveBeenCalledWith('phase_requirements', { problemId: 'url-shortener' });
+
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      expect(trackFn).toHaveBeenCalledWith('phase_canvas', { problemId: 'url-shortener' });
+
+      window.dispatchEvent(new Event('pagehide'));
+      expect(trackFn).toHaveBeenCalledWith('abandon', {
+        problemId: 'url-shortener',
+        phase: 'canvas',
+      });
+
+      nav.destroy();
+    });
   });
 });

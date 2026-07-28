@@ -30,6 +30,7 @@ import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
 import { t } from '../i18n/t';
 import { shareDesign } from '../share/share-design';
+import { bindAbandonTracking, track } from '../analytics/track';
 import {
   advancePhase,
   createSession,
@@ -74,6 +75,8 @@ export interface MountPhaseNavigationOptions {
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
   upsertSessionFn?: typeof upsertSession;
   getNickname?: () => string;
+  /** Injectable analytics emitter (tests). */
+  trackFn?: typeof track;
   now?: () => number;
 }
 
@@ -139,8 +142,20 @@ export function mountPhaseNavigation(
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
   const getNickname = options.getNickname ?? getOrCreateNickname;
   const upsertSessionFn = options.upsertSessionFn ?? upsertSession;
+  const emitTrack = options.trackFn ?? track;
 
   let beginnerMode = experienceLevel === 'beginner';
+  let lastTrackedPhase: GamePhase | null = null;
+  let reachedResult = false;
+
+  emitTrack('problem_start', { problemId, mode });
+
+  const unbindAbandon = bindAbandonTracking({
+    getProblemId: () => problemId,
+    getPhase: () => getSession()?.phase ?? lastTrackedPhase,
+    hasReachedResult: () => reachedResult,
+    trackFn: emitTrack,
+  });
 
   const shell = document.createElement('div');
   shell.className = 'sdq-phase-shell';
@@ -394,6 +409,18 @@ export function mountPhaseNavigation(
     const phase = session?.phase ?? 'briefing';
     const visibility = getPhaseLayerVisibility(phase);
 
+    if (phase !== lastTrackedPhase) {
+      lastTrackedPhase = phase;
+      if (phase === 'requirements') {
+        emitTrack('phase_requirements', { problemId });
+      } else if (phase === 'canvas') {
+        emitTrack('phase_canvas', { problemId });
+      } else if (phase === 'result') {
+        reachedResult = true;
+        emitTrack('phase_result', { problemId });
+      }
+    }
+
     briefingPanel.root.hidden = !visibility.briefing;
     requirementsPanel.root.hidden = !visibility.requirements;
     palette.setVisible(visibility.palette);
@@ -481,6 +508,7 @@ export function mountPhaseNavigation(
     root: shell,
     sync,
     destroy: () => {
+      unbindAbandon();
       unbindGlossaryShortcut();
       glossaryPanel.destroy();
       unsubscribeGraphChanges?.();
