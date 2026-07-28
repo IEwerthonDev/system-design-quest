@@ -22,14 +22,16 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` Execute Batch 1 (T1–T7 / P1+P2) via sub-agent |
-| **Próximo passo** | Await Batch 1 compact summary → Batch 2 (T8–T13) → Batch 3 (T14–T19) → Verifier |
+| **Fase atual** | `judge-realism` Execute — Batch 1 (T1–T7 / P1+P2) **complete** |
+| **Próximo passo** | Batch 2 (T8–T13 / P3+P4) → Batch 3 (T14–T19) → Verifier |
 | **Feature ativa** | `judge-realism` (Complex) |
 | **Branch** | `feature/judge-realism` |
-| **Bloqueios** | Judge mock uses URL-shortener golden tiers for ALL problems when `LLM_API_KEY` missing — same graph can “pass” videoconference |
+| **Bloqueios** | None for Batch 1 — structural-first path kills cross-problem golden reuse on mock/no-key |
+| **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
+| **Gate** | `npx nx run-many -t test -p shared,server` — shared 95 + server 131 passed |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
-| **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** approved |
+| **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** + AD-027/028 |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_99JVXdfuakhwUv9u8WFo4XYi31DZ` — READY (`b555df7` canvas-clear + paper icon + header gap) |
 | **Env set** | KV_* · AUTH_* · GOOGLE_* · LLM_API_KEY + LLM_BASE_URL (OpenRouter) + LLM_MODEL (`openai/gpt-4o-mini`) — local `.env` + Vercel prod/preview/dev; redeploy needed for live judge; user accepted no-rotate for chat-exposed key |
@@ -39,26 +41,24 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **UI fix** | Voltar in header; palette minimizable; Stop/Share/config chrome |
 | **Neon** | Deferred (NEON-01) |
 
-### Context Checkpoint (2026-07-28)
+### Context Checkpoint (2026-07-28 Batch 1)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER/RED — ops + hotfixes + large judge overhaul in one thread |
-| Uncommitted | GREEN after chrome commit |
-| Spec drift | GREEN for UI; judge-realism not yet specified |
-| Gate confidence | GREEN for UI tests; judge rigor unproven |
-| Task clarity | AMBER — Complex feature needs discuss before execute |
+| Chat length | GREEN — fresh Batch 1 worker, T1–T7 only |
+| Uncommitted | GREEN — all T1–T7 committed |
+| Spec drift | GREEN — Approach A / AD-027 structural-first |
+| Gate confidence | GREEN — shared 95 + server 131 |
+| Task clarity | GREEN — next = Batch 2 T8–T13 |
 
-**Veredito:** AMBER — ship UI; **do not invent** judge/config architecture until discuss answers. Prefer **new session** for `judge-realism` Execute.
+**Veredito:** GREEN for starting Batch 2 in a fresh worker.
 
-**Prompt para nova sessão:**
+**Prompt para Batch 2:**
 ```
-Branch main. UI chrome shipped (canvas clear on new challenge, paper config icon, header gap).
-Skills: ddia-systems + interview-system-designer installed.
-Read .specs/STATE.md Handoff. Root cause of weak judging: mock LLM maps ANY problem graph to URL-shortener golden tiers when LLM_API_KEY missing.
-Feature: judge-realism — problem-specific judging + configs that affect pass/fail + DDIA-grounded rigor.
-Discuss answers from prior chat (or ask again), then TLC Specify → Design → Tasks → Execute.
-Gate: problem A PASS must FAIL on problem B with same graph; configs change score/sim.
+Branch feature/judge-realism. Batch 1 (T1–T7) complete.
+Read .specs/STATE.md Handoff + .specs/features/judge-realism/tasks.md T8–T13.
+Execute Batch 2 only (Phases 3+4 = T8→T13). One atomic commit per task. Do not push. Do not spawn sub-agents.
+Gate: npx nx test shared / server / client per task.
 ```
 
 ### Deploy note (Hobby)
