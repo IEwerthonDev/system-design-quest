@@ -162,6 +162,8 @@ export type UiStringKey =
   | 'palette.collapse'
   | 'findings.title'
   | 'workload.title'
+  | 'workload.fab'
+  | 'workload.collapse'
   | 'workload.rps'
   | 'workload.readRps'
   | 'workload.writeRps'
@@ -174,6 +176,8 @@ export type UiStringKey =
   | 'workload.growthFactor'
   | 'workload.dailyDataGb'
   | 'mentor.title'
+  | 'mentor.fab'
+  | 'mentor.collapse'
   | 'mentor.evaluate'
   | 'mentor.hint'
   | 'mentor.bottlenecks'
@@ -352,6 +356,8 @@ export const CATALOG_EN: UiCatalog = {
   'palette.collapse': 'Minimize components',
   'findings.title': 'Findings',
   'workload.title': 'Workload',
+  'workload.fab': 'WORKLOAD',
+  'workload.collapse': 'Minimize workload',
   'workload.rps': 'RPS',
   'workload.readRps': 'Reads/s',
   'workload.writeRps': 'Writes/s',
@@ -364,6 +370,8 @@ export const CATALOG_EN: UiCatalog = {
   'workload.growthFactor': 'Growth factor',
   'workload.dailyDataGb': 'Daily data (GB)',
   'mentor.title': 'AI Mentor',
+  'mentor.fab': 'MENTOR',
+  'mentor.collapse': 'Minimize mentor',
   'mentor.evaluate': 'Evaluate architecture',
   'mentor.hint': 'Give me a hint',
   'mentor.bottlenecks': 'Find bottlenecks',
