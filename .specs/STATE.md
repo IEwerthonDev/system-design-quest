@@ -22,34 +22,37 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `study-mode` implementado — gate lint+test green |
-| **Próximo passo** | Merge PR + smoke Study Mode CTA + mentor buttons on production |
-| **Feature ativa** | `study-mode` |
-| **Branch** | `feature/study-mode` |
+| **Fase atual** | `study-mode` merged to `main` + production READY |
+| **Próximo passo** | Smoke UI: Study Mode CTA → workload → Start → mentor buttons |
+| **Feature ativa** | none (`study-mode` shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033 |
-| **Gate** | `npx nx run-many -t lint test` green |
+| **Gate** | lint+test green pre-merge |
+| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/5 (squash `82af861`) |
 | **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_7sWPkg6sn75AFHVDwPGroNrywe8F` READY (`api/mentor` live) |
 
-### Context Checkpoint (2026-07-28 study-mode)
+### Context Checkpoint (2026-07-28 study-mode ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — large epic |
-| Uncommitted | shipping |
+| Chat length | AMBER — epic shipped |
+| Uncommitted | docs commit |
 | Spec drift | GREEN |
 | Gate confidence | GREEN |
-| Task clarity | GREEN |
+| Task clarity | GREEN — done |
 
-**Veredito:** GREEN — ship
+**Veredito:** GREEN — shipped
 
 ### Deploy note (Hobby)
 
-- **Serves:** Vite client `dist/client` + serverless `api/*.js` (judge, sessions, leaderboard, cron, optional export) via esbuild from `server/src/vercel/`
+- **Serves:** Vite client `dist/client` + serverless `api/*.js` (judge, sessions, leaderboard, cron, auth, **mentor**) via esbuild from `server/src/vercel/`
+- **New API routes:** run `bash scripts/vercel-build.sh` (or at least esbuild the new entry) before `vercel deploy` so `api/<name>.js` exists locally — Vercel registers lambdas from the uploaded `api/` set
 - **Sessions / leaderboard on Hobby:** Vercel KV primary (AD-025); client `localStorage` fallback when remote missing/fails; optional `VITE_SESSIONS_MODE=local`
 - **Mobile:** tap-to-add when `(pointer: coarse)` or width ≤768; HTML5 DnD remains desktop path
-- **Env:** Documented in `.env.example` — `KV_*`, optional `BLOB_READ_WRITE_TOKEN`, `EDGE_CONFIG` / `VITE_EDGE_CONFIG`, `CRON_SECRET`; optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock
-- **Build:** esbuild api bundles (judge/sessions/leaderboard/cron) then `client:build`; quality gate `nx run-many -t lint test`
+- **Env:** Documented in `.env.example` — `KV_*`, optional `BLOB_READ_WRITE_TOKEN`, `EDGE_CONFIG` / `VITE_EDGE_CONFIG`, `CRON_SECRET`; optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge/mentor when key missing; `JUDGE_USE_MOCK=true` forces mock
+- **Build:** esbuild api bundles (judge/sessions/leaderboard/cron/auth/mentor) then `client:build`; quality gate `nx run-many -t lint test`
 - **Production:** https://system-design-quest.vercel.app
 - **Cron:** `vercel.json` schedules `GET/POST /api/cron` daily (`0 6 * * *`); auth via `Authorization: Bearer CRON_SECRET`
 
