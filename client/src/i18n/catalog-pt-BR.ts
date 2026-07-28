@@ -185,6 +185,8 @@ export const CATALOG_PT_BR: UiCatalog = {
   'workload.growthFactor': 'Fator de crescimento',
   'workload.dailyDataGb': 'Dados diários (GB)',
   'mentor.title': 'Mentor IA',
+  'mentor.fab': 'MENTOR',
+  'mentor.collapse': 'Minimizar mentor',
   'mentor.evaluate': 'Avaliar arquitetura',
   'mentor.hint': 'Me dê uma dica',
   'mentor.bottlenecks': 'Encontrar gargalos',
