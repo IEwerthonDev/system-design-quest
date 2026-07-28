@@ -147,6 +147,71 @@ describe('problem library UI', () => {
     const card = container.querySelector('[data-testid="problem-card-youtube"]');
     expect(card?.textContent).toContain('Concluído');
   });
+
+  it('renders EN and PT-BR locale buttons with pt-BR active by default', () => {
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+
+    const en = container.querySelector('[data-testid="locale-en"]');
+    const pt = container.querySelector('[data-testid="locale-pt-BR"]');
+    expect(en).toBeTruthy();
+    expect(pt).toBeTruthy();
+    expect(pt?.classList.contains('sdq-library__locale-btn--active')).toBe(true);
+    expect(en?.classList.contains('sdq-library__locale-btn--active')).toBe(false);
+    expect(container.querySelector('.sdq-library__title')?.textContent).toBe('Problemas');
+    expect(
+      container.querySelector('[data-testid="problem-title-url-shortener"]')?.textContent,
+    ).toBe('Encurtador de URL');
+  });
+
+  it('clicking EN updates chrome strings and localized titles; PT-BR restores', () => {
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+
+    container.querySelector<HTMLButtonElement>('[data-testid="locale-en"]')?.click();
+
+    expect(
+      container.querySelector('[data-testid="locale-en"]')?.classList.contains(
+        'sdq-library__locale-btn--active',
+      ),
+    ).toBe(true);
+    expect(container.querySelector('.sdq-library__title')?.textContent).toBe('Problems');
+    expect(
+      container.querySelector('[data-testid="library-open-sessions"]')?.textContent,
+    ).toBe('My sessions');
+    expect(
+      container.querySelector('[data-testid="problem-title-url-shortener"]')?.textContent,
+    ).toBe('URL Shortener');
+
+    container.querySelector<HTMLButtonElement>('[data-testid="locale-pt-BR"]')?.click();
+
+    expect(
+      container.querySelector('[data-testid="locale-pt-BR"]')?.classList.contains(
+        'sdq-library__locale-btn--active',
+      ),
+    ).toBe(true);
+    expect(container.querySelector('.sdq-library__title')?.textContent).toBe('Problemas');
+    expect(
+      container.querySelector('[data-testid="problem-title-url-shortener"]')?.textContent,
+    ).toBe('Encurtador de URL');
+  });
+
+  it('locale preference survives remount via storage', () => {
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+    container.querySelector<HTMLButtonElement>('[data-testid="locale-en"]')?.click();
+    container.replaceChildren();
+    document.getElementById('sdq-library-styles')?.remove();
+
+    mountProblemLibrary(container, { onSelect: () => undefined }, storage);
+
+    expect(
+      container.querySelector('[data-testid="locale-en"]')?.classList.contains(
+        'sdq-library__locale-btn--active',
+      ),
+    ).toBe(true);
+    expect(container.querySelector('.sdq-library__title')?.textContent).toBe('Problems');
+    expect(
+      container.querySelector('[data-testid="problem-title-url-shortener"]')?.textContent,
+    ).toBe('URL Shortener');
+  });
 });
 
 function librarySetHardAndClick(container: ParentNode): void {

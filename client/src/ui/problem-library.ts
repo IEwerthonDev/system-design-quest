@@ -2,10 +2,13 @@ import {
   countByDifficulty,
   filterProblems,
   listProblemsByDifficulty,
+  localizeProblem,
   type Difficulty,
   type Problem,
 } from '@sdq/shared';
 import type { LeaderboardEntry } from '@sdq/shared';
+import { getLocale, setLocale, type Locale } from '../i18n/locale';
+import { t } from '../i18n/t';
 import type { GameMode } from '../test-hook';
 import { DIFFICULTY_LABELS } from './briefing-panel';
 import {
@@ -114,6 +117,36 @@ function injectLibraryStyles(root: HTMLElement): void {
       letter-spacing: -0.02em;
       color: var(--sdq-text);
       line-height: 1.15;
+    }
+    .sdq-library__header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+    .sdq-library__locale {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--sdq-border);
+      border-radius: var(--sdq-radius-sm, 6px);
+    }
+    .sdq-library__locale-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--sdq-text-muted);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font: 600 12px var(--sdq-font-mono, monospace);
+      letter-spacing: 0.04em;
+      cursor: pointer;
+      min-height: 36px;
+      touch-action: manipulation;
+    }
+    .sdq-library__locale-btn--active {
+      background: var(--sdq-accent-muted, rgba(201,169,98,0.15));
+      border-color: var(--sdq-accent-border);
+      color: var(--sdq-accent);
     }
     .sdq-library__sessions {
       border: 1px solid var(--sdq-border);
@@ -328,6 +361,8 @@ export function mountProblemLibrary(
 
   let currentFilter: LibraryFilter = 'all';
   let warningMessage: string | null = null;
+  let warningKind: 'hard' | 'speedrunMedium' | null = null;
+  let currentLocale: Locale = getLocale(storage);
 
   const panel = document.createElement('div');
   panel.className = 'sdq-library';
@@ -350,25 +385,44 @@ export function mountProblemLibrary(
 
   const title = document.createElement('h1');
   title.className = 'sdq-library__title';
-  title.textContent = 'Problemas';
 
   headerText.append(eyebrow, title);
+
+  const headerActions = document.createElement('div');
+  headerActions.className = 'sdq-library__header-actions';
+
+  const localeGroup = document.createElement('div');
+  localeGroup.className = 'sdq-library__locale';
+  localeGroup.setAttribute('role', 'group');
+  localeGroup.setAttribute('aria-label', 'Language');
+
+  const localeEnButton = document.createElement('button');
+  localeEnButton.type = 'button';
+  localeEnButton.className = 'sdq-library__locale-btn';
+  localeEnButton.setAttribute('data-testid', 'locale-en');
+  localeEnButton.textContent = t('library.locale.en', currentLocale, storage);
+
+  const localePtButton = document.createElement('button');
+  localePtButton.type = 'button';
+  localePtButton.className = 'sdq-library__locale-btn';
+  localePtButton.setAttribute('data-testid', 'locale-pt-BR');
+  localePtButton.textContent = t('library.locale.ptBR', currentLocale, storage);
+
+  localeGroup.append(localeEnButton, localePtButton);
 
   const sessionsButton = document.createElement('button');
   sessionsButton.type = 'button';
   sessionsButton.className = 'sdq-library__sessions';
   sessionsButton.setAttribute('data-testid', 'library-open-sessions');
-  sessionsButton.textContent = 'Minhas sessões';
   sessionsButton.addEventListener('click', () => {
     callbacks.onOpenSessions?.();
   });
 
-  header.append(headerText, sessionsButton);
+  headerActions.append(localeGroup, sessionsButton);
+  header.append(headerText, headerActions);
 
   const subtitle = document.createElement('p');
   subtitle.className = 'sdq-library__subtitle';
-  subtitle.textContent =
-    'Desenhe o system design de features reais de empresas conhecidas — Bit.ly, Uber, Netflix, WhatsApp e mais.';
 
   const warning = document.createElement('div');
   warning.className = 'sdq-library__warning';
@@ -395,11 +449,11 @@ export function mountProblemLibrary(
     fetchLeaderboard: callbacks.fetchLeaderboard,
   });
 
-  const filterOptions: Array<{ id: LibraryFilter; label: string }> = [
-    { id: 'all', label: 'Todos' },
-    { id: 'easy', label: '🟢 Fácil' },
-    { id: 'medium', label: '🟡 Médio' },
-    { id: 'hard', label: '🔴 Difícil' },
+  const filterOptions = (): Array<{ id: LibraryFilter; label: string }> => [
+    { id: 'all', label: t('library.filter.all', currentLocale, storage) },
+    { id: 'easy', label: t('library.filter.easy', currentLocale, storage) },
+    { id: 'medium', label: t('library.filter.medium', currentLocale, storage) },
+    { id: 'hard', label: t('library.filter.hard', currentLocale, storage) },
   ];
 
   const idsForDifficulty = (difficulty: Difficulty) =>
@@ -407,6 +461,26 @@ export function mountProblemLibrary(
 
   const getCompletedEasyCount = (): number =>
     countCompletedByDifficulty('easy', idsForDifficulty, storage).completed;
+
+  const localized = (problem: Problem): Problem => localizeProblem(problem, currentLocale);
+
+  const renderLocaleButtons = (): void => {
+    localeEnButton.className = `sdq-library__locale-btn${
+      currentLocale === 'en' ? ' sdq-library__locale-btn--active' : ''
+    }`;
+    localePtButton.className = `sdq-library__locale-btn${
+      currentLocale === 'pt-BR' ? ' sdq-library__locale-btn--active' : ''
+    }`;
+    localeEnButton.setAttribute('aria-pressed', currentLocale === 'en' ? 'true' : 'false');
+    localePtButton.setAttribute('aria-pressed', currentLocale === 'pt-BR' ? 'true' : 'false');
+  };
+
+  const renderChrome = (): void => {
+    title.textContent = t('library.title', currentLocale, storage);
+    subtitle.textContent = t('library.subtitle', currentLocale, storage);
+    sessionsButton.textContent = t('library.sessions', currentLocale, storage);
+    renderLocaleButtons();
+  };
 
   const renderProgress = (): void => {
     progressRow.replaceChildren();
@@ -421,7 +495,15 @@ export function mountProblemLibrary(
       const item = document.createElement('span');
       item.className = 'sdq-library__progress-item';
       item.setAttribute('data-testid', `library-progress-${difficulty}`);
-      item.textContent = `${DIFFICULTY_BADGES[difficulty]} ${completed}/${total} ${DIFFICULTY_LABELS[difficulty]}`;
+      const difficultyLabel =
+        currentLocale === 'en'
+          ? difficulty === 'easy'
+            ? 'Easy'
+            : difficulty === 'medium'
+              ? 'Medium'
+              : 'Hard'
+          : DIFFICULTY_LABELS[difficulty];
+      item.textContent = `${DIFFICULTY_BADGES[difficulty]} ${completed}/${total} ${difficultyLabel}`;
       progressRow.append(item);
       void tiers[difficulty];
     }
@@ -430,7 +512,7 @@ export function mountProblemLibrary(
   const renderFilters = (): void => {
     filters.replaceChildren();
 
-    for (const option of filterOptions) {
+    for (const option of filterOptions()) {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = `sdq-library__filter${
@@ -441,6 +523,7 @@ export function mountProblemLibrary(
       button.addEventListener('click', () => {
         currentFilter = option.id;
         warningMessage = null;
+        warningKind = null;
         syncWarning();
         renderFilters();
         renderGrid();
@@ -450,6 +533,12 @@ export function mountProblemLibrary(
   };
 
   const syncWarning = (): void => {
+    if (warningKind === 'hard') {
+      warningMessage = t('library.warn.hard', currentLocale, storage);
+    } else if (warningKind === 'speedrunMedium') {
+      warningMessage = t('library.warn.speedrunMedium', currentLocale, storage);
+    }
+
     if (warningMessage) {
       warning.textContent = warningMessage;
       warning.hidden = false;
@@ -463,14 +552,15 @@ export function mountProblemLibrary(
     const completedEasy = getCompletedEasyCount();
 
     if (shouldWarnHardSelection(problem, completedEasy)) {
-      warningMessage =
-        'Este é um problema difícil — recomendamos completar pelo menos um 🟢 Fácil antes. Você pode continuar mesmo assim.';
+      warningKind = 'hard';
+      warningMessage = t('library.warn.hard', currentLocale, storage);
       syncWarning();
     } else if (shouldWarnSpeedrunMedium(mode, problem, completedEasy)) {
-      warningMessage =
-        'Speedrun em problemas Médios funciona melhor após concluir 2 Easy em Study. Timer completo chega na Fase 4.';
+      warningKind = 'speedrunMedium';
+      warningMessage = t('library.warn.speedrunMedium', currentLocale, storage);
       syncWarning();
     } else {
+      warningKind = null;
       warningMessage = null;
       syncWarning();
     }
@@ -479,23 +569,25 @@ export function mountProblemLibrary(
   };
 
   const renderProblemCard = (problem: Problem): HTMLElement => {
+    const view = localized(problem);
     const completed = isProblemCompleted(problem.id, storage);
     const cardEl = document.createElement('article');
     cardEl.className = `sdq-library__problem${completed ? ' sdq-library__problem--completed' : ''}`;
     cardEl.setAttribute('data-testid', `problem-card-${problem.id}`);
 
-    const header = document.createElement('div');
-    header.className = 'sdq-library__problem-header';
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'sdq-library__problem-header';
 
     const titleBlock = document.createElement('div');
 
     const company = document.createElement('p');
     company.className = 'sdq-library__company';
-    company.textContent = problem.company;
+    company.textContent = view.company;
 
     const problemTitle = document.createElement('h2');
     problemTitle.className = 'sdq-library__problem-title';
-    problemTitle.textContent = problem.title;
+    problemTitle.setAttribute('data-testid', `problem-title-${problem.id}`);
+    problemTitle.textContent = view.title;
 
     titleBlock.append(company, problemTitle);
 
@@ -504,7 +596,7 @@ export function mountProblemLibrary(
     difficultyBadge.textContent = DIFFICULTY_BADGES[problem.difficulty];
     difficultyBadge.setAttribute('aria-label', DIFFICULTY_LABELS[problem.difficulty]);
 
-    header.append(titleBlock, difficultyBadge);
+    cardHeader.append(titleBlock, difficultyBadge);
 
     const badges = document.createElement('div');
     badges.className = 'sdq-library__badges';
@@ -512,21 +604,21 @@ export function mountProblemLibrary(
     if (problem.isRecommended) {
       const recommended = document.createElement('span');
       recommended.className = 'sdq-library__badge sdq-library__badge--recommended';
-      recommended.textContent = 'Recomendado';
+      recommended.textContent = t('library.badge.recommended', currentLocale, storage);
       badges.append(recommended);
     }
 
     if (problem.isTutorial) {
       const tutorial = document.createElement('span');
       tutorial.className = 'sdq-library__badge sdq-library__badge--tutorial';
-      tutorial.textContent = 'Tutorial';
+      tutorial.textContent = t('library.badge.tutorial', currentLocale, storage);
       badges.append(tutorial);
     }
 
     if (completed) {
       const done = document.createElement('span');
       done.className = 'sdq-library__badge sdq-library__badge--completed';
-      done.textContent = 'Concluído';
+      done.textContent = t('library.badge.completed', currentLocale, storage);
       badges.append(done);
     }
 
@@ -545,27 +637,27 @@ export function mountProblemLibrary(
     studyButton.type = 'button';
     studyButton.className = 'sdq-library__action sdq-library__action--primary';
     studyButton.setAttribute('data-testid', `problem-study-${problem.id}`);
-    studyButton.textContent = 'Study';
+    studyButton.textContent = t('library.action.study', currentLocale, storage);
     studyButton.addEventListener('click', () => handleSelect(problem, 'study'));
 
     const speedrunButton = document.createElement('button');
     speedrunButton.type = 'button';
     speedrunButton.className = 'sdq-library__action';
     speedrunButton.setAttribute('data-testid', `problem-speedrun-${problem.id}`);
-    speedrunButton.textContent = 'Speedrun';
+    speedrunButton.textContent = t('library.action.speedrun', currentLocale, storage);
     speedrunButton.addEventListener('click', () => handleSelect(problem, 'speedrun'));
 
     const rankingButton = document.createElement('button');
     rankingButton.type = 'button';
     rankingButton.className = 'sdq-library__action';
     rankingButton.setAttribute('data-testid', `problem-ranking-${problem.id}`);
-    rankingButton.textContent = 'Ranking';
+    rankingButton.textContent = t('library.action.ranking', currentLocale, storage);
     rankingButton.addEventListener('click', () => {
-      void leaderboardPanel.show(problem.id, problem.title);
+      void leaderboardPanel.show(problem.id, view.title);
     });
 
     actions.append(studyButton, speedrunButton, rankingButton);
-    cardEl.append(header, badges, tags, meta, actions);
+    cardEl.append(cardHeader, badges, tags, meta, actions);
 
     return cardEl;
   };
@@ -582,9 +674,26 @@ export function mountProblemLibrary(
     }
   };
 
-  renderFilters();
-  renderProgress();
-  renderGrid();
+  const refreshLocale = (): void => {
+    currentLocale = getLocale(storage);
+    renderChrome();
+    renderFilters();
+    renderProgress();
+    syncWarning();
+    renderGrid();
+  };
+
+  localeEnButton.addEventListener('click', () => {
+    setLocale('en', storage);
+    refreshLocale();
+  });
+
+  localePtButton.addEventListener('click', () => {
+    setLocale('pt-BR', storage);
+    refreshLocale();
+  });
+
+  refreshLocale();
   void loadProgress(storage);
 
   return {
