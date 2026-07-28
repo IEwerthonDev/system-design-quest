@@ -180,6 +180,56 @@ describe('evaluateStructuralRubric (Deep antiPatterns + configRules)', () => {
     expect(lowReport.scoreHint).toBeLessThan(highReport.scoreHint);
   });
 
+  it('awards capped detailBonus for deliberate configs and notes when no blockers', () => {
+    const problem = getProblem('url-shortener');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const sparse = evaluateStructuralRubric({
+      problem,
+      locale: 'en',
+      graph: {
+        nodes: problem.rubric.expectedComponents.map((type, i) => ({
+          id: `n${i}`,
+          type: type as ArchitectureGraph['nodes'][number]['type'],
+          label: type,
+          position: { x: i * 40, y: 0 },
+        })),
+        edges: [],
+      },
+    });
+    const detailed = evaluateStructuralRubric({
+      problem,
+      locale: 'en',
+      graph: {
+        nodes: problem.rubric.expectedComponents.map((type, i) => ({
+          id: `n${i}`,
+          type: type as ArchitectureGraph['nodes'][number]['type'],
+          label: type,
+          position: { x: i * 40, y: 0 },
+          implementationNotes:
+            type === 'cache_redis'
+              ? 'Cache-aside with LRU; target 95% hit rate on redirect path at peak RPS.'
+              : undefined,
+          ...(type === 'cache_redis'
+            ? {
+                config: {
+                  kind: 'cache' as const,
+                  hitRate: 95,
+                  eviction: 'lru' as const,
+                  maxMemoryGb: 16,
+                },
+              }
+            : {}),
+        })),
+        edges: [],
+      },
+    });
+    expect(detailed.detailBonus).toBeGreaterThan(sparse.detailBonus);
+    expect(detailed.detailBonus).toBeLessThanOrEqual(15);
+    expect(detailed.scoreHint).toBeGreaterThanOrEqual(sparse.scoreHint);
+  });
+
   it('fires auto-increment-db-ids major when unique-id-gen graph includes sql_db', () => {
     const problem = getProblem('unique-id-gen');
     expect(problem).toBeDefined();

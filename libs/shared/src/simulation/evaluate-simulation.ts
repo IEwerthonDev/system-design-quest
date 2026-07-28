@@ -97,21 +97,25 @@ function cdnTtlReliefFactor(node: ArchitectureGraph['nodes'][number]): number {
 
 const DEFAULT_CDN_TTL_REF = 3600;
 
-function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
-  if (node.config?.kind !== 'sql_db') {
-    return 1;
-  }
-  const { shardCount, keySkew } = node.config;
-  return Math.sqrt(shardCount) * (1 - (keySkew / 100) * 0.5);
-}
-
 function mqCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
-  if (node.config?.kind !== 'mq') {
-    return 1;
+  if (node.config?.kind === 'mq') {
+    const durabilityFactor = node.config.durability === 'memory' ? 0.55 : 1;
+    const partitionFactor = Math.sqrt(Math.max(node.config.partitionCount, 1) / 3);
+    const deliveryFactor =
+      node.config.delivery === 'exactly_once'
+        ? 0.85
+        : node.config.delivery === 'at_most_once'
+          ? 1.1
+          : 1;
+    return durabilityFactor * partitionFactor * deliveryFactor;
   }
-  const durabilityFactor = node.config.durability === 'memory' ? 0.55 : 1;
-  const partitionFactor = Math.sqrt(Math.max(node.config.partitionCount, 1) / 3);
-  return durabilityFactor * partitionFactor;
+  if (node.config?.kind === 'kafka') {
+    const durabilityFactor = node.config.durability === 'memory' ? 0.55 : 1;
+    const partitionFactor = Math.sqrt(Math.max(node.config.partitionCount, 1) / 3);
+    const rfFactor = clamp(node.config.replicationFactor / 3, 0.5, 1.2);
+    return durabilityFactor * partitionFactor * rfFactor;
+  }
+  return 1;
 }
 
 function wsCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
@@ -119,20 +123,83 @@ function wsCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
     return 1;
   }
   // Default fan-out 10k → 1.0; low fan-out shrinks capacity
-  return clamp(node.config.fanOutLimit / 10_000, 0.15, 2);
+  const fan = clamp(node.config.fanOutLimit / 10_000, 0.15, 2);
+  return fan * (node.config.stickySessions ? 1 : 0.9);
 }
 
 function lbCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
   if (node.config?.kind !== 'lb') {
     return 1;
   }
+  let factor = 1;
   if (node.config.algorithm === 'least_conn') {
-    return 1.08;
+    factor = 1.08;
+  } else if (node.config.algorithm === 'ip_hash') {
+    factor = 0.92;
   }
-  if (node.config.algorithm === 'ip_hash') {
-    return 0.92;
+  return factor * (node.config.healthCheck ? 1 : 0.85);
+}
+
+function nosqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'nosql_db') {
+    return 1;
   }
-  return 1;
+  return Math.sqrt(Math.max(node.config.shardCount, 1));
+}
+
+function computeCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'compute') {
+    return 1;
+  }
+  const rpsFactor = clamp(node.config.maxRpsPerReplica / 200, 0.25, 3);
+  return rpsFactor * (node.config.stateless ? 1 : 0.7);
+}
+
+function rateLimiterCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'rate_limiter') {
+    return 1;
+  }
+  return clamp(Math.log10(Math.max(node.config.limitPerSec, 1)) / 2, 0.3, 1.5);
+}
+
+function searchCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'search') {
+    return 1;
+  }
+  return Math.sqrt(Math.max(node.config.shardCount, 1)) * (1 + node.config.replicaCount * 0.15);
+}
+
+function workerCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'worker') {
+    return 1;
+  }
+  return clamp(node.config.concurrency / 4, 0.25, 4);
+}
+
+function objectStorageCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'object_storage') {
+    return 1;
+  }
+  const classFactor = node.config.storageClass === 'hot' ? 1 : 0.6;
+  const repFactor = node.config.replication === 'multi_region' ? 1 : 0.85;
+  return classFactor * repFactor;
+}
+
+function cacheMemoryModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'cache') {
+    return 1;
+  }
+  return clamp(Math.log10(Math.max(node.config.maxMemoryGb, 1) + 1) / Math.log10(5), 0.5, 1.5);
+}
+
+function sqlCapacityModifier(node: ArchitectureGraph['nodes'][number]): number {
+  if (node.config?.kind !== 'sql_db') {
+    return 1;
+  }
+  const base = Math.sqrt(node.config.shardCount) * (1 - (node.config.keySkew / 100) * 0.5);
+  // RF=1 → unchanged vs pre-config-depth; extra replicas add modest capacity
+  const rfBoost = 1 + (node.config.replicationFactor - 1) * 0.15;
+  return base * clamp(rfBoost, 1, 1.8);
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -145,9 +212,16 @@ function nodeCapacity(node: ArchitectureGraph['nodes'][number]): number {
     reps *
     capacityPerReplica(node.type) *
     sqlCapacityModifier(node) *
+    nosqlCapacityModifier(node) *
     mqCapacityModifier(node) *
     wsCapacityModifier(node) *
-    lbCapacityModifier(node)
+    lbCapacityModifier(node) *
+    computeCapacityModifier(node) *
+    rateLimiterCapacityModifier(node) *
+    searchCapacityModifier(node) *
+    workerCapacityModifier(node) *
+    objectStorageCapacityModifier(node) *
+    cacheMemoryModifier(node)
   );
 }
 
@@ -188,12 +262,23 @@ function buildPressureReason(
   }
 
   // level is already narrowed to warn|hot (ok returned above)
-  if (node.config?.kind === 'mq' && node.config.durability === 'memory') {
+  if (
+    (node.config?.kind === 'mq' || node.config?.kind === 'kafka') &&
+    node.config.durability === 'memory'
+  ) {
     return 'Fila em memória sob pressão — risco de perda sob carga';
   }
 
   if (node.config?.kind === 'ws' && node.config.fanOutLimit < 2000) {
     return 'Fan-out baixo no WebSocket Gateway';
+  }
+
+  if (node.config?.kind === 'rate_limiter' && node.config.limitPerSec < 10 && traffic >= 3) {
+    return 'Rate limit muito baixo para o tráfego simulado';
+  }
+
+  if (node.config?.kind === 'worker' && !node.config.dlq && level === 'hot') {
+    return 'Worker sem DLQ sob carga — risco de poison messages';
   }
 
   if (node.config?.kind === 'cdn' && node.config.ttlSeconds < 300) {

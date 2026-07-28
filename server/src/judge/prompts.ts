@@ -143,6 +143,8 @@ function buildJudgePrompt(
     'Every list field MUST be a JSON array (use [] when empty) — never omit them or return an object.',
     'In rationale and criticalIssues, honor structural blockers and include the required scale analysis.',
     'On sql_db / nosql_db configs, accessPattern (read|write|read_write) and topologyRole (primary|replica|standalone) matter for CQRS and replica scoring — treat them as intentional design signals.',
+    'Reward deliberate scale configs (hit rate, shards, durability, delivery guarantees, Kafka retention/RF, rate-limit algorithm, object-storage replication, auth MFA, worker DLQ, etc.) and substantive implementationNotes that name trade-offs — award higher scores when details match the problem scale.',
+    'Do NOT award high scores for checkbox spam alone: topology must still fit the problem; structural blockers remain absolute.',
   ].join('\n');
 }
 

@@ -157,7 +157,12 @@ describe('blueprint canvas', () => {
     const slider = popover.querySelector('[data-testid="config-hit-rate"]') as HTMLInputElement;
     slider.value = '95';
     slider.dispatchEvent(new Event('input', { bubbles: true }));
-    expect(canvas.getGraph().nodes[0]?.config).toEqual({ kind: 'cache', hitRate: 95 });
+    expect(canvas.getGraph().nodes[0]?.config).toEqual({
+      kind: 'cache',
+      hitRate: 95,
+      eviction: 'lru',
+      maxMemoryGb: 4,
+    });
 
     const notes = popover.querySelector('[data-testid="config-notes"]') as HTMLTextAreaElement;
     notes.value = 'cache-aside';
@@ -186,6 +191,10 @@ describe('blueprint canvas', () => {
     expect(popover.querySelector('[data-testid="config-access-pattern"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-topology-role"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-shard-count"]')).toBeTruthy();
+    const advancedToggle = popover.querySelector(
+      '[data-testid="config-advanced-toggle"]',
+    ) as HTMLButtonElement;
+    advancedToggle.click();
     expect(popover.querySelector('[data-testid="config-partitioning"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-key-skew"]')).toBeTruthy();
 

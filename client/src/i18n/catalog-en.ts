@@ -80,6 +80,75 @@ export type UiStringKey =
   | 'config.badge.read_write'
   | 'config.badge.replica'
   | 'config.badge.standalone'
+  | 'config.advancedShow'
+  | 'config.advancedHide'
+  | 'config.eviction'
+  | 'config.eviction.lru'
+  | 'config.eviction.lfu'
+  | 'config.eviction.ttl'
+  | 'config.maxMemoryGb'
+  | 'config.edgeRegions'
+  | 'config.replicationFactor'
+  | 'config.consistency'
+  | 'config.consistency.strong'
+  | 'config.consistency.eventual'
+  | 'config.partitioning.hash'
+  | 'config.partitioning.range'
+  | 'config.partitioning.geographic'
+  | 'config.partitioning.list'
+  | 'config.model'
+  | 'config.model.document'
+  | 'config.model.kv'
+  | 'config.model.wide_column'
+  | 'config.nosqlConsistency.one'
+  | 'config.nosqlConsistency.quorum'
+  | 'config.nosqlConsistency.all'
+  | 'config.delivery'
+  | 'config.delivery.at_most_once'
+  | 'config.delivery.at_least_once'
+  | 'config.delivery.exactly_once'
+  | 'config.durability.memory'
+  | 'config.durability.disk'
+  | 'config.retentionHours'
+  | 'config.stickySessions'
+  | 'config.healthCheck'
+  | 'config.lbAlgorithm.round_robin'
+  | 'config.lbAlgorithm.least_conn'
+  | 'config.lbAlgorithm.ip_hash'
+  | 'config.limitPerSec'
+  | 'config.rateLimitAlgorithm.token_bucket'
+  | 'config.rateLimitAlgorithm.sliding_window'
+  | 'config.rateLimitAlgorithm.fixed_window'
+  | 'config.scope'
+  | 'config.scope.ip'
+  | 'config.scope.user'
+  | 'config.scope.global'
+  | 'config.authRequired'
+  | 'config.timeoutMs'
+  | 'config.retryMax'
+  | 'config.storageClass'
+  | 'config.storageClass.hot'
+  | 'config.storageClass.cold'
+  | 'config.replication'
+  | 'config.storageReplication.single_region'
+  | 'config.storageReplication.multi_region'
+  | 'config.replicaCount'
+  | 'config.refreshIntervalSec'
+  | 'config.tokenTtlSec'
+  | 'config.sessionStore'
+  | 'config.sessionStore.jwt'
+  | 'config.sessionStore.redis'
+  | 'config.sessionStore.sticky'
+  | 'config.mfa'
+  | 'config.stateless'
+  | 'config.maxRpsPerReplica'
+  | 'config.concurrency'
+  | 'config.dlq'
+  | 'config.channels'
+  | 'config.channel.push'
+  | 'config.channel.email'
+  | 'config.channel.sms'
+  | 'config.dedupeWindowSec'
   | 'canvas.reps'
   | 'canvas.aria.incReplicas'
   | 'canvas.aria.decReplicas'
@@ -177,6 +246,75 @@ export const CATALOG_EN: UiCatalog = {
   'config.badge.read_write': 'R+W',
   'config.badge.replica': 'repl',
   'config.badge.standalone': 'solo',
+  'config.advancedShow': 'Advanced settings…',
+  'config.advancedHide': 'Hide advanced settings',
+  'config.eviction': 'Eviction policy',
+  'config.eviction.lru': 'LRU',
+  'config.eviction.lfu': 'LFU',
+  'config.eviction.ttl': 'TTL',
+  'config.maxMemoryGb': 'Max memory (GB)',
+  'config.edgeRegions': 'Edge regions',
+  'config.replicationFactor': 'Replication factor',
+  'config.consistency': 'Consistency',
+  'config.consistency.strong': 'Strong',
+  'config.consistency.eventual': 'Eventual',
+  'config.partitioning.hash': 'Hash',
+  'config.partitioning.range': 'Range',
+  'config.partitioning.geographic': 'Geographic / spatial',
+  'config.partitioning.list': 'List',
+  'config.model': 'Data model',
+  'config.model.document': 'Document',
+  'config.model.kv': 'Key-value',
+  'config.model.wide_column': 'Wide column',
+  'config.nosqlConsistency.one': 'One',
+  'config.nosqlConsistency.quorum': 'Quorum',
+  'config.nosqlConsistency.all': 'All',
+  'config.delivery': 'Delivery guarantee',
+  'config.delivery.at_most_once': 'At most once',
+  'config.delivery.at_least_once': 'At least once',
+  'config.delivery.exactly_once': 'Exactly once',
+  'config.durability.memory': 'Memory',
+  'config.durability.disk': 'Disk',
+  'config.retentionHours': 'Retention (hours)',
+  'config.stickySessions': 'Sticky sessions',
+  'config.healthCheck': 'Health check',
+  'config.lbAlgorithm.round_robin': 'Round robin',
+  'config.lbAlgorithm.least_conn': 'Least connections',
+  'config.lbAlgorithm.ip_hash': 'IP hash',
+  'config.limitPerSec': 'Limit per second',
+  'config.rateLimitAlgorithm.token_bucket': 'Token bucket',
+  'config.rateLimitAlgorithm.sliding_window': 'Sliding window',
+  'config.rateLimitAlgorithm.fixed_window': 'Fixed window',
+  'config.scope': 'Scope',
+  'config.scope.ip': 'Per IP',
+  'config.scope.user': 'Per user',
+  'config.scope.global': 'Global',
+  'config.authRequired': 'Auth required',
+  'config.timeoutMs': 'Timeout (ms)',
+  'config.retryMax': 'Max retries',
+  'config.storageClass': 'Storage class',
+  'config.storageClass.hot': 'Hot',
+  'config.storageClass.cold': 'Cold',
+  'config.replication': 'Replication',
+  'config.storageReplication.single_region': 'Single region',
+  'config.storageReplication.multi_region': 'Multi region',
+  'config.replicaCount': 'Replica count',
+  'config.refreshIntervalSec': 'Refresh interval (sec)',
+  'config.tokenTtlSec': 'Token TTL (sec)',
+  'config.sessionStore': 'Session store',
+  'config.sessionStore.jwt': 'JWT',
+  'config.sessionStore.redis': 'Redis',
+  'config.sessionStore.sticky': 'Sticky',
+  'config.mfa': 'Multi-factor auth',
+  'config.stateless': 'Stateless',
+  'config.maxRpsPerReplica': 'Max RPS per replica',
+  'config.concurrency': 'Concurrency',
+  'config.dlq': 'Dead-letter queue',
+  'config.channels': 'Channels',
+  'config.channel.push': 'Push',
+  'config.channel.email': 'Email',
+  'config.channel.sms': 'SMS',
+  'config.dedupeWindowSec': 'Dedupe window (sec)',
   'canvas.reps': '{n} reps',
   'canvas.aria.incReplicas': 'Increase replicas',
   'canvas.aria.decReplicas': 'Decrease replicas',

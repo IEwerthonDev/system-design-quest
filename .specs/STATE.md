@@ -22,43 +22,25 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `node-access-roles` merged to `main` + production READY |
-| **Próximo passo** | Smoke: SQL/NoSQL paper config → Leitura/Escrita; switch EN/PT-BR on canvas |
-| **Feature ativa** | none (node-access-roles shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `config-depth` on `feature/config-depth` — ship to main + production |
+| **Próximo passo** | Merge/push + Vercel production deploy; smoke paper-icon Advanced configs |
+| **Feature ativa** | `config-depth` |
+| **Branch** | `feature/config-depth` |
 | **Bloqueios** | None |
-| **Verification** | Gate 668; lint green; commits `fc67dde` · `7333b50` · `84f23de` |
-| **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_HZVeAyGcd3QsxZVjsDngveBiXivc` READY (`84f23de`) |
-| **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
-| **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
-| **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 `59a9c94` |
-| **Gate** | shared 115 + server 137 + client 408 = 660 passed (0 failed); lint green |
-| **T19 note** | Rebuilt via `esbuild` from `scripts/vercel-build.sh` entry; bundle contains `evaluateStructuralRubric` / `scaleNarrative`; artifact not committed (`.gitignore`) |
-| **KV** | `sdq-sessions-kv` + user/nick maps |
-| **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
-| **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** + AD-027/028 |
-| **Env set** | KV_* · AUTH_* · GOOGLE_* · LLM_API_KEY + LLM_BASE_URL (OpenRouter) + LLM_MODEL (`openai/gpt-4o-mini`) — live on production after redeploy |
-| **Skills** | `ddia-systems` + `interview-system-designer` installed (~/.agents/skills) |
-| **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip; compact header; tap-to-add |
-| **Bugfix** | Canvas cleared on new challenge; Stop contrast; Share styles; paper config icon; header gap |
-| **UI fix** | Voltar in header; palette minimizable; Stop/Share/config chrome |
-| **Neon** | Deferred (NEON-01) |
-| **Note** | Tier-2 catalog now 26 types (+`websocket_gateway` for AD-028 ws config); PR https://github.com/IEwerthonDev/system-design-quest/pull/3 |
+| **Decisões** | 1B·2B·3B·4A; AD-030 detailBonus cap 15 |
+| **Gate** | `npx nx run-many -t lint test` green (this session) |
 
-### Context Checkpoint (2026-07-28 Verifier)
+### Context Checkpoint (2026-07-28 config-depth)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — independent Verifier only |
-| Uncommitted | AMBER — `validation.md` + STATE Handoff (docs only; no product code) |
-| Spec drift | GREEN — ACs evidenced; 3 minor precision notes |
-| Gate confidence | GREEN — fresh `nx run-many -t lint test` 660/660 |
-| Task clarity | GREEN — merge-ready |
+| Chat length | AMBER — multi-step epic (user said just do it) |
+| Uncommitted | shipping |
+| Spec drift | GREEN — context locked |
+| Gate confidence | GREEN — lint+test passed |
+| Task clarity | GREEN — agent decisions locked |
 
-**Veredito:** GREEN — feature Verified PASS.
-
-**Lessons:** `scripts/lessons.py` not present — skipped distill (clean PASS / precision-only signal).
+**Veredito:** GREEN (continuation unlocked)
 
 ### Deploy note (Hobby)
 
@@ -121,6 +103,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-027 | active | **Judge structural-first (hybrid)** — deterministic per-problem structural rubric always runs before LLM; LLM cannot clear structural blockers; no cross-problem URL-shortener golden mock; Baseline 27 + Deep Core 13 | judge-realism Approach A; trustworthy learning bar |
 | AD-028 | active | **Scale-critical `ComponentConfig`** — cache, CDN(+TTL), SQL, MQ durability/partitions, WS fan-out, LB algorithm; configs affect simulation pressure and structural judge rules | Extends AD-019; judge-realism 2A/7B |
 | AD-029 | active | **DB access + topology roles** — `accessPattern` read\|write\|read_write and `topologyRole` primary\|replica\|standalone on sql_db + nosql_db; canvas badge + judge JSON; `sdq:localechange` refreshes canvas/config/palette chrome | Player CQRS intent + AD-024 full-system locale |
+| AD-030 | active | **Config depth + detailBonus** — expanded ComponentConfig (rate limiter, gateway, object storage, search, auth, compute, worker, notification; deepen cache/SQL/NoSQL/MQ; kafka kind); Advanced toggle; structural detailBonus ≤15 when no blockers; LLM prompts reward trade-off detail | Extends AD-028/029; config-depth 1B·2B·3B·4A |
 
 ---
 
