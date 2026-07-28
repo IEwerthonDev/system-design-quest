@@ -31,6 +31,8 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*`; sessions + LB POST gated |
 | **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
 | **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_6nPREDdz9QKhnMYZ9CBfQJEAV6qT` — READY (`api/auth` live) |
+| **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL — missing GOOGLE_CLIENT_ID/SECRET |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
