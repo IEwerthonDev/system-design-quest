@@ -22,12 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` **Verified PASS** — see `.specs/features/judge-realism/validation.md` |
-| **Próximo passo** | Merge `feature/judge-realism` → `main` (optional minor polish: EN structural title assert; youtube scale content assert) |
-| **Feature ativa** | `judge-realism` (Complex) — verification complete |
-| **Branch** | `feature/judge-realism` |
-| **Bloqueios** | None — Verifier PASS (3/3 sensor killed; gate 660; 3 non-blocking spec-precision notes) |
-| **Verification** | 2026-07-28 independent Verifier — PASS ✅ · gate 115+408+137 · sensor 3/3 · report `validation.md` |
+| **Fase atual** | `judge-realism` merged to `main` + production READY |
+| **Próximo passo** | Smoke-test production (shortener graph on zoom → FAIL; scale narrative with LLM) |
+| **Feature ativa** | none (judge-realism shipped) |
+| **Branch** | `main` |
+| **Bloqueios** | None |
+| **Verification** | Verifier PASS · PR #3 merged · hotfix `2421a61` for shared:build TS |
+| **Production URL** | https://system-design-quest.vercel.app |
+| **Deployment** | `dpl_383dABW5AKocab51SpE7dHxWveDe` — READY (`2421a61` judge-realism + sim TS fix) |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
 | **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
 | **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 `59a9c94` |
@@ -36,15 +38,13 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** + AD-027/028 |
-| **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_99JVXdfuakhwUv9u8WFo4XYi31DZ` — READY (`b555df7` canvas-clear + paper icon + header gap) |
-| **Env set** | KV_* · AUTH_* · GOOGLE_* · LLM_API_KEY + LLM_BASE_URL (OpenRouter) + LLM_MODEL (`openai/gpt-4o-mini`) — local `.env` + Vercel prod/preview/dev; redeploy needed for live judge; user accepted no-rotate for chat-exposed key |
+| **Env set** | KV_* · AUTH_* · GOOGLE_* · LLM_API_KEY + LLM_BASE_URL (OpenRouter) + LLM_MODEL (`openai/gpt-4o-mini`) — live on production after redeploy |
 | **Skills** | `ddia-systems` + `interview-system-designer` installed (~/.agents/skills) |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip; compact header; tap-to-add |
 | **Bugfix** | Canvas cleared on new challenge; Stop contrast; Share styles; paper config icon; header gap |
 | **UI fix** | Voltar in header; palette minimizable; Stop/Share/config chrome |
 | **Neon** | Deferred (NEON-01) |
-| **Note** | Tier-2 catalog now 26 types (+`websocket_gateway` for AD-028 ws config) |
+| **Note** | Tier-2 catalog now 26 types (+`websocket_gateway` for AD-028 ws config); PR https://github.com/IEwerthonDev/system-design-quest/pull/3 |
 
 ### Context Checkpoint (2026-07-28 Verifier)
 
