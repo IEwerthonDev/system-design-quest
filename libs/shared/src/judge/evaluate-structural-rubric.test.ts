@@ -209,4 +209,55 @@ describe('evaluateStructuralRubric (Deep antiPatterns + configRules)', () => {
     expect(report.codes).not.toContain('in-memory-only-counter');
     expect(report.codes).toContain('missing_component');
   });
+
+  it('fires zoom no-sfu-media-path when media_server is absent on a non-empty graph', () => {
+    const problem = getProblem('zoom-conference');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: graphWithTypes('client_web', 'signaling_server', 'turn_server'),
+      locale: 'en',
+    });
+
+    expect(report.codes).toContain('no-sfu-media-path');
+    expect(
+      report.blockers.some(
+        (b) => b.severity === 'blocker' && b.relatedComponents?.includes('media_server'),
+      ),
+    ).toBe(true);
+  });
+
+  it('fires stripe no-idempotency-queue when message_queue is absent', () => {
+    const problem = getProblem('stripe-payments');
+    expect(problem).toBeDefined();
+    if (!problem) return;
+
+    const report = evaluateStructuralRubric({
+      problem,
+      graph: graphWithTypes('api_gateway', 'app_server', 'sql_db'),
+      locale: 'en',
+    });
+
+    expect(report.codes).toContain('no-idempotency-queue');
+    expect(report.blockers.some((b) => b.severity === 'blocker')).toBe(true);
+  });
+
+  it('Core Hard Deep rubrics emit ≥2 scale checklist lines', () => {
+    for (const id of ['zoom-conference', 'ticketmaster', 'stripe-payments'] as const) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      const report = evaluateStructuralRubric({
+        problem,
+        graph: emptyGraph(),
+        locale: 'en',
+      });
+
+      expect(report.scaleChecklistLines.length).toBeGreaterThanOrEqual(2);
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(2);
+    }
+  });
 });

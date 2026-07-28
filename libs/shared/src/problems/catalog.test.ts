@@ -173,7 +173,9 @@ describe('Core Easy Deep rubrics (JR-24 / JR-30)', () => {
 
   it('covers all 7 Easy Core Realism ids', () => {
     expect(easyCoreIds).toHaveLength(7);
-    expect(easyCoreIds.every((id) => CORE_REALISM_IDS.includes(id))).toBe(true);
+    expect(easyCoreIds.every((id) => (CORE_REALISM_IDS as readonly string[]).includes(id))).toBe(
+      true,
+    );
   });
 
   it('each Easy Core id has deep depth and ≥1 antiPattern or configRule', () => {
@@ -193,6 +195,42 @@ describe('Core Easy Deep rubrics (JR-24 / JR-30)', () => {
       expect(ptLines.length).toBeGreaterThanOrEqual(1);
       expect(enLines.every((l) => l.length > 0)).toBe(true);
       expect(ptLines.every((l) => l.length > 0)).toBe(true);
+    }
+  });
+});
+
+describe('Core Medium/Hard Deep rubrics (JR-25 / JR-28)', () => {
+  const mediumHardCoreIds = [
+    'chat-system',
+    'news-feed',
+    'youtube',
+    'zoom-conference',
+    'ticketmaster',
+    'stripe-payments',
+  ] as const;
+
+  it('enriches all 6 Core Medium/Hard ids with Deep fields', () => {
+    for (const id of mediumHardCoreIds) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+
+      expect(problem.rubric.structuralDepth).toBe('deep');
+      const antiCount = problem.rubric.antiPatterns?.length ?? 0;
+      const configCount = problem.rubric.configRules?.length ?? 0;
+      expect(antiCount + configCount).toBeGreaterThanOrEqual(1);
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it('Core Hard entries have ≥2 explicit scale dimensions', () => {
+    for (const id of ['zoom-conference', 'ticketmaster', 'stripe-payments'] as const) {
+      const problem = getProblem(id);
+      expect(problem).toBeDefined();
+      if (!problem) continue;
+      expect(problem.difficulty).toBe('hard');
+      expect(problem.rubric.scaleChecklist?.en?.length ?? 0).toBeGreaterThanOrEqual(2);
+      expect(problem.rubric.scaleChecklist?.['pt-BR']?.length ?? 0).toBeGreaterThanOrEqual(2);
     }
   });
 });

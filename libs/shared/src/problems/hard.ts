@@ -98,6 +98,41 @@ export const TICKETMASTER: ProblemDefinition = {
       'Check-then-act inventory — overselling under load',
       'No seat hold TTL — inventory locked indefinitely',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'no-waiting-room-queue',
+        requiredAnyOf: ['message_queue'],
+        severity: 'blocker',
+        messageKey: 'ticketmaster.no_waiting_room',
+      },
+    ],
+    configRules: [
+      {
+        code: 'shardCount-too-low',
+        componentType: 'sql_db',
+        minShardCount: 2,
+        severity: 'major',
+        messageKey: 'ticketmaster.shard_count_too_low',
+      },
+      {
+        code: 'mq-not-durable',
+        componentType: 'message_queue',
+        requireMqDurability: 'disk',
+        severity: 'blocker',
+        messageKey: 'ticketmaster.mq_not_durable',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Absorb flash-sale peaks (~400k transactions/min) with a fair FIFO virtual waiting room.',
+        'Hold inventory locks with TTL and strong consistency so seats are never oversold.',
+      ],
+      'pt-BR': [
+        'Absorva picos de flash sale (~400k tx/min) com waiting room virtual FIFO justa.',
+        'Segure locks de inventário com TTL e consistência forte para nunca overselling.',
+      ],
+    },
   },
 };
 
@@ -248,6 +283,47 @@ export const STRIPE_PAYMENTS: ProblemDefinition = {
       'Single-entry accounting — audit failures',
       'Storing raw credit card numbers',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'no-idempotency-queue',
+        requiredAnyOf: ['message_queue'],
+        severity: 'blocker',
+        messageKey: 'stripe_payments.no_idempotency_queue',
+      },
+      {
+        code: 'no-durable-ledger-store',
+        requiredAnyOf: ['sql_db'],
+        severity: 'blocker',
+        messageKey: 'stripe_payments.no_durable_ledger',
+      },
+    ],
+    configRules: [
+      {
+        code: 'mq-not-durable',
+        componentType: 'message_queue',
+        requireMqDurability: 'disk',
+        severity: 'blocker',
+        messageKey: 'stripe_payments.mq_not_durable',
+      },
+      {
+        code: 'shardCount-too-low',
+        componentType: 'sql_db',
+        minShardCount: 2,
+        severity: 'major',
+        messageKey: 'stripe_payments.shard_count_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Process ~100,000 payment RPS with idempotency keys so retries never double-charge.',
+        'Keep a durable double-entry ledger and webhook retry queue for merchant reconciliation.',
+      ],
+      'pt-BR': [
+        'Processe ~100.000 RPS de pagamento com idempotency keys para retries sem cobrança dupla.',
+        'Mantenha ledger double-entry durável e fila de retry de webhooks para reconciliação.',
+      ],
+    },
   },
 };
 
@@ -298,6 +374,46 @@ export const ZOOM_CONFERENCE: ProblemDefinition = {
       'No TURN server — users behind NAT cannot connect',
       'MCU mixing all streams — CPU bottleneck',
     ],
+    structuralDepth: 'deep',
+    antiPatterns: [
+      {
+        code: 'no-sfu-media-path',
+        requiredAnyOf: ['media_server'],
+        severity: 'blocker',
+        messageKey: 'zoom_conference.no_sfu',
+      },
+      {
+        code: 'no-signaling',
+        requiredAnyOf: ['signaling_server'],
+        severity: 'blocker',
+        messageKey: 'zoom_conference.no_signaling',
+      },
+      {
+        code: 'no-turn-nat',
+        requiredAnyOf: ['turn_server'],
+        severity: 'major',
+        messageKey: 'zoom_conference.no_turn',
+      },
+    ],
+    configRules: [
+      {
+        code: 'ws-fanout-too-low',
+        componentType: 'websocket_gateway',
+        minFanOutLimit: 5_000,
+        severity: 'major',
+        messageKey: 'zoom_conference.ws_fanout_too_low',
+      },
+    ],
+    scaleChecklist: {
+      en: [
+        'Scale SFU media fan-out for ~300M meetings/day with <150 ms media latency.',
+        'Provide TURN/STUN NAT traversal and signaling so participants behind firewalls can join.',
+      ],
+      'pt-BR': [
+        'Escale fan-out de mídia SFU para ~300M meetings/dia com latência de mídia <150 ms.',
+        'Ofereça TURN/STUN e signaling para participantes atrás de NAT/firewall entrarem.',
+      ],
+    },
   },
 };
 
