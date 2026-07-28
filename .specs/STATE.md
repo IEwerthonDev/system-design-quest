@@ -22,13 +22,13 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `hobby-platform` merged to `main` — production deploy in progress |
-| **Próximo passo** | Confirm prod READY; configure Vercel KV/Blob/Edge/Cron env from `.env.example` |
-| **Feature ativa** | `hobby-platform` on `main` (PR #2 squash `91273d0` + deploy fix) |
+| **Fase atual** | `hobby-platform` on production |
+| **Próximo passo** | Configure Vercel env (KV/Blob/Edge/Cron) from `.env.example` for durable sessions/leaderboard |
+| **Feature ativa** | `hobby-platform` merged via [PR #2](https://github.com/IEwerthonDev/system-design-quest/pull/2) |
 | **Branch** | `main` |
-| **Bloqueios** | Prod durable path needs Vercel env (KV/Blob/Edge/Cron); CLI deploy needed buildCommand/functions fix |
+| **Bloqueios** | Without KV env, sessions stay on localStorage fallback |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
+| **Deployment** | `dpl_HS1bb4ppxot4QHeFpy5VQQRYEMaU` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
