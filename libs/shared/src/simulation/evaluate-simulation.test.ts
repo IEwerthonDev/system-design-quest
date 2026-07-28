@@ -159,4 +159,104 @@ describe('evaluateSimulation', () => {
       order[evaluateSimulation(base).nodes.db!],
     );
   });
+
+  it('increases origin pressure when CDN TTL is low vs default (JR-19)', () => {
+    function cdnGraph(ttlSeconds: number): ArchitectureGraph {
+      return {
+        nodes: [
+          {
+            id: 'client',
+            type: 'client_web',
+            label: 'Client',
+            replicas: 1,
+            position: { x: 0, y: 0 },
+          },
+          {
+            id: 'cdn',
+            type: 'cdn',
+            label: 'CDN',
+            replicas: 1,
+            position: { x: 50, y: 0 },
+            config: { kind: 'cdn', hitRate: 95, ttlSeconds },
+          },
+          {
+            id: 'origin',
+            type: 'app_server',
+            label: 'Origin',
+            replicas: 1,
+            position: { x: 100, y: 0 },
+          },
+        ],
+        edges: [
+          { id: 'e1', from: 'client', to: 'cdn', direction: 'forward' },
+          { id: 'e2', from: 'cdn', to: 'origin', direction: 'forward' },
+        ],
+        simulation: { running: true, speed: 1, traffic: 5, readRatio: 90 },
+      };
+    }
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    const lowTtl = evaluateSimulation(cdnGraph(60));
+    const defaultTtl = evaluateSimulation(cdnGraph(3600));
+    expect(order[lowTtl.nodes.origin!]).toBeGreaterThan(order[defaultTtl.nodes.origin!]);
+  });
+
+  it('raises MQ pressure for memory durability vs disk (JR-19)', () => {
+    function mqGraph(durability: 'memory' | 'disk'): ArchitectureGraph {
+      return {
+        nodes: [
+          {
+            id: 'app',
+            type: 'app_server',
+            label: 'App',
+            replicas: 1,
+            position: { x: 0, y: 0 },
+          },
+          {
+            id: 'mq',
+            type: 'message_queue',
+            label: 'MQ',
+            replicas: 1,
+            position: { x: 100, y: 0 },
+            config: { kind: 'mq', durability, partitionCount: 3 },
+          },
+        ],
+        edges: [{ id: 'e1', from: 'app', to: 'mq', direction: 'forward' }],
+        simulation: { running: true, speed: 1, traffic: 3, readRatio: 20 },
+      };
+    }
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    const memory = evaluateSimulation(mqGraph('memory'));
+    const disk = evaluateSimulation(mqGraph('disk'));
+    expect(order[memory.nodes.mq!]).toBeGreaterThan(order[disk.nodes.mq!]);
+  });
+
+  it('raises WebSocket Gateway pressure when fan-out is low (JR-19)', () => {
+    function wsGraph(fanOutLimit: number): ArchitectureGraph {
+      return {
+        nodes: [
+          {
+            id: 'client',
+            type: 'client_web',
+            label: 'Client',
+            replicas: 1,
+            position: { x: 0, y: 0 },
+          },
+          {
+            id: 'ws',
+            type: 'websocket_gateway',
+            label: 'WS',
+            replicas: 1,
+            position: { x: 100, y: 0 },
+            config: { kind: 'ws', fanOutLimit },
+          },
+        ],
+        edges: [{ id: 'e1', from: 'client', to: 'ws', direction: 'forward' }],
+        simulation: { running: true, speed: 1, traffic: 2, readRatio: 50 },
+      };
+    }
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    const low = evaluateSimulation(wsGraph(500));
+    const high = evaluateSimulation(wsGraph(10_000));
+    expect(order[low.nodes.ws!]).toBeGreaterThan(order[high.nodes.ws!]);
+  });
 });
