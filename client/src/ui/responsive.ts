@@ -193,6 +193,14 @@ function injectResponsiveStyles(): void {
       border: 1px solid var(--sdq-border);
       box-shadow: var(--sdq-shadow);
     }
+    .sdq-layout--phone .sdq-session-header__trailing {
+      flex-shrink: 0;
+    }
+    .sdq-layout--phone .sdq-settings-btn--in-header {
+      padding: 6px 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
     .sdq-layout--phone .sdq-session-header__brand-sub {
       display: none;
     }

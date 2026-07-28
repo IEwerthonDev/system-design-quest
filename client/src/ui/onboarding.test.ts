@@ -143,33 +143,14 @@ describe('onboarding', () => {
   });
 
   describe('bootstrapApp', () => {
-    it('shows onboarding on first visit', () => {
+    it('opens the problem library as home on first visit', () => {
       bootstrapApp(container, null, { storage });
-
-      expect(container.querySelector('[data-testid="onboarding-panel"]')).toBeTruthy();
-      expect(container.querySelector('[data-testid="phase-shell"]')).toBeNull();
-    });
-
-    it('starts URL Shortener with guided mode after choosing Sou iniciante', () => {
-      bootstrapApp(container, null, { storage });
-
-      container.querySelector<HTMLButtonElement>('[data-testid="onboarding-next"]')!.click();
-      container.querySelector<HTMLButtonElement>('[data-testid="onboarding-next"]')!.click();
-      container.querySelector<HTMLButtonElement>('[data-testid="onboarding-beginner"]')!.click();
 
       expect(container.querySelector('[data-testid="onboarding-panel"]')).toBeNull();
-      expect(container.querySelector('[data-testid="phase-shell"]')).toBeTruthy();
-      expect(container.querySelector('[data-testid="briefing-panel"]')).toBeTruthy();
-      expect(window.__GAME_STATE__).toMatchObject({
-        problemId: 'url-shortener',
-        guidedMode: true,
-        experienceLevel: 'beginner',
-        phase: 'briefing',
-      });
-      expect(shouldShowOnboarding(loadPreferences(storage))).toBe(false);
+      expect(container.querySelector('[data-testid="problem-library"]')).toBeTruthy();
     });
 
-    it('skips onboarding when preference is already completed', () => {
+    it('opens library for returning users with saved preferences', () => {
       savePreferences({ onboardingCompleted: true }, storage);
 
       bootstrapApp(container, null, { storage });
@@ -178,9 +159,8 @@ describe('onboarding', () => {
       expect(container.querySelector('[data-testid="problem-library"]')).toBeTruthy();
     });
 
-    it('starts without guided mode when onboarding is skipped', () => {
+    it('starts a study session from the library without guided mode', () => {
       bootstrapApp(container, null, { storage });
-      container.querySelector<HTMLButtonElement>('[data-testid="onboarding-skip"]')!.click();
 
       expect(container.querySelector('[data-testid="problem-library"]')).toBeTruthy();
 
@@ -190,7 +170,6 @@ describe('onboarding', () => {
 
       expect(window.__GAME_STATE__).toMatchObject({
         guidedMode: false,
-        experienceLevel: 'experienced',
         phase: 'briefing',
       });
     });

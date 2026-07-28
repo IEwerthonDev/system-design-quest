@@ -68,8 +68,8 @@ function injectSuggestionStyles(root: HTMLElement): void {
     }
     .sdq-suggestions__card {
       border: 1px solid var(--sdq-accent-border);
-      background: rgba(30, 64, 175, 0.25);
-      color: #bfdbfe;
+      background: var(--sdq-accent-muted);
+      color: var(--sdq-accent);
       border-radius: 999px;
       padding: 6px 12px;
       font: 12px/1.4 system-ui, sans-serif;
@@ -78,7 +78,7 @@ function injectSuggestionStyles(root: HTMLElement): void {
       max-width: 100%;
     }
     .sdq-suggestions__card:hover:not(:disabled) {
-      background: rgba(37, 99, 235, 0.45);
+      background: rgba(201, 169, 98, 0.22);
       color: var(--sdq-text);
     }
     .sdq-suggestions__card--used,
@@ -86,7 +86,7 @@ function injectSuggestionStyles(root: HTMLElement): void {
       opacity: 0.45;
       cursor: default;
       border-color: var(--sdq-border);
-      background: rgba(51, 65, 85, 0.35);
+      background: var(--sdq-bg-surface);
       color: var(--sdq-text-muted);
     }
   `;

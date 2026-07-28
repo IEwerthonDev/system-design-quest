@@ -4,6 +4,8 @@ export interface SessionHeader {
   setVisible(visible: boolean): void;
   /** Left of brand — e.g. phase back button during canvas. */
   leadingSlot: HTMLElement;
+  /** Right of brand — e.g. settings during canvas. */
+  trailingSlot: HTMLElement;
   controlsSlot: HTMLElement;
   destroy(): void;
 }
@@ -40,8 +42,13 @@ function injectStyles(): void {
       align-items: center;
       flex-shrink: 0;
     }
-    .sdq-session-header__leading:empty {
+    .sdq-session-header__leading:empty,
+    .sdq-session-header__trailing:empty {
       display: none;
+    }
+    .sdq-session-header__leading,
+    .sdq-session-header__trailing {
+      min-width: 0;
     }
     .sdq-session-header__brand {
       font-family: var(--sdq-font-mono, ui-monospace, monospace);
@@ -64,7 +71,18 @@ function injectStyles(): void {
       flex: 1;
     }
     .sdq-session-header__row {
-      display: contents;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      min-width: 0;
+    }
+    .sdq-session-header__trailing {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-shrink: 0;
     }
     .sdq-session-header[hidden] { display: none !important; }
   `;
@@ -89,7 +107,11 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
   brand.className = 'sdq-session-header__brand';
   brand.innerHTML = `<span class="sdq-session-header__brand-sub">SYSTEM DESIGN QUEST</span><strong data-testid="session-title">${problemTitle}</strong>`;
 
-  row.append(leadingSlot, brand);
+  const trailingSlot = document.createElement('div');
+  trailingSlot.className = 'sdq-session-header__trailing';
+  trailingSlot.setAttribute('data-testid', 'session-header-trailing');
+
+  row.append(leadingSlot, brand, trailingSlot);
 
   const controlsSlot = document.createElement('div');
   controlsSlot.className = 'sdq-session-header__controls';
@@ -100,6 +122,7 @@ export function mountSessionHeader(container: HTMLElement, problemTitle: string)
   return {
     root,
     leadingSlot,
+    trailingSlot,
     controlsSlot,
     setTitle(title) {
       const el = root.querySelector('[data-testid="session-title"]');

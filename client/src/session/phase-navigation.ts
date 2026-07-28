@@ -24,6 +24,7 @@ import {
 import { mountSubmitPanel } from '../ui/submit-panel';
 import { mountTimerPanel } from '../ui/timer-panel';
 import { mountSessionHeader } from '../ui/session-header';
+import { mountSettingsPanel } from '../ui/settings-panel';
 import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
 import {
@@ -62,6 +63,7 @@ export interface MountPhaseNavigationOptions {
   designSession?: DesignSessionRecord;
   /** Exit session and return to problem library (home). */
   onExitToLibrary?: () => void;
+  storage?: Storage;
   submitForJudging?: typeof submitForJudging;
   retryLastJudging?: typeof import('../judge/judge-api').retryLastJudging;
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
@@ -251,6 +253,12 @@ export function mountPhaseNavigation(
 
   const sessionHeader = mountSessionHeader(shell, problem.title);
 
+  const settingsPanel = mountSettingsPanel(shell, {
+    anchor: sessionHeader.trailingSlot,
+    storage: options.storage,
+  });
+  settingsPanel.setVisible(false);
+
   const placeBackButton = (inHeader: boolean): void => {
     backButton.classList.toggle('sdq-phase-back--in-header', inHeader);
     if (inHeader) {
@@ -345,6 +353,7 @@ export function mountPhaseNavigation(
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);
     sessionHeader.setVisible(phase === 'canvas');
+    settingsPanel.setVisible(phase === 'canvas');
     if (phase !== 'canvas') {
       problemDrawer.close();
     }
@@ -428,6 +437,7 @@ export function mountPhaseNavigation(
       unsubscribeGraphChanges?.();
       guidedOverlay?.destroy();
       simControls.destroy();
+      settingsPanel.root.remove();
       sessionHeader.destroy();
       problemDrawer.destroy();
       destroyConfirmModal();

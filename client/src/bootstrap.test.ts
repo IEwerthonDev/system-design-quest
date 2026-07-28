@@ -1,11 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { bootstrapApp, clearAppUi } from './bootstrap';
-import {
-  completeOnboardingExperienced,
-  completeOnboardingBeginner,
-  isProblemLibraryUnlocked,
-  resetPreferences,
-} from './storage/preferences';
+import { completeOnboardingExperienced, resetPreferences } from './storage/preferences';
 
 vi.mock('./session/phase-navigation', () => ({
   mountPhaseNavigation: vi.fn(() => ({
@@ -13,14 +8,6 @@ vi.mock('./session/phase-navigation', () => ({
     sync: vi.fn(),
     destroy: vi.fn(),
   })),
-}));
-
-vi.mock('./ui/onboarding', () => ({
-  mountOnboarding: vi.fn(({ onComplete, onSkip }) => {
-    const root = document.createElement('div');
-    root.setAttribute('data-testid', 'onboarding-mock');
-    return { root, getCurrentScreenIndex: () => 0 };
-  }),
 }));
 
 vi.mock('./ui/problem-library', () => ({
@@ -32,7 +19,6 @@ vi.mock('./ui/problem-library', () => ({
 }));
 
 import { mountPhaseNavigation } from './session/phase-navigation';
-import { mountOnboarding } from './ui/onboarding';
 import { mountProblemLibrary } from './ui/problem-library';
 
 class MemoryStorage implements Storage {
@@ -92,13 +78,13 @@ describe('bootstrapApp', () => {
     expect(container.querySelector('[data-testid="chrome"]')).toBeNull();
   });
 
-  it('shows onboarding when preferences indicate first visit', () => {
+  it('always opens the problem library as home', () => {
     bootstrapApp(container, null, { storage });
-    expect(mountOnboarding).toHaveBeenCalled();
-    expect(mountProblemLibrary).not.toHaveBeenCalled();
+    expect(mountProblemLibrary).toHaveBeenCalled();
+    expect(mountPhaseNavigation).not.toHaveBeenCalled();
   });
 
-  it('routes experienced users to problem library', () => {
+  it('opens problem library for returning users', () => {
     completeOnboardingExperienced(storage);
     bootstrapApp(container, null, { storage });
 
@@ -106,63 +92,8 @@ describe('bootstrapApp', () => {
     expect(mountPhaseNavigation).not.toHaveBeenCalled();
   });
 
-  it('routes beginner guided users directly to URL Shortener', () => {
-    completeOnboardingBeginner(storage);
+  it('does not mount global settings on the library screen', () => {
     bootstrapApp(container, null, { storage });
-
-    expect(mountPhaseNavigation).toHaveBeenCalledWith(
-      container,
-      expect.objectContaining({
-        problemId: 'url-shortener',
-        guidedMode: true,
-      }),
-    );
-    expect(mountProblemLibrary).not.toHaveBeenCalled();
-  });
-
-  it('routes to library when tutorial unlocked even for beginners', () => {
-    completeOnboardingBeginner(storage);
-    storage.setItem(
-      'sdq-user-preferences',
-      JSON.stringify({
-        onboardingCompleted: true,
-        experienceLevel: 'beginner',
-        guidedModeRequested: true,
-        libraryUnlocked: true,
-        soundEnabled: true,
-      }),
-    );
-
-    bootstrapApp(container, null, { storage });
-    expect(mountProblemLibrary).toHaveBeenCalled();
-  });
-
-  it('Refazer tutorial from settings starts guided URL Shortener session', () => {
-    completeOnboardingExperienced(storage);
-    bootstrapApp(container, null, { storage });
-    expect(mountProblemLibrary).toHaveBeenCalled();
-    vi.clearAllMocks();
-
-    (
-      container.querySelector('[data-testid="settings-open"]') as HTMLButtonElement
-    ).click();
-    (
-      container.querySelector('[data-testid="settings-redo-tutorial"]') as HTMLButtonElement
-    ).click();
-
-    expect(mountPhaseNavigation).toHaveBeenCalledWith(
-      container,
-      expect.objectContaining({
-        problemId: 'url-shortener',
-        guidedMode: true,
-      }),
-    );
-    expect(mountProblemLibrary).not.toHaveBeenCalled();
-  });
-});
-
-describe('library unlock flag', () => {
-  it('defaults to false for new users', () => {
-    expect(isProblemLibraryUnlocked()).toBe(false);
+    expect(container.querySelector('[data-testid="settings-open"]')).toBeNull();
   });
 });

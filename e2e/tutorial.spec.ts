@@ -24,8 +24,8 @@ const mockJudgeResult = {
   },
 };
 
-test.describe('tutorial happy path', () => {
-  test('onboarding beginner → canvas graph → submit with mocked judge', async ({ page }) => {
+test.describe('study session happy path', () => {
+  test('library → canvas graph → submit with mocked judge', async ({ page }) => {
     await page.route('**/api/judge', async (route) => {
       await route.fulfill({
         status: 200,
@@ -40,9 +40,8 @@ test.describe('tutorial happy path', () => {
 
     await page.goto('/');
 
-    await page.getByTestId('onboarding-next').click();
-    await page.getByTestId('onboarding-next').click();
-    await page.getByTestId('onboarding-beginner').click();
+    await expect(page.getByTestId('problem-library')).toBeVisible();
+    await page.getByTestId('problem-study-url-shortener').click();
 
     await expect(page.getByTestId('briefing-panel')).toBeVisible();
     await page.getByTestId('briefing-start').click();
@@ -52,6 +51,7 @@ test.describe('tutorial happy path', () => {
 
     await expect(page.getByTestId('component-palette')).toBeVisible();
     await expect(page.getByTestId('submit-button')).toBeVisible();
+    await expect(page.getByTestId('settings-open')).toBeVisible();
 
     // Place + connect via e2e hooks (avoid WebGL pixel interaction)
     await page.evaluate(() => {
@@ -79,7 +79,6 @@ test.describe('tutorial happy path', () => {
     );
     expect(nodeCount).toBeGreaterThanOrEqual(1);
 
-    // Guided overlay intercepts pointer events — submit via DOM event
     await page.evaluate(() => {
       const button = document.querySelector<HTMLButtonElement>('[data-testid="submit-button"]');
       button?.dispatchEvent(

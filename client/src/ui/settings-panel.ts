@@ -1,16 +1,10 @@
-import {
-  loadPreferences,
-  requestRedoTutorial,
-  requestReplayOnboarding,
-  setSoundEnabled,
-  type UserPreferences,
-} from '../storage/preferences';
+import { loadPreferences, setSoundEnabled, type UserPreferences } from '../storage/preferences';
 
 export interface SettingsPanelCallbacks {
-  onRedoTutorial: (preferences: UserPreferences) => void;
-  onReplayOnboarding: (preferences: UserPreferences) => void;
   onSoundChange?: (preferences: UserPreferences) => void;
   storage?: Storage;
+  /** When set, the open button is mounted here instead of fixed FAB. */
+  anchor?: HTMLElement;
 }
 
 export interface SettingsPanel {
@@ -18,6 +12,7 @@ export interface SettingsPanel {
   open(): void;
   close(): void;
   isOpen(): boolean;
+  setVisible(visible: boolean): void;
 }
 
 function injectSettingsStyles(): void {
@@ -51,6 +46,23 @@ function injectSettingsStyles(): void {
         background: var(--sdq-bg-elevated);
       }
     }
+    .sdq-settings-btn--in-header {
+      position: static;
+      flex-shrink: 0;
+      min-height: 36px;
+      padding: 6px 12px;
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text-muted);
+      border-radius: var(--sdq-radius-sm);
+      font: 500 13px var(--sdq-font);
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .sdq-settings-btn--in-header:hover {
+      color: var(--sdq-text);
+      border-color: var(--sdq-border-strong);
+    }
     .sdq-settings-panel {
       position: fixed;
       top: 52px;
@@ -65,7 +77,14 @@ function injectSettingsStyles(): void {
       font: 14px system-ui, sans-serif;
       box-shadow: var(--sdq-shadow);
     }
+    .sdq-settings-panel--anchored {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      left: auto;
+    }
     .sdq-settings-panel[hidden] { display: none !important; }
+    .sdq-settings-root[hidden] { display: none !important; }
     .sdq-settings-panel h2 {
       margin: 0 0 12px;
       font-size: 15px;
@@ -77,21 +96,6 @@ function injectSettingsStyles(): void {
       gap: 12px;
       margin-bottom: 10px;
     }
-    .sdq-settings-panel button.action {
-      width: 100%;
-      margin-top: 8px;
-      border: 1px solid var(--sdq-border-strong);
-      background: var(--sdq-bg-surface);
-      color: var(--sdq-text);
-      border-radius: var(--sdq-radius-sm);
-      padding: 10px 12px;
-      cursor: pointer;
-      font: 600 13px var(--sdq-font);
-      text-align: left;
-    }
-    .sdq-settings-panel button.action:hover {
-      background: var(--sdq-hover-bg);
-    }
   `;
   document.head.appendChild(style);
 }
@@ -102,15 +106,16 @@ export function mountSettingsPanel(
 ): SettingsPanel {
   injectSettingsStyles();
   const storage = callbacks.storage;
+  const inline = Boolean(callbacks.anchor);
 
-  const fab = document.createElement('button');
-  fab.type = 'button';
-  fab.className = 'sdq-settings-fab';
-  fab.setAttribute('data-testid', 'settings-open');
-  fab.textContent = 'Configurações';
+  const openBtn = document.createElement('button');
+  openBtn.type = 'button';
+  openBtn.className = inline ? 'sdq-settings-btn--in-header' : 'sdq-settings-fab';
+  openBtn.setAttribute('data-testid', 'settings-open');
+  openBtn.textContent = 'Configurações';
 
   const panel = document.createElement('div');
-  panel.className = 'sdq-settings-panel';
+  panel.className = inline ? 'sdq-settings-panel sdq-settings-panel--anchored' : 'sdq-settings-panel';
   panel.setAttribute('data-testid', 'settings-panel');
   panel.hidden = true;
 
@@ -129,24 +134,19 @@ export function mountSettingsPanel(
   soundToggle.checked = loadPreferences(storage).soundEnabled;
   soundRow.append(soundLabel, soundToggle);
 
-  const redoBtn = document.createElement('button');
-  redoBtn.type = 'button';
-  redoBtn.className = 'action';
-  redoBtn.setAttribute('data-testid', 'settings-redo-tutorial');
-  redoBtn.textContent = 'Refazer tutorial';
-
-  const onboardBtn = document.createElement('button');
-  onboardBtn.type = 'button';
-  onboardBtn.className = 'action';
-  onboardBtn.setAttribute('data-testid', 'settings-replay-onboarding');
-  onboardBtn.textContent = 'Rever onboarding';
-
-  panel.append(title, soundRow, redoBtn, onboardBtn);
+  panel.append(title, soundRow);
 
   const root = document.createElement('div');
+  root.className = 'sdq-settings-root';
   root.setAttribute('data-testid', 'settings-root');
-  root.append(fab, panel);
-  parent.appendChild(root);
+  root.style.position = inline ? 'relative' : '';
+  root.append(openBtn, panel);
+
+  if (inline && callbacks.anchor) {
+    callbacks.anchor.append(root);
+  } else {
+    parent.appendChild(root);
+  }
 
   let open = false;
 
@@ -155,7 +155,7 @@ export function mountSettingsPanel(
     panel.hidden = !next;
   };
 
-  fab.addEventListener('click', () => {
+  openBtn.addEventListener('click', () => {
     setOpen(!open);
   });
 
@@ -164,22 +164,16 @@ export function mountSettingsPanel(
     callbacks.onSoundChange?.(prefs);
   });
 
-  redoBtn.addEventListener('click', () => {
-    const prefs = requestRedoTutorial(storage);
-    setOpen(false);
-    callbacks.onRedoTutorial(prefs);
-  });
-
-  onboardBtn.addEventListener('click', () => {
-    const prefs = requestReplayOnboarding(storage);
-    setOpen(false);
-    callbacks.onReplayOnboarding(prefs);
-  });
-
   return {
     root,
     open: () => setOpen(true),
     close: () => setOpen(false),
     isOpen: () => open,
+    setVisible(visible) {
+      root.hidden = !visible;
+      if (!visible) {
+        setOpen(false);
+      }
+    },
   };
 }

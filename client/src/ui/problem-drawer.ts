@@ -20,17 +20,24 @@ function injectStyles(): void {
       position: fixed;
       left: 0;
       top: 50%;
-      transform: translateY(-50%) rotate(-90deg);
-      transform-origin: left center;
+      transform: translateY(-50%);
       z-index: 22;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
       background: var(--sdq-bg-elevated);
-      color: var(--sdq-text);
-      border: 1px solid rgba(148,163,184,0.35);
-      border-radius: 0 0 8px 8px;
-      padding: 8px 14px;
-      font: 700 11px ui-monospace, monospace;
+      color: var(--sdq-text-muted);
+      border: 1px solid var(--sdq-border);
+      border-left: none;
+      border-radius: 0 var(--sdq-radius-sm) var(--sdq-radius-sm) 0;
+      padding: 14px 8px;
+      font: 700 11px var(--sdq-font-mono);
       letter-spacing: 0.08em;
       cursor: pointer;
+      touch-action: manipulation;
+    }
+    .sdq-problem-tab:hover {
+      color: var(--sdq-text);
+      border-color: var(--sdq-border-strong);
     }
     .sdq-problem-drawer {
       position: fixed;
@@ -40,7 +47,7 @@ function injectStyles(): void {
       height: 100%;
       z-index: 21;
       background: var(--sdq-bg-elevated);
-      border-right: 1px solid rgba(148,163,184,0.3);
+      border-right: 1px solid var(--sdq-border);
       color: var(--sdq-text);
       font-family: ui-monospace, Menlo, monospace;
       font-size: 12px;

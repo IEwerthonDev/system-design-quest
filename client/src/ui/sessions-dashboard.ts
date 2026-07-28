@@ -86,13 +86,17 @@ function injectStyles(): void {
       color: var(--sdq-text-muted);
     }
     .sdq-sessions__back {
-      border: 1px solid var(--sdq-border-strong);
-      background: rgba(51, 65, 85, 0.9);
-      color: var(--sdq-text);
+      border: 1px solid var(--sdq-border);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-text-muted);
       border-radius: var(--sdq-radius-sm);
       padding: 6px 12px;
       cursor: pointer;
       font: 600 13px var(--sdq-font);
+    }
+    .sdq-sessions__back:hover {
+      color: var(--sdq-text);
+      border-color: var(--sdq-border-strong);
     }
     .sdq-sessions__tabs {
       display: flex;
@@ -111,7 +115,8 @@ function injectStyles(): void {
     }
     .sdq-sessions__tab--active {
       background: var(--sdq-accent-muted);
-      border-color: rgba(56, 189, 248, 0.55);
+      border-color: var(--sdq-accent-border);
+      color: var(--sdq-accent);
     }
     .sdq-sessions__list {
       display: flex;
@@ -130,7 +135,7 @@ function injectStyles(): void {
       width: 100%;
     }
     .sdq-sessions__item:hover {
-      border-color: rgba(56, 189, 248, 0.45);
+      border-color: var(--sdq-accent-border);
     }
     .sdq-sessions__item-title {
       margin: 0 0 4px;

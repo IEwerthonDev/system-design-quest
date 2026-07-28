@@ -1,11 +1,5 @@
-import { describe, expect, it, beforeEach, vi } from 'vitest';
-import {
-  loadPreferences,
-  requestRedoTutorial,
-  requestReplayOnboarding,
-  resetPreferences,
-  shouldShowOnboarding,
-} from '../storage/preferences';
+import { describe, expect, it, beforeEach } from 'vitest';
+import { loadPreferences, resetPreferences } from '../storage/preferences';
 import { mountSettingsPanel } from './settings-panel';
 
 class MemoryStorage implements Storage {
@@ -41,15 +35,9 @@ describe('settings-panel', () => {
     document.body.appendChild(host);
   });
 
-  it('renders mute toggle, refazer tutorial and rever onboarding', () => {
-    mountSettingsPanel(host, {
-      storage,
-      onRedoTutorial: () => undefined,
-      onReplayOnboarding: () => undefined,
-    });
+  it('renders mute toggle in the panel', () => {
+    mountSettingsPanel(host, { storage });
 
-    const panel = mountSettingsPanel;
-    void panel;
     const settings = host.querySelector('[data-testid="settings-root"]');
     expect(settings).toBeTruthy();
 
@@ -58,53 +46,24 @@ describe('settings-panel', () => {
 
     expect(host.querySelector('[data-testid="settings-panel"]')).toBeTruthy();
     expect(host.querySelector('[data-testid="settings-sound-toggle"]')).toBeTruthy();
-    expect(host.querySelector('[data-testid="settings-redo-tutorial"]')).toBeTruthy();
-    expect(host.querySelector('[data-testid="settings-replay-onboarding"]')).toBeTruthy();
+    expect(host.querySelector('[data-testid="settings-redo-tutorial"]')).toBeNull();
+    expect(host.querySelector('[data-testid="settings-replay-onboarding"]')).toBeNull();
   });
 
-  it('Refazer tutorial sets guided URL Shortener prefs and invokes callback', () => {
-    const onRedo = vi.fn();
-    mountSettingsPanel(host, {
-      storage,
-      onRedoTutorial: onRedo,
-      onReplayOnboarding: () => undefined,
-    });
+  it('mounts inline in an anchor slot for canvas header', () => {
+    const anchor = document.createElement('div');
+    host.append(anchor);
+    const panel = mountSettingsPanel(host, { storage, anchor });
 
-    (host.querySelector('[data-testid="settings-open"]') as HTMLButtonElement).click();
-    (host.querySelector('[data-testid="settings-redo-tutorial"]') as HTMLButtonElement).click();
+    expect(anchor.querySelector('[data-testid="settings-open"]')).toBeTruthy();
+    expect(anchor.querySelector('.sdq-settings-btn--in-header')).toBeTruthy();
 
-    const prefs = loadPreferences(storage);
-    expect(prefs.guidedModeRequested).toBe(true);
-    expect(prefs.libraryUnlocked).toBe(false);
-    expect(prefs.experienceLevel).toBe('beginner');
-    expect(onRedo).toHaveBeenCalled();
-  });
-
-  it('Rever onboarding clears completion so onboarding shows', () => {
-    requestRedoTutorial(storage);
-    const onReplay = vi.fn();
-    mountSettingsPanel(host, {
-      storage,
-      onRedoTutorial: () => undefined,
-      onReplayOnboarding: onReplay,
-    });
-
-    (host.querySelector('[data-testid="settings-open"]') as HTMLButtonElement).click();
-    (
-      host.querySelector('[data-testid="settings-replay-onboarding"]') as HTMLButtonElement
-    ).click();
-
-    expect(shouldShowOnboarding(loadPreferences(storage))).toBe(true);
-    expect(onReplay).toHaveBeenCalled();
-    void requestReplayOnboarding;
+    panel.setVisible(false);
+    expect(anchor.querySelector('[data-testid="settings-root"]')?.hasAttribute('hidden')).toBe(true);
   });
 
   it('sound toggle persists mute', () => {
-    mountSettingsPanel(host, {
-      storage,
-      onRedoTutorial: () => undefined,
-      onReplayOnboarding: () => undefined,
-    });
+    mountSettingsPanel(host, { storage });
     (host.querySelector('[data-testid="settings-open"]') as HTMLButtonElement).click();
     const toggle = host.querySelector(
       '[data-testid="settings-sound-toggle"]',
