@@ -33,18 +33,33 @@ describe('mentor', () => {
     expect(result.body.toLowerCase()).toContain('empty');
   });
 
-  it('handleMentorRequest returns mock without LLM key', async () => {
-    const res = await handleMentorRequest({
-      body: {
-        action: 'hint',
-        graph: { nodes: [], edges: [] },
-        locale: 'pt-BR',
+  it('mock bottlenecks includes QUEUE_BACKLOG findings', () => {
+    const result = buildMockMentorResult({
+      action: 'bottlenecks',
+      graph: {
+        nodes: [
+          {
+            id: 'app',
+            type: 'app_server',
+            label: 'App',
+            replicas: 1,
+            position: { x: 0, y: 0 },
+          },
+        ],
+        edges: [],
       },
-      ip: '127.0.0.1',
-      env: { JUDGE_USE_MOCK: 'true' },
+      findings: [
+        {
+          code: 'QUEUE_BACKLOG',
+          severity: 'major',
+          nodeIds: ['app'],
+          reasonPt: 'App em queueing',
+          reasonEn: 'App is queueing',
+        },
+      ],
+      locale: 'en',
     });
-    expect(res.status).toBe(200);
-    expect((res.body as { action: string }).action).toBe('hint');
-    expect((res.body as { body: string }).body.length).toBeGreaterThan(10);
+    expect(result.body).toContain('QUEUE_BACKLOG');
+    expect(result.body).toContain('queueing');
   });
 });
