@@ -22,7 +22,6 @@ describe('normalizeGraph', () => {
       edges: [],
     } as ArchitectureGraph;
 
-    // Simulate missing replicas at runtime
     delete (legacy.nodes[0] as { replicas?: number }).replicas;
 
     const normalized = normalizeGraph(legacy);
@@ -30,6 +29,7 @@ describe('normalizeGraph', () => {
     expect(normalized.nodes[0]?.implementationNotes).toBe('old note');
     expect(normalized.simulation).toEqual(DEFAULT_SIMULATION);
     expect(normalized.nodes[0]?.position).toEqual({ x: 1, y: 2, z: 3 });
+    expect(normalized.nodes[0]?.config?.kind).toBe('compute');
   });
 
   it('clamps replicas and applies typed config defaults', () => {
@@ -41,27 +41,54 @@ describe('normalizeGraph', () => {
       position: { x: 0, y: 0 },
     });
     expect(node.replicas).toBe(1);
-    expect(node.config).toEqual({ kind: 'cache', hitRate: 90 });
+    expect(node.config).toEqual({
+      kind: 'cache',
+      hitRate: 90,
+      eviction: 'lru',
+      maxMemoryGb: 4,
+    });
     expect(defaultConfigForType('cdn')).toEqual({
       kind: 'cdn',
       hitRate: 99,
       ttlSeconds: 3600,
+      edgeRegions: 8,
     });
     expect(defaultConfigForType('sql_db')?.kind).toBe('sql_db');
     expect(defaultConfigForType('message_queue')).toEqual({
       kind: 'mq',
       durability: 'disk',
       partitionCount: 3,
+      delivery: 'at_least_once',
     });
-    expect(defaultConfigForType('kafka')?.kind).toBe('mq');
+    expect(defaultConfigForType('kafka')?.kind).toBe('kafka');
     expect(defaultConfigForType('pub_sub')?.kind).toBe('mq');
     expect(defaultConfigForType('websocket_gateway')).toEqual({
       kind: 'ws',
       fanOutLimit: 10_000,
+      stickySessions: true,
     });
     expect(defaultConfigForType('load_balancer')).toEqual({
       kind: 'lb',
       algorithm: 'round_robin',
+      healthCheck: true,
+    });
+    expect(defaultConfigForType('rate_limiter')?.kind).toBe('rate_limiter');
+    expect(defaultConfigForType('object_storage')?.kind).toBe('object_storage');
+  });
+
+  it('migrates legacy kafka mq config to kafka kind', () => {
+    const node = normalizeNode({
+      id: 'k',
+      type: 'kafka',
+      label: 'Kafka',
+      position: { x: 0, y: 0 },
+      config: { kind: 'mq', durability: 'disk', partitionCount: 12, delivery: 'at_least_once' },
+    });
+    expect(node.config).toMatchObject({
+      kind: 'kafka',
+      partitionCount: 12,
+      replicationFactor: 3,
+      retentionHours: 168,
     });
   });
 
@@ -90,9 +117,14 @@ describe('normalizeGraph', () => {
       label: 'Cache',
       replicas: 2,
       position: { x: 0, y: 0 },
-      config: { kind: 'cache', hitRate: 150 },
+      config: { kind: 'cache', hitRate: 150, eviction: 'lru', maxMemoryGb: 4 },
     });
-    expect(cache.config).toEqual({ kind: 'cache', hitRate: 100 });
+    expect(cache.config).toEqual({
+      kind: 'cache',
+      hitRate: 100,
+      eviction: 'lru',
+      maxMemoryGb: 4,
+    });
 
     const sql = normalizeNode({
       id: 's',
@@ -105,6 +137,10 @@ describe('normalizeGraph', () => {
         shardCount: 0,
         partitioningStrategy: 'geographic',
         keySkew: -5,
+        accessPattern: 'read_write',
+        topologyRole: 'primary',
+        replicationFactor: 1,
+        consistency: 'strong',
       },
     });
     expect(sql.config).toEqual({
@@ -114,6 +150,8 @@ describe('normalizeGraph', () => {
       keySkew: 0,
       accessPattern: 'read_write',
       topologyRole: 'primary',
+      replicationFactor: 1,
+      consistency: 'strong',
     });
   });
 
@@ -124,13 +162,13 @@ describe('normalizeGraph', () => {
       label: 'SQL',
       position: { x: 0, y: 0 },
     });
-    expect(sql.config).toEqual({
+    expect(sql.config).toMatchObject({
       kind: 'sql_db',
       shardCount: 1,
-      partitioningStrategy: 'hash',
-      keySkew: 0,
       accessPattern: 'read_write',
       topologyRole: 'primary',
+      replicationFactor: 1,
+      consistency: 'strong',
     });
 
     const nosql = normalizeNode({
@@ -142,12 +180,18 @@ describe('normalizeGraph', () => {
         kind: 'nosql_db',
         accessPattern: 'read',
         topologyRole: 'replica',
+        model: 'kv',
+        shardCount: 4,
+        consistency: 'one',
       },
     });
     expect(nosql.config).toEqual({
       kind: 'nosql_db',
       accessPattern: 'read',
       topologyRole: 'replica',
+      model: 'kv',
+      shardCount: 4,
+      consistency: 'one',
     });
   });
 
@@ -164,6 +208,8 @@ describe('normalizeGraph', () => {
         keySkew: 0,
         accessPattern: 'both' as never,
         topologyRole: 'master' as never,
+        replicationFactor: 1,
+        consistency: 'strong',
       },
     });
     expect(sql.config).toMatchObject({
@@ -179,9 +225,19 @@ describe('normalizeGraph', () => {
       label: 'CDN',
       replicas: 1,
       position: { x: 0, y: 0 },
-      config: { kind: 'cdn', hitRate: -10, ttlSeconds: 999_999 },
+      config: {
+        kind: 'cdn',
+        hitRate: -10,
+        ttlSeconds: 999_999,
+        edgeRegions: 8,
+      },
     });
-    expect(cdn.config).toEqual({ kind: 'cdn', hitRate: 0, ttlSeconds: 86_400 });
+    expect(cdn.config).toEqual({
+      kind: 'cdn',
+      hitRate: 0,
+      ttlSeconds: 86_400,
+      edgeRegions: 8,
+    });
 
     const mq = normalizeNode({
       id: 'mq',
@@ -189,9 +245,19 @@ describe('normalizeGraph', () => {
       label: 'MQ',
       replicas: 1,
       position: { x: 0, y: 0 },
-      config: { kind: 'mq', durability: 'memory', partitionCount: 0 },
+      config: {
+        kind: 'mq',
+        durability: 'memory',
+        partitionCount: 0,
+        delivery: 'at_least_once',
+      },
     });
-    expect(mq.config).toEqual({ kind: 'mq', durability: 'memory', partitionCount: 1 });
+    expect(mq.config).toEqual({
+      kind: 'mq',
+      durability: 'memory',
+      partitionCount: 1,
+      delivery: 'at_least_once',
+    });
 
     const ws = normalizeNode({
       id: 'ws',
@@ -199,9 +265,9 @@ describe('normalizeGraph', () => {
       label: 'WS',
       replicas: 1,
       position: { x: 0, y: 0 },
-      config: { kind: 'ws', fanOutLimit: 0 },
+      config: { kind: 'ws', fanOutLimit: 0, stickySessions: true },
     });
-    expect(ws.config).toEqual({ kind: 'ws', fanOutLimit: 1 });
+    expect(ws.config).toEqual({ kind: 'ws', fanOutLimit: 1, stickySessions: true });
 
     const lb = normalizeNode({
       id: 'lb',
@@ -209,8 +275,8 @@ describe('normalizeGraph', () => {
       label: 'LB',
       replicas: 1,
       position: { x: 0, y: 0 },
-      config: { kind: 'lb', algorithm: 'least_conn' },
+      config: { kind: 'lb', algorithm: 'least_conn', healthCheck: true },
     });
-    expect(lb.config).toEqual({ kind: 'lb', algorithm: 'least_conn' });
+    expect(lb.config).toEqual({ kind: 'lb', algorithm: 'least_conn', healthCheck: true });
   });
 });

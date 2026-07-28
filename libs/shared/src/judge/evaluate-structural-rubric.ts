@@ -1,5 +1,5 @@
-import { normalizeGraph } from '../schema/normalize-graph';
-import type { ArchitectureGraph, ComponentNode } from '../schema/architecture-graph';
+import { DETAIL_BONUS_CAP, normalizeGraph } from '../schema/normalize-graph';
+import type { ArchitectureGraph, ComponentConfig, ComponentNode } from '../schema/architecture-graph';
 import type { FeedbackItem } from '../schema/judge';
 import type {
   Locale,
@@ -9,11 +9,14 @@ import type {
   StructuralDepth,
 } from '../schema/problem';
 import { isCoreRealismProblem } from '../problems/structural-depth';
+import { defaultConfigForType } from '../schema/normalize-graph';
 
 export interface StructuralReport {
   problemId: string;
   depth: StructuralDepth;
   scoreHint: number;
+  /** Capped bonus for deliberate configs + implementation notes (AD-030) */
+  detailBonus: number;
   blockers: FeedbackItem[];
   majors: FeedbackItem[];
   strengths: FeedbackItem[];
@@ -176,9 +179,11 @@ function configRuleViolated(rule: StructuralConfigRule, node: ComponentNode): bo
     }
   }
 
-  if (rule.minShardCount != null && config.kind === 'sql_db') {
-    if (config.shardCount < rule.minShardCount) {
-      return true;
+  if (rule.minShardCount != null) {
+    if (config.kind === 'sql_db' || config.kind === 'nosql_db' || config.kind === 'search') {
+      if (config.shardCount < rule.minShardCount) {
+        return true;
+      }
     }
   }
 
@@ -188,9 +193,11 @@ function configRuleViolated(rule: StructuralConfigRule, node: ComponentNode): bo
     }
   }
 
-  if (rule.minPartitionCount != null && config.kind === 'mq') {
-    if (config.partitionCount < rule.minPartitionCount) {
-      return true;
+  if (rule.minPartitionCount != null) {
+    if (config.kind === 'mq' || config.kind === 'kafka') {
+      if (config.partitionCount < rule.minPartitionCount) {
+        return true;
+      }
     }
   }
 
@@ -200,13 +207,106 @@ function configRuleViolated(rule: StructuralConfigRule, node: ComponentNode): bo
     }
   }
 
-  if (rule.requireMqDurability != null && config.kind === 'mq') {
-    if (config.durability !== rule.requireMqDurability) {
-      return true;
+  if (rule.requireMqDurability != null) {
+    if (config.kind === 'mq' || config.kind === 'kafka') {
+      if (config.durability !== rule.requireMqDurability) {
+        return true;
+      }
     }
   }
 
   return false;
+}
+
+/** Award points for deliberate scale configs and trade-off notes (capped). */
+export function computeDetailBonus(graph: ArchitectureGraph): number {
+  let bonus = 0;
+  for (const node of graph.nodes) {
+    const notes = node.implementationNotes ?? node.note ?? '';
+    if (notes.trim().length >= 40) {
+      bonus += 2;
+    }
+    if (!node.config) {
+      continue;
+    }
+    bonus += configDetailPoints(node.type, node.config);
+  }
+  return Math.min(DETAIL_BONUS_CAP, bonus);
+}
+
+function configDetailPoints(type: ComponentNode['type'], config: ComponentConfig): number {
+  const defaults = defaultConfigForType(type);
+  let points = 0;
+
+  switch (config.kind) {
+    case 'cache':
+      if (config.hitRate >= 80) points += 1;
+      if (config.eviction !== 'lru' || config.maxMemoryGb !== 4) points += 1;
+      break;
+    case 'cdn':
+      if (config.hitRate >= 90) points += 1;
+      if (config.edgeRegions >= 5) points += 1;
+      break;
+    case 'sql_db':
+      if (config.shardCount > 1) points += 1;
+      if (config.replicationFactor > 1) points += 1;
+      if (config.accessPattern !== 'read_write' || config.topologyRole !== 'primary') points += 1;
+      break;
+    case 'nosql_db':
+      if (config.shardCount > 1) points += 1;
+      if (config.consistency === 'quorum' || config.consistency === 'all') points += 1;
+      if (config.model !== 'document') points += 1;
+      break;
+    case 'mq':
+      if (config.durability === 'disk') points += 1;
+      if (config.delivery === 'exactly_once' || config.partitionCount > 3) points += 1;
+      break;
+    case 'kafka':
+      if (config.replicationFactor >= 3) points += 1;
+      if (config.retentionHours >= 24) points += 1;
+      if (config.partitionCount > 3) points += 1;
+      break;
+    case 'rate_limiter':
+      if (config.limitPerSec > 0) points += 1;
+      if (config.algorithm !== 'fixed_window') points += 1;
+      break;
+    case 'api_gateway':
+      if (config.authRequired) points += 1;
+      if (config.timeoutMs > 0 && config.timeoutMs <= 10_000) points += 1;
+      break;
+    case 'object_storage':
+      if (config.replication === 'multi_region') points += 1;
+      break;
+    case 'search':
+      if (config.shardCount > 1) points += 1;
+      break;
+    case 'auth':
+      if (config.mfa || config.sessionStore === 'redis') points += 1;
+      break;
+    case 'compute':
+      if (config.stateless) points += 1;
+      break;
+    case 'worker':
+      if (config.dlq) points += 1;
+      break;
+    case 'notification':
+      if (config.channels.length > 1) points += 1;
+      break;
+    case 'ws':
+      if (config.fanOutLimit >= 5000) points += 1;
+      break;
+    case 'lb':
+      if (config.healthCheck) points += 1;
+      break;
+    default:
+      break;
+  }
+
+  // Tiny nudge if player changed anything vs type defaults
+  if (defaults && JSON.stringify(defaults) !== JSON.stringify(config)) {
+    points = Math.max(points, 1);
+  }
+  return Math.min(3, points);
 }
 
 function evaluateConfigRules(
@@ -378,12 +478,20 @@ export function evaluateStructuralRubric(input: EvaluateStructuralRubricInput): 
   }
 
   const scaleChecklistLines = deriveScaleChecklist(problem, locale);
-  const scoreHint = scoreFromCoverage(presentCount, expected.length, blockers.length, majors.length);
+  const detailBonus = blockers.length > 0 ? 0 : computeDetailBonus(graph);
+  const baseScore = scoreFromCoverage(
+    presentCount,
+    expected.length,
+    blockers.length,
+    majors.length,
+  );
+  const scoreHint = Math.min(100, baseScore + detailBonus);
 
   return {
     problemId: problem.id,
     depth,
     scoreHint,
+    detailBonus,
     blockers,
     majors,
     strengths,

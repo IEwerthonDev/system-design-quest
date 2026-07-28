@@ -2,12 +2,23 @@ import type { ComponentType } from './component-types';
 import type {
   AccessPattern,
   ArchitectureGraph,
+  CacheEviction,
   ComponentConfig,
   ComponentNode,
+  ConsistencyMode,
   DbTopologyRole,
+  DeliveryGuarantee,
   LbAlgorithm,
   MqDurability,
+  NosqlConsistency,
+  NosqlModel,
+  NotificationChannel,
+  RateLimitAlgorithm,
+  RateLimitScope,
+  SessionStore,
   SimulationSettings,
+  StorageClass,
+  StorageReplication,
 } from './architecture-graph';
 
 export const DEFAULT_SIMULATION: SimulationSettings = {
@@ -20,46 +31,83 @@ export const DEFAULT_SIMULATION: SimulationSettings = {
 export const DEFAULT_CDN_TTL_SECONDS = 3600;
 export const DEFAULT_MQ_PARTITION_COUNT = 3;
 export const DEFAULT_WS_FAN_OUT = 10_000;
+export const DEFAULT_CACHE_MEMORY_GB = 4;
+export const DEFAULT_KAFKA_RETENTION_HOURS = 168;
+export const DETAIL_BONUS_CAP = 15;
 
 const LB_ALGORITHMS: readonly LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
 const MQ_DURABILITIES: readonly MqDurability[] = ['memory', 'disk'];
 const ACCESS_PATTERNS: readonly AccessPattern[] = ['read', 'write', 'read_write'];
 const DB_TOPOLOGY_ROLES: readonly DbTopologyRole[] = ['primary', 'replica', 'standalone'];
+const CACHE_EVICTIONS: readonly CacheEviction[] = ['lru', 'lfu', 'ttl'];
+const CONSISTENCY_MODES: readonly ConsistencyMode[] = ['strong', 'eventual'];
+const NOSQL_MODELS: readonly NosqlModel[] = ['document', 'kv', 'wide_column'];
+const NOSQL_CONSISTENCY: readonly NosqlConsistency[] = ['one', 'quorum', 'all'];
+const DELIVERIES: readonly DeliveryGuarantee[] = [
+  'at_most_once',
+  'at_least_once',
+  'exactly_once',
+];
+const RATE_ALGOS: readonly RateLimitAlgorithm[] = [
+  'token_bucket',
+  'sliding_window',
+  'fixed_window',
+];
+const RATE_SCOPES: readonly RateLimitScope[] = ['ip', 'user', 'global'];
+const STORAGE_CLASSES: readonly StorageClass[] = ['hot', 'cold'];
+const STORAGE_REPLICATION: readonly StorageReplication[] = ['single_region', 'multi_region'];
+const SESSION_STORES: readonly SessionStore[] = ['jwt', 'redis', 'sticky'];
+const NOTIF_CHANNELS: readonly NotificationChannel[] = ['push', 'email', 'sms'];
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, value));
 }
 
-function isLbAlgorithm(value: unknown): value is LbAlgorithm {
-  return typeof value === 'string' && (LB_ALGORITHMS as readonly string[]).includes(value);
-}
-
-function isMqDurability(value: unknown): value is MqDurability {
-  return typeof value === 'string' && (MQ_DURABILITIES as readonly string[]).includes(value);
-}
-
-function isAccessPattern(value: unknown): value is AccessPattern {
-  return typeof value === 'string' && (ACCESS_PATTERNS as readonly string[]).includes(value);
-}
-
-function isDbTopologyRole(value: unknown): value is DbTopologyRole {
-  return typeof value === 'string' && (DB_TOPOLOGY_ROLES as readonly string[]).includes(value);
+function pick<T extends string>(value: unknown, allowed: readonly T[], fallback: T): T {
+  return typeof value === 'string' && (allowed as readonly string[]).includes(value)
+    ? (value as T)
+    : fallback;
 }
 
 function resolveAccessPattern(value: unknown): AccessPattern {
-  return isAccessPattern(value) ? value : 'read_write';
+  return pick(value, ACCESS_PATTERNS, 'read_write');
 }
 
 function resolveTopologyRole(value: unknown): DbTopologyRole {
-  return isDbTopologyRole(value) ? value : 'primary';
+  return pick(value, DB_TOPOLOGY_ROLES, 'primary');
+}
+
+function asRecord(config: ComponentConfig): Record<string, unknown> {
+  return config as unknown as Record<string, unknown>;
+}
+
+function normalizeChannels(value: unknown): NotificationChannel[] {
+  if (!Array.isArray(value) || value.length === 0) {
+    return ['push'];
+  }
+  const next = value.filter(
+    (c): c is NotificationChannel =>
+      typeof c === 'string' && (NOTIF_CHANNELS as readonly string[]).includes(c),
+  );
+  return next.length > 0 ? next : ['push'];
 }
 
 export function defaultConfigForType(type: ComponentType): ComponentConfig | undefined {
   if (type === 'cache_redis') {
-    return { kind: 'cache', hitRate: 90 };
+    return {
+      kind: 'cache',
+      hitRate: 90,
+      eviction: 'lru',
+      maxMemoryGb: DEFAULT_CACHE_MEMORY_GB,
+    };
   }
   if (type === 'cdn') {
-    return { kind: 'cdn', hitRate: 99, ttlSeconds: DEFAULT_CDN_TTL_SECONDS };
+    return {
+      kind: 'cdn',
+      hitRate: 99,
+      ttlSeconds: DEFAULT_CDN_TTL_SECONDS,
+      edgeRegions: 8,
+    };
   }
   if (type === 'sql_db') {
     return {
@@ -69,6 +117,8 @@ export function defaultConfigForType(type: ComponentType): ComponentConfig | und
       keySkew: 0,
       accessPattern: 'read_write',
       topologyRole: 'primary',
+      replicationFactor: 1,
+      consistency: 'strong',
     };
   }
   if (type === 'nosql_db') {
@@ -76,96 +126,276 @@ export function defaultConfigForType(type: ComponentType): ComponentConfig | und
       kind: 'nosql_db',
       accessPattern: 'read_write',
       topologyRole: 'primary',
+      model: 'document',
+      shardCount: 1,
+      consistency: 'quorum',
     };
   }
-  if (type === 'message_queue' || type === 'kafka' || type === 'pub_sub') {
+  if (type === 'kafka') {
+    return {
+      kind: 'kafka',
+      durability: 'disk',
+      partitionCount: DEFAULT_MQ_PARTITION_COUNT,
+      retentionHours: DEFAULT_KAFKA_RETENTION_HOURS,
+      replicationFactor: 3,
+    };
+  }
+  if (type === 'message_queue' || type === 'pub_sub') {
     return {
       kind: 'mq',
       durability: 'disk',
       partitionCount: DEFAULT_MQ_PARTITION_COUNT,
+      delivery: 'at_least_once',
     };
   }
   if (type === 'websocket_gateway') {
-    return { kind: 'ws', fanOutLimit: DEFAULT_WS_FAN_OUT };
+    return { kind: 'ws', fanOutLimit: DEFAULT_WS_FAN_OUT, stickySessions: true };
   }
   if (type === 'load_balancer') {
-    return { kind: 'lb', algorithm: 'round_robin' };
+    return { kind: 'lb', algorithm: 'round_robin', healthCheck: true };
+  }
+  if (type === 'rate_limiter') {
+    return {
+      kind: 'rate_limiter',
+      algorithm: 'token_bucket',
+      limitPerSec: 100,
+      scope: 'user',
+    };
+  }
+  if (type === 'api_gateway') {
+    return {
+      kind: 'api_gateway',
+      authRequired: true,
+      timeoutMs: 3000,
+      retryMax: 1,
+    };
+  }
+  if (type === 'object_storage') {
+    return {
+      kind: 'object_storage',
+      storageClass: 'hot',
+      replication: 'multi_region',
+    };
+  }
+  if (type === 'search_engine') {
+    return {
+      kind: 'search',
+      shardCount: 3,
+      replicaCount: 1,
+      refreshIntervalSec: 1,
+    };
+  }
+  if (type === 'auth_service') {
+    return {
+      kind: 'auth',
+      tokenTtlSec: 3600,
+      mfa: false,
+      sessionStore: 'jwt',
+    };
+  }
+  if (type === 'app_server' || type === 'microservice') {
+    return {
+      kind: 'compute',
+      stateless: true,
+      maxRpsPerReplica: 200,
+    };
+  }
+  if (type === 'worker') {
+    return { kind: 'worker', concurrency: 4, dlq: true };
+  }
+  if (type === 'notification') {
+    return {
+      kind: 'notification',
+      channels: ['push', 'email'],
+      dedupeWindowSec: 60,
+    };
   }
   return undefined;
 }
 
 function normalizeConfig(node: ComponentNode): ComponentConfig | undefined {
   const fallback = defaultConfigForType(node.type);
-  if (!node.config) {
+  const raw = node.config;
+  if (!raw) {
     return fallback;
   }
 
-  if (node.config.kind === 'cache') {
+  // Migrate legacy kafka nodes that still carry mq kind
+  if (node.type === 'kafka' && raw.kind === 'mq') {
+    const mq = raw;
+    return {
+      kind: 'kafka',
+      durability: pick(mq.durability, MQ_DURABILITIES, 'disk'),
+      partitionCount: clamp(Math.round(mq.partitionCount), 1, 256),
+      retentionHours: DEFAULT_KAFKA_RETENTION_HOURS,
+      replicationFactor: 3,
+    };
+  }
+
+  if (raw.kind === 'cache') {
+    const r = asRecord(raw);
     return {
       kind: 'cache',
-      hitRate: clamp(node.config.hitRate, 0, 100),
+      hitRate: clamp(raw.hitRate, 0, 100),
+      eviction: pick(r.eviction, CACHE_EVICTIONS, 'lru'),
+      maxMemoryGb: clamp(
+        Math.round(typeof r.maxMemoryGb === 'number' ? r.maxMemoryGb : DEFAULT_CACHE_MEMORY_GB),
+        1,
+        1024,
+      ),
     };
   }
 
-  if (node.config.kind === 'cdn') {
+  if (raw.kind === 'cdn') {
+    const r = asRecord(raw);
     const ttlRaw =
-      typeof (node.config as { ttlSeconds?: number }).ttlSeconds === 'number'
-        ? (node.config as { ttlSeconds: number }).ttlSeconds
-        : DEFAULT_CDN_TTL_SECONDS;
+      typeof r.ttlSeconds === 'number' ? r.ttlSeconds : DEFAULT_CDN_TTL_SECONDS;
     return {
       kind: 'cdn',
-      hitRate: clamp(node.config.hitRate, 0, 100),
+      hitRate: clamp(raw.hitRate, 0, 100),
       ttlSeconds: clamp(Math.round(ttlRaw), 1, 86_400),
+      edgeRegions: clamp(
+        Math.round(typeof r.edgeRegions === 'number' ? r.edgeRegions : 8),
+        1,
+        200,
+      ),
     };
   }
 
-  if (node.config.kind === 'sql_db') {
+  if (raw.kind === 'sql_db') {
+    const r = asRecord(raw);
     return {
       kind: 'sql_db',
-      shardCount: clamp(Math.round(node.config.shardCount), 1, 256),
-      partitioningStrategy: node.config.partitioningStrategy,
-      partitionKey: node.config.partitionKey,
-      keySkew: clamp(node.config.keySkew, 0, 100),
-      accessPattern: resolveAccessPattern(
-        (node.config as { accessPattern?: unknown }).accessPattern,
+      shardCount: clamp(Math.round(raw.shardCount), 1, 256),
+      partitioningStrategy: raw.partitioningStrategy,
+      partitionKey: raw.partitionKey,
+      keySkew: clamp(raw.keySkew, 0, 100),
+      accessPattern: resolveAccessPattern(r.accessPattern),
+      topologyRole: resolveTopologyRole(r.topologyRole),
+      replicationFactor: clamp(
+        Math.round(typeof r.replicationFactor === 'number' ? r.replicationFactor : 1),
+        1,
+        9,
       ),
-      topologyRole: resolveTopologyRole(
-        (node.config as { topologyRole?: unknown }).topologyRole,
-      ),
+      consistency: pick(r.consistency, CONSISTENCY_MODES, 'strong'),
     };
   }
 
-  if (node.config.kind === 'nosql_db') {
+  if (raw.kind === 'nosql_db') {
+    const r = asRecord(raw);
     return {
       kind: 'nosql_db',
-      accessPattern: resolveAccessPattern(
-        (node.config as { accessPattern?: unknown }).accessPattern,
-      ),
-      topologyRole: resolveTopologyRole(
-        (node.config as { topologyRole?: unknown }).topologyRole,
-      ),
+      accessPattern: resolveAccessPattern(r.accessPattern),
+      topologyRole: resolveTopologyRole(r.topologyRole),
+      model: pick(r.model, NOSQL_MODELS, 'document'),
+      shardCount: clamp(Math.round(typeof r.shardCount === 'number' ? r.shardCount : 1), 1, 256),
+      consistency: pick(r.consistency, NOSQL_CONSISTENCY, 'quorum'),
     };
   }
 
-  if (node.config.kind === 'mq') {
+  if (raw.kind === 'mq') {
+    const r = asRecord(raw);
     return {
       kind: 'mq',
-      durability: isMqDurability(node.config.durability) ? node.config.durability : 'disk',
-      partitionCount: clamp(Math.round(node.config.partitionCount), 1, 256),
+      durability: pick(raw.durability, MQ_DURABILITIES, 'disk'),
+      partitionCount: clamp(Math.round(raw.partitionCount), 1, 256),
+      delivery: pick(r.delivery, DELIVERIES, 'at_least_once'),
     };
   }
 
-  if (node.config.kind === 'ws') {
+  if (raw.kind === 'kafka') {
+    return {
+      kind: 'kafka',
+      durability: pick(raw.durability, MQ_DURABILITIES, 'disk'),
+      partitionCount: clamp(Math.round(raw.partitionCount), 1, 256),
+      retentionHours: clamp(Math.round(raw.retentionHours), 1, 8760),
+      replicationFactor: clamp(Math.round(raw.replicationFactor), 1, 9),
+    };
+  }
+
+  if (raw.kind === 'ws') {
+    const r = asRecord(raw);
     return {
       kind: 'ws',
-      fanOutLimit: clamp(Math.round(node.config.fanOutLimit), 1, 1_000_000),
+      fanOutLimit: clamp(Math.round(raw.fanOutLimit), 1, 1_000_000),
+      stickySessions: typeof r.stickySessions === 'boolean' ? r.stickySessions : true,
     };
   }
 
-  if (node.config.kind === 'lb') {
+  if (raw.kind === 'lb') {
+    const r = asRecord(raw);
     return {
       kind: 'lb',
-      algorithm: isLbAlgorithm(node.config.algorithm) ? node.config.algorithm : 'round_robin',
+      algorithm: pick(raw.algorithm, LB_ALGORITHMS, 'round_robin'),
+      healthCheck: typeof r.healthCheck === 'boolean' ? r.healthCheck : true,
+    };
+  }
+
+  if (raw.kind === 'rate_limiter') {
+    return {
+      kind: 'rate_limiter',
+      algorithm: pick(raw.algorithm, RATE_ALGOS, 'token_bucket'),
+      limitPerSec: clamp(Math.round(raw.limitPerSec), 1, 1_000_000),
+      scope: pick(raw.scope, RATE_SCOPES, 'user'),
+    };
+  }
+
+  if (raw.kind === 'api_gateway') {
+    return {
+      kind: 'api_gateway',
+      authRequired: Boolean(raw.authRequired),
+      timeoutMs: clamp(Math.round(raw.timeoutMs), 50, 120_000),
+      retryMax: clamp(Math.round(raw.retryMax), 0, 10),
+    };
+  }
+
+  if (raw.kind === 'object_storage') {
+    return {
+      kind: 'object_storage',
+      storageClass: pick(raw.storageClass, STORAGE_CLASSES, 'hot'),
+      replication: pick(raw.replication, STORAGE_REPLICATION, 'multi_region'),
+    };
+  }
+
+  if (raw.kind === 'search') {
+    return {
+      kind: 'search',
+      shardCount: clamp(Math.round(raw.shardCount), 1, 256),
+      replicaCount: clamp(Math.round(raw.replicaCount), 0, 9),
+      refreshIntervalSec: clamp(Math.round(raw.refreshIntervalSec), 1, 3600),
+    };
+  }
+
+  if (raw.kind === 'auth') {
+    return {
+      kind: 'auth',
+      tokenTtlSec: clamp(Math.round(raw.tokenTtlSec), 60, 604_800),
+      mfa: Boolean(raw.mfa),
+      sessionStore: pick(raw.sessionStore, SESSION_STORES, 'jwt'),
+    };
+  }
+
+  if (raw.kind === 'compute') {
+    return {
+      kind: 'compute',
+      stateless: Boolean(raw.stateless),
+      maxRpsPerReplica: clamp(Math.round(raw.maxRpsPerReplica), 1, 100_000),
+    };
+  }
+
+  if (raw.kind === 'worker') {
+    return {
+      kind: 'worker',
+      concurrency: clamp(Math.round(raw.concurrency), 1, 10_000),
+      dlq: Boolean(raw.dlq),
+    };
+  }
+
+  if (raw.kind === 'notification') {
+    return {
+      kind: 'notification',
+      channels: normalizeChannels(raw.channels),
+      dedupeWindowSec: clamp(Math.round(raw.dedupeWindowSec), 0, 86_400),
     };
   }
 

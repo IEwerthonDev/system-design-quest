@@ -1,12 +1,39 @@
 import {
   getComponentMeta,
   type AccessPattern,
+  type ApiGatewayConfig,
+  type AuthConfig,
+  type CacheConfig,
+  type CacheEviction,
+  type CdnConfig,
   type ComponentConfig,
   type ComponentNode,
+  type ComputeConfig,
+  type ConsistencyMode,
   type DbTopologyRole,
+  type DeliveryGuarantee,
+  type KafkaConfig,
   type LbAlgorithm,
+  type LbConfig,
+  type MqConfig,
   type MqDurability,
+  type NosqlConsistency,
+  type NosqlDbConfig,
+  type NosqlModel,
+  type NotificationChannel,
+  type NotificationConfig,
+  type ObjectStorageConfig,
   type PartitioningStrategy,
+  type RateLimitAlgorithm,
+  type RateLimiterConfig,
+  type RateLimitScope,
+  type SearchConfig,
+  type SessionStore,
+  type SqlDbConfig,
+  type StorageClass,
+  type StorageReplication,
+  type WorkerConfig,
+  type WsConfig,
 } from '@sdq/shared';
 import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
 import { t } from '../i18n/t';
@@ -25,10 +52,29 @@ export interface ConfigPopover {
 }
 
 const STRATEGIES: PartitioningStrategy[] = ['hash', 'range', 'geographic', 'list'];
+const CACHE_EVICTIONS: CacheEviction[] = ['lru', 'lfu', 'ttl'];
 const LB_ALGORITHMS: LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
 const MQ_DURABILITIES: MqDurability[] = ['memory', 'disk'];
+const DELIVERY_GUARANTEES: DeliveryGuarantee[] = [
+  'at_most_once',
+  'at_least_once',
+  'exactly_once',
+];
 const ACCESS_PATTERNS: AccessPattern[] = ['read', 'write', 'read_write'];
 const TOPOLOGY_ROLES: DbTopologyRole[] = ['primary', 'replica', 'standalone'];
+const CONSISTENCY_MODES: ConsistencyMode[] = ['strong', 'eventual'];
+const NOSQL_MODELS: NosqlModel[] = ['document', 'kv', 'wide_column'];
+const NOSQL_CONSISTENCY: NosqlConsistency[] = ['one', 'quorum', 'all'];
+const RATE_LIMIT_ALGORITHMS: RateLimitAlgorithm[] = [
+  'token_bucket',
+  'sliding_window',
+  'fixed_window',
+];
+const RATE_LIMIT_SCOPES: RateLimitScope[] = ['ip', 'user', 'global'];
+const STORAGE_CLASSES: StorageClass[] = ['hot', 'cold'];
+const STORAGE_REPLICATIONS: StorageReplication[] = ['single_region', 'multi_region'];
+const SESSION_STORES: SessionStore[] = ['jwt', 'redis', 'sticky'];
+const NOTIFICATION_CHANNELS: NotificationChannel[] = ['push', 'email', 'sms'];
 
 function injectStyles(): void {
   if (document.getElementById('sdq-config-popover-styles')) {
@@ -74,6 +120,17 @@ function injectStyles(): void {
     .sdq-config-popover textarea { min-height: 64px; resize: vertical; }
     .sdq-config-popover__notes-title { font-size: 11px; margin: 12px 0 6px; letter-spacing: 0.04em; }
     .sdq-config-popover__hint { font-size: 10px; color: var(--sdq-text-subtle); margin-top: 8px; }
+    .sdq-config-popover__advanced-toggle {
+      width: 100%; margin: 4px 0 10px; padding: 6px 8px; font: inherit; font-size: 11px;
+      background: rgba(0,0,0,0.25); border: 1px solid rgba(148,163,184,0.3); border-radius: var(--sdq-radius-sm);
+      color: var(--sdq-text-muted); cursor: pointer; text-align: left;
+    }
+    .sdq-config-popover__advanced-toggle:hover { color: var(--sdq-text); }
+    .sdq-config-popover__advanced[hidden] { display: none; }
+    .sdq-config-popover__checkbox-row {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 6px; font-size: 11px;
+    }
+    .sdq-config-popover__checkbox-row input { width: auto; }
   `;
   document.head.append(style);
 }
@@ -91,6 +148,150 @@ function fieldLabel(text: string, valueText?: string): HTMLLabelElement {
   return label;
 }
 
+function appendRangeField(
+  root: HTMLElement,
+  opts: {
+    label: string;
+    testId: string;
+    min: number;
+    max: number;
+    value: number;
+    format?: (v: number) => string;
+    onChange: (v: number) => void;
+  },
+): void {
+  const field = document.createElement('div');
+  field.className = 'sdq-config-popover__field';
+  const format = opts.format ?? String;
+  const label = fieldLabel(opts.label, format(opts.value));
+  const valueEl = label.lastElementChild as HTMLSpanElement;
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.min = String(opts.min);
+  slider.max = String(opts.max);
+  slider.value = String(opts.value);
+  slider.setAttribute('data-testid', opts.testId);
+  slider.addEventListener('input', () => {
+    const v = Number(slider.value);
+    valueEl.textContent = format(v);
+    opts.onChange(v);
+  });
+  field.append(label, slider);
+  root.append(field);
+}
+
+function appendSelectField<T extends string>(
+  root: HTMLElement,
+  opts: {
+    label: string;
+    testId: string;
+    value: T;
+    options: readonly T[];
+    labelKey: (v: T) => string;
+    onChange: (v: T) => void;
+  },
+): void {
+  const field = document.createElement('div');
+  field.className = 'sdq-config-popover__field';
+  field.append(fieldLabel(opts.label));
+  const select = document.createElement('select');
+  select.setAttribute('data-testid', opts.testId);
+  for (const option of opts.options) {
+    const opt = document.createElement('option');
+    opt.value = option;
+    opt.textContent = opts.labelKey(option);
+    if (option === opts.value) {
+      opt.selected = true;
+    }
+    select.append(opt);
+  }
+  select.addEventListener('change', () => {
+    opts.onChange(select.value as T);
+  });
+  field.append(select);
+  root.append(field);
+}
+
+function appendCheckboxField(
+  root: HTMLElement,
+  opts: {
+    label: string;
+    testId: string;
+    checked: boolean;
+    onChange: (checked: boolean) => void;
+  },
+): void {
+  const row = document.createElement('div');
+  row.className = 'sdq-config-popover__checkbox-row';
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.checked = opts.checked;
+  input.setAttribute('data-testid', opts.testId);
+  input.addEventListener('change', () => {
+    opts.onChange(input.checked);
+  });
+  const label = document.createElement('label');
+  label.textContent = opts.label;
+  row.append(input, label);
+  root.append(row);
+}
+
+function appendTextField(
+  root: HTMLElement,
+  opts: {
+    label: string;
+    testId: string;
+    value: string;
+    placeholder?: string;
+    onChange: (value: string) => void;
+  },
+): void {
+  const field = document.createElement('div');
+  field.className = 'sdq-config-popover__field';
+  field.append(fieldLabel(opts.label));
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.value = opts.value;
+  if (opts.placeholder) {
+    input.placeholder = opts.placeholder;
+  }
+  input.setAttribute('data-testid', opts.testId);
+  input.addEventListener('change', () => {
+    opts.onChange(input.value);
+  });
+  field.append(input);
+  root.append(field);
+}
+
+function createAdvancedSection(
+  root: HTMLElement,
+  expanded: boolean,
+  onToggle: (expanded: boolean) => void,
+): HTMLElement {
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'sdq-config-popover__advanced-toggle';
+  toggle.setAttribute('data-testid', 'config-advanced-toggle');
+  toggle.textContent = expanded ? t('config.advancedHide') : t('config.advancedShow');
+  toggle.setAttribute('aria-expanded', String(expanded));
+
+  const advanced = document.createElement('div');
+  advanced.className = 'sdq-config-popover__advanced';
+  advanced.setAttribute('data-testid', 'config-advanced');
+  advanced.hidden = !expanded;
+
+  toggle.addEventListener('click', () => {
+    const next = advanced.hidden;
+    onToggle(next);
+    advanced.hidden = !next;
+    toggle.textContent = next ? t('config.advancedHide') : t('config.advancedShow');
+    toggle.setAttribute('aria-expanded', String(next));
+  });
+
+  root.append(toggle, advanced);
+  return advanced;
+}
+
 function appendAccessTopologyFields(
   root: HTMLElement,
   cfg: { accessPattern: AccessPattern; topologyRole: DbTopologyRole },
@@ -99,45 +300,573 @@ function appendAccessTopologyFields(
     topologyRole?: DbTopologyRole;
   }) => void,
 ): void {
-  const accessField = document.createElement('div');
-  accessField.className = 'sdq-config-popover__field';
-  accessField.append(fieldLabel(t('config.accessPattern')));
-  const accessSelect = document.createElement('select');
-  accessSelect.setAttribute('data-testid', 'config-access-pattern');
-  for (const pattern of ACCESS_PATTERNS) {
-    const opt = document.createElement('option');
-    opt.value = pattern;
-    opt.textContent = t(`config.access.${pattern}`);
-    if (pattern === cfg.accessPattern) {
-      opt.selected = true;
-    }
-    accessSelect.append(opt);
-  }
-  accessSelect.addEventListener('change', () => {
-    onPatch({ accessPattern: accessSelect.value as AccessPattern });
+  appendSelectField(root, {
+    label: t('config.accessPattern'),
+    testId: 'config-access-pattern',
+    value: cfg.accessPattern,
+    options: ACCESS_PATTERNS,
+    labelKey: (pattern) => t(`config.access.${pattern}`),
+    onChange: (accessPattern) => onPatch({ accessPattern }),
   });
-  accessField.append(accessSelect);
 
-  const topoField = document.createElement('div');
-  topoField.className = 'sdq-config-popover__field';
-  topoField.append(fieldLabel(t('config.topologyRole')));
-  const topoSelect = document.createElement('select');
-  topoSelect.setAttribute('data-testid', 'config-topology-role');
-  for (const role of TOPOLOGY_ROLES) {
-    const opt = document.createElement('option');
-    opt.value = role;
-    opt.textContent = t(`config.topology.${role}`);
-    if (role === cfg.topologyRole) {
-      opt.selected = true;
-    }
-    topoSelect.append(opt);
-  }
-  topoSelect.addEventListener('change', () => {
-    onPatch({ topologyRole: topoSelect.value as DbTopologyRole });
+  appendSelectField(root, {
+    label: t('config.topologyRole'),
+    testId: 'config-topology-role',
+    value: cfg.topologyRole,
+    options: TOPOLOGY_ROLES,
+    labelKey: (role) => t(`config.topology.${role}`),
+    onChange: (topologyRole) => onPatch({ topologyRole }),
   });
-  topoField.append(topoSelect);
+}
 
-  root.append(accessField, topoField);
+function renderConfigFields(
+  root: HTMLElement,
+  node: ComponentNode,
+  advancedExpanded: boolean,
+  setAdvancedExpanded: (v: boolean) => void,
+  onConfigChange: (config: ComponentConfig) => void,
+): void {
+  const config = node.config;
+  if (!config) {
+    return;
+  }
+
+  const mountAdvanced = (buildAdvanced: (section: HTMLElement) => void): void => {
+    const section = createAdvancedSection(root, advancedExpanded, setAdvancedExpanded);
+    buildAdvanced(section);
+  };
+
+  switch (config.kind) {
+    case 'cache': {
+      let cfg: CacheConfig = { ...config };
+      const patch = (patch: Partial<CacheConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.hitRate'),
+        testId: 'config-hit-rate',
+        min: 0,
+        max: 100,
+        value: cfg.hitRate,
+        format: (v) => `${v}%`,
+        onChange: (hitRate) => patch({ hitRate }),
+      });
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.eviction'),
+          testId: 'config-cache-eviction',
+          value: cfg.eviction,
+          options: CACHE_EVICTIONS,
+          labelKey: (v) => t(`config.eviction.${v}`),
+          onChange: (eviction) => patch({ eviction }),
+        });
+        appendRangeField(section, {
+          label: t('config.maxMemoryGb'),
+          testId: 'config-cache-max-memory',
+          min: 1,
+          max: 1024,
+          value: cfg.maxMemoryGb,
+          format: (v) => `${v} GB`,
+          onChange: (maxMemoryGb) => patch({ maxMemoryGb }),
+        });
+      });
+      break;
+    }
+    case 'cdn': {
+      let cfg: CdnConfig = { ...config };
+      const patch = (patch: Partial<CdnConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.hitRate'),
+        testId: 'config-hit-rate',
+        min: 0,
+        max: 100,
+        value: cfg.hitRate,
+        format: (v) => `${v}%`,
+        onChange: (hitRate) => patch({ hitRate }),
+      });
+      appendRangeField(root, {
+        label: t('config.ttl'),
+        testId: 'config-cdn-ttl',
+        min: 1,
+        max: 86400,
+        value: cfg.ttlSeconds,
+        onChange: (ttlSeconds) => patch({ ttlSeconds }),
+      });
+      mountAdvanced((section) => {
+        appendRangeField(section, {
+          label: t('config.edgeRegions'),
+          testId: 'config-cdn-edge-regions',
+          min: 1,
+          max: 200,
+          value: cfg.edgeRegions,
+          onChange: (edgeRegions) => patch({ edgeRegions }),
+        });
+      });
+      break;
+    }
+    case 'sql_db': {
+      let cfg: SqlDbConfig = { ...config };
+      const patch = (patch: Partial<SqlDbConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendAccessTopologyFields(root, cfg, patch);
+      appendRangeField(root, {
+        label: t('config.shardCount'),
+        testId: 'config-shard-count',
+        min: 1,
+        max: 256,
+        value: cfg.shardCount,
+        onChange: (shardCount) => patch({ shardCount }),
+      });
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.partitioning'),
+          testId: 'config-partitioning',
+          value: cfg.partitioningStrategy,
+          options: STRATEGIES,
+          labelKey: (s) => t(`config.partitioning.${s}`),
+          onChange: (partitioningStrategy) => patch({ partitioningStrategy }),
+        });
+        appendTextField(section, {
+          label: t('config.partitionKey'),
+          testId: 'config-partition-key',
+          value: cfg.partitionKey ?? '',
+          placeholder: 'e.g. user_id',
+          onChange: (value) => patch({ partitionKey: value || undefined }),
+        });
+        appendRangeField(section, {
+          label: t('config.keySkew'),
+          testId: 'config-key-skew',
+          min: 0,
+          max: 100,
+          value: cfg.keySkew,
+          format: (v) => `${v}%`,
+          onChange: (keySkew) => patch({ keySkew }),
+        });
+        appendRangeField(section, {
+          label: t('config.replicationFactor'),
+          testId: 'config-replication-factor',
+          min: 1,
+          max: 9,
+          value: cfg.replicationFactor,
+          onChange: (replicationFactor) => patch({ replicationFactor }),
+        });
+        appendSelectField(section, {
+          label: t('config.consistency'),
+          testId: 'config-consistency',
+          value: cfg.consistency,
+          options: CONSISTENCY_MODES,
+          labelKey: (v) => t(`config.consistency.${v}`),
+          onChange: (consistency) => patch({ consistency }),
+        });
+      });
+      break;
+    }
+    case 'nosql_db': {
+      let cfg: NosqlDbConfig = { ...config };
+      const patch = (patch: Partial<NosqlDbConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendAccessTopologyFields(root, cfg, patch);
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.model'),
+          testId: 'config-nosql-model',
+          value: cfg.model,
+          options: NOSQL_MODELS,
+          labelKey: (v) => t(`config.model.${v}`),
+          onChange: (model) => patch({ model }),
+        });
+        appendRangeField(section, {
+          label: t('config.shardCount'),
+          testId: 'config-shard-count',
+          min: 1,
+          max: 256,
+          value: cfg.shardCount,
+          onChange: (shardCount) => patch({ shardCount }),
+        });
+        appendSelectField(section, {
+          label: t('config.consistency'),
+          testId: 'config-nosql-consistency',
+          value: cfg.consistency,
+          options: NOSQL_CONSISTENCY,
+          labelKey: (v) => t(`config.nosqlConsistency.${v}`),
+          onChange: (consistency) => patch({ consistency }),
+        });
+      });
+      break;
+    }
+    case 'mq': {
+      let cfg: MqConfig = { ...config };
+      const patch = (patch: Partial<MqConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendSelectField(root, {
+        label: t('config.durability'),
+        testId: 'config-mq-durability',
+        value: cfg.durability,
+        options: MQ_DURABILITIES,
+        labelKey: (v) => t(`config.durability.${v}`),
+        onChange: (durability) => patch({ durability }),
+      });
+      appendRangeField(root, {
+        label: t('config.partitionCount'),
+        testId: 'config-mq-partitions',
+        min: 1,
+        max: 256,
+        value: cfg.partitionCount,
+        onChange: (partitionCount) => patch({ partitionCount }),
+      });
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.delivery'),
+          testId: 'config-mq-delivery',
+          value: cfg.delivery,
+          options: DELIVERY_GUARANTEES,
+          labelKey: (v) => t(`config.delivery.${v}`),
+          onChange: (delivery) => patch({ delivery }),
+        });
+      });
+      break;
+    }
+    case 'kafka': {
+      let cfg: KafkaConfig = { ...config };
+      const patch = (patch: Partial<KafkaConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.partitionCount'),
+        testId: 'config-kafka-partitions',
+        min: 1,
+        max: 256,
+        value: cfg.partitionCount,
+        onChange: (partitionCount) => patch({ partitionCount }),
+      });
+      appendRangeField(root, {
+        label: t('config.retentionHours'),
+        testId: 'config-kafka-retention',
+        min: 1,
+        max: 8760,
+        value: cfg.retentionHours,
+        format: (v) => `${v}h`,
+        onChange: (retentionHours) => patch({ retentionHours }),
+      });
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.durability'),
+          testId: 'config-kafka-durability',
+          value: cfg.durability,
+          options: MQ_DURABILITIES,
+          labelKey: (v) => t(`config.durability.${v}`),
+          onChange: (durability) => patch({ durability }),
+        });
+        appendRangeField(section, {
+          label: t('config.replicationFactor'),
+          testId: 'config-kafka-replication',
+          min: 1,
+          max: 9,
+          value: cfg.replicationFactor,
+          onChange: (replicationFactor) => patch({ replicationFactor }),
+        });
+      });
+      break;
+    }
+    case 'ws': {
+      let cfg: WsConfig = { ...config };
+      const patch = (patch: Partial<WsConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.fanOut'),
+        testId: 'config-ws-fanout',
+        min: 1,
+        max: 100000,
+        value: cfg.fanOutLimit,
+        onChange: (fanOutLimit) => patch({ fanOutLimit }),
+      });
+      mountAdvanced((section) => {
+        appendCheckboxField(section, {
+          label: t('config.stickySessions'),
+          testId: 'config-ws-sticky',
+          checked: cfg.stickySessions,
+          onChange: (stickySessions) => patch({ stickySessions }),
+        });
+      });
+      break;
+    }
+    case 'lb': {
+      let cfg: LbConfig = { ...config };
+      const patch = (patch: Partial<LbConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendSelectField(root, {
+        label: t('config.algorithm'),
+        testId: 'config-lb-algorithm',
+        value: cfg.algorithm,
+        options: LB_ALGORITHMS,
+        labelKey: (v) => t(`config.lbAlgorithm.${v}`),
+        onChange: (algorithm) => patch({ algorithm }),
+      });
+      mountAdvanced((section) => {
+        appendCheckboxField(section, {
+          label: t('config.healthCheck'),
+          testId: 'config-lb-health-check',
+          checked: cfg.healthCheck,
+          onChange: (healthCheck) => patch({ healthCheck }),
+        });
+      });
+      break;
+    }
+    case 'rate_limiter': {
+      let cfg: RateLimiterConfig = { ...config };
+      const patch = (patch: Partial<RateLimiterConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.limitPerSec'),
+        testId: 'config-rate-limit',
+        min: 1,
+        max: 100000,
+        value: cfg.limitPerSec,
+        onChange: (limitPerSec) => patch({ limitPerSec }),
+      });
+      appendSelectField(root, {
+        label: t('config.algorithm'),
+        testId: 'config-rate-algorithm',
+        value: cfg.algorithm,
+        options: RATE_LIMIT_ALGORITHMS,
+        labelKey: (v) => t(`config.rateLimitAlgorithm.${v}`),
+        onChange: (algorithm) => patch({ algorithm }),
+      });
+      mountAdvanced((section) => {
+        appendSelectField(section, {
+          label: t('config.scope'),
+          testId: 'config-rate-scope',
+          value: cfg.scope,
+          options: RATE_LIMIT_SCOPES,
+          labelKey: (v) => t(`config.scope.${v}`),
+          onChange: (scope) => patch({ scope }),
+        });
+      });
+      break;
+    }
+    case 'api_gateway': {
+      let cfg: ApiGatewayConfig = { ...config };
+      const patch = (patch: Partial<ApiGatewayConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendCheckboxField(root, {
+        label: t('config.authRequired'),
+        testId: 'config-api-auth',
+        checked: cfg.authRequired,
+        onChange: (authRequired) => patch({ authRequired }),
+      });
+      appendRangeField(root, {
+        label: t('config.timeoutMs'),
+        testId: 'config-api-timeout',
+        min: 100,
+        max: 30000,
+        value: cfg.timeoutMs,
+        format: (v) => `${v} ms`,
+        onChange: (timeoutMs) => patch({ timeoutMs }),
+      });
+      mountAdvanced((section) => {
+        appendRangeField(section, {
+          label: t('config.retryMax'),
+          testId: 'config-api-retry',
+          min: 0,
+          max: 10,
+          value: cfg.retryMax,
+          onChange: (retryMax) => patch({ retryMax }),
+        });
+      });
+      break;
+    }
+    case 'object_storage': {
+      let cfg: ObjectStorageConfig = { ...config };
+      const patch = (patch: Partial<ObjectStorageConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendSelectField(root, {
+        label: t('config.storageClass'),
+        testId: 'config-storage-class',
+        value: cfg.storageClass,
+        options: STORAGE_CLASSES,
+        labelKey: (v) => t(`config.storageClass.${v}`),
+        onChange: (storageClass) => patch({ storageClass }),
+      });
+      appendSelectField(root, {
+        label: t('config.replication'),
+        testId: 'config-storage-replication',
+        value: cfg.replication,
+        options: STORAGE_REPLICATIONS,
+        labelKey: (v) => t(`config.storageReplication.${v}`),
+        onChange: (replication) => patch({ replication }),
+      });
+      break;
+    }
+    case 'search': {
+      let cfg: SearchConfig = { ...config };
+      const patch = (patch: Partial<SearchConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.shardCount'),
+        testId: 'config-search-shards',
+        min: 1,
+        max: 256,
+        value: cfg.shardCount,
+        onChange: (shardCount) => patch({ shardCount }),
+      });
+      mountAdvanced((section) => {
+        appendRangeField(section, {
+          label: t('config.replicaCount'),
+          testId: 'config-search-replicas',
+          min: 0,
+          max: 9,
+          value: cfg.replicaCount,
+          onChange: (replicaCount) => patch({ replicaCount }),
+        });
+        appendRangeField(section, {
+          label: t('config.refreshIntervalSec'),
+          testId: 'config-search-refresh',
+          min: 1,
+          max: 3600,
+          value: cfg.refreshIntervalSec,
+          format: (v) => `${v}s`,
+          onChange: (refreshIntervalSec) => patch({ refreshIntervalSec }),
+        });
+      });
+      break;
+    }
+    case 'auth': {
+      let cfg: AuthConfig = { ...config };
+      const patch = (patch: Partial<AuthConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.tokenTtlSec'),
+        testId: 'config-auth-token-ttl',
+        min: 60,
+        max: 86400,
+        value: cfg.tokenTtlSec,
+        format: (v) => `${v}s`,
+        onChange: (tokenTtlSec) => patch({ tokenTtlSec }),
+      });
+      appendSelectField(root, {
+        label: t('config.sessionStore'),
+        testId: 'config-auth-session-store',
+        value: cfg.sessionStore,
+        options: SESSION_STORES,
+        labelKey: (v) => t(`config.sessionStore.${v}`),
+        onChange: (sessionStore) => patch({ sessionStore }),
+      });
+      mountAdvanced((section) => {
+        appendCheckboxField(section, {
+          label: t('config.mfa'),
+          testId: 'config-auth-mfa',
+          checked: cfg.mfa,
+          onChange: (mfa) => patch({ mfa }),
+        });
+      });
+      break;
+    }
+    case 'compute': {
+      let cfg: ComputeConfig = { ...config };
+      const patch = (patch: Partial<ComputeConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendCheckboxField(root, {
+        label: t('config.stateless'),
+        testId: 'config-compute-stateless',
+        checked: cfg.stateless,
+        onChange: (stateless) => patch({ stateless }),
+      });
+      appendRangeField(root, {
+        label: t('config.maxRpsPerReplica'),
+        testId: 'config-compute-max-rps',
+        min: 1,
+        max: 100000,
+        value: cfg.maxRpsPerReplica,
+        format: (v) => `${v} RPS`,
+        onChange: (maxRpsPerReplica) => patch({ maxRpsPerReplica }),
+      });
+      break;
+    }
+    case 'worker': {
+      let cfg: WorkerConfig = { ...config };
+      const patch = (patch: Partial<WorkerConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      appendRangeField(root, {
+        label: t('config.concurrency'),
+        testId: 'config-worker-concurrency',
+        min: 1,
+        max: 256,
+        value: cfg.concurrency,
+        onChange: (concurrency) => patch({ concurrency }),
+      });
+      appendCheckboxField(root, {
+        label: t('config.dlq'),
+        testId: 'config-worker-dlq',
+        checked: cfg.dlq,
+        onChange: (dlq) => patch({ dlq }),
+      });
+      break;
+    }
+    case 'notification': {
+      let cfg: NotificationConfig = { ...config };
+      const patch = (patch: Partial<NotificationConfig>): void => {
+        cfg = { ...cfg, ...patch };
+        onConfigChange(cfg);
+      };
+      const channelsField = document.createElement('div');
+      channelsField.className = 'sdq-config-popover__field';
+      channelsField.append(fieldLabel(t('config.channels')));
+      channelsField.setAttribute('data-testid', 'config-notification-channels');
+      for (const channel of NOTIFICATION_CHANNELS) {
+        appendCheckboxField(channelsField, {
+          label: t(`config.channel.${channel}`),
+          testId: `config-notification-channel-${channel}`,
+          checked: cfg.channels.includes(channel),
+          onChange: (checked) => {
+            const channels = checked
+              ? [...cfg.channels, channel]
+              : cfg.channels.filter((c) => c !== channel);
+            patch({ channels });
+          },
+        });
+      }
+      root.append(channelsField);
+      appendRangeField(root, {
+        label: t('config.dedupeWindowSec'),
+        testId: 'config-notification-dedupe',
+        min: 0,
+        max: 3600,
+        value: cfg.dedupeWindowSec,
+        format: (v) => `${v}s`,
+        onChange: (dedupeWindowSec) => patch({ dedupeWindowSec }),
+      });
+      break;
+    }
+  }
 }
 
 export function mountConfigPopover(
@@ -153,6 +882,7 @@ export function mountConfigPopover(
 
   let currentNode: ComponentNode | null = null;
   let anchorRect: DOMRect | null = null;
+  let advancedExpanded = false;
 
   const onLocaleChange = (): void => {
     if (currentNode && !root.hidden) {
@@ -196,251 +926,18 @@ export function mountConfigPopover(
 
     root.append(header, desc);
 
-    if (node.config?.kind === 'cache') {
-      let cfg = node.config;
-      const field = document.createElement('div');
-      field.className = 'sdq-config-popover__field';
-      const label = fieldLabel(t('config.hitRate'), `${cfg.hitRate}%`);
-      const value = label.lastElementChild as HTMLSpanElement;
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = '0';
-      slider.max = '100';
-      slider.value = String(cfg.hitRate);
-      slider.setAttribute('data-testid', 'config-hit-rate');
-      slider.addEventListener('input', () => {
-        const hitRate = Number(slider.value);
-        value.textContent = `${hitRate}%`;
-        cfg = { kind: 'cache', hitRate };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      field.append(label, slider);
-      root.append(field);
-    }
-
-    if (node.config?.kind === 'cdn') {
-      let cfg = { ...node.config };
-      const hitField = document.createElement('div');
-      hitField.className = 'sdq-config-popover__field';
-      const hitLabel = fieldLabel(t('config.hitRate'), `${cfg.hitRate}%`);
-      const hitVal = hitLabel.lastElementChild as HTMLSpanElement;
-      const hitSlider = document.createElement('input');
-      hitSlider.type = 'range';
-      hitSlider.min = '0';
-      hitSlider.max = '100';
-      hitSlider.value = String(cfg.hitRate);
-      hitSlider.setAttribute('data-testid', 'config-hit-rate');
-      hitSlider.addEventListener('input', () => {
-        const hitRate = Number(hitSlider.value);
-        hitVal.textContent = `${hitRate}%`;
-        cfg = { ...cfg, hitRate };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      hitField.append(hitLabel, hitSlider);
-
-      const ttlField = document.createElement('div');
-      ttlField.className = 'sdq-config-popover__field';
-      const ttlLabel = fieldLabel(t('config.ttl'), String(cfg.ttlSeconds));
-      const ttlVal = ttlLabel.lastElementChild as HTMLSpanElement;
-      const ttlSlider = document.createElement('input');
-      ttlSlider.type = 'range';
-      ttlSlider.min = '1';
-      ttlSlider.max = '86400';
-      ttlSlider.value = String(cfg.ttlSeconds);
-      ttlSlider.setAttribute('data-testid', 'config-cdn-ttl');
-      ttlSlider.addEventListener('input', () => {
-        const ttlSeconds = Number(ttlSlider.value);
-        ttlVal.textContent = String(ttlSeconds);
-        cfg = { ...cfg, ttlSeconds };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      ttlField.append(ttlLabel, ttlSlider);
-      root.append(hitField, ttlField);
-    }
-
-    if (node.config?.kind === 'sql_db') {
-      let cfg = { ...node.config };
-      const patchSql = (patch: Partial<typeof cfg>): void => {
-        cfg = { ...cfg, ...patch };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      };
-
-      appendAccessTopologyFields(root, cfg, patchSql);
-
-      const shardField = document.createElement('div');
-      shardField.className = 'sdq-config-popover__field';
-      const shardLabel = fieldLabel(t('config.shardCount'), String(cfg.shardCount));
-      const shardVal = shardLabel.lastElementChild as HTMLSpanElement;
-      const shardSlider = document.createElement('input');
-      shardSlider.type = 'range';
-      shardSlider.min = '1';
-      shardSlider.max = '256';
-      shardSlider.value = String(cfg.shardCount);
-      shardSlider.setAttribute('data-testid', 'config-shard-count');
-      shardSlider.addEventListener('input', () => {
-        const shardCount = Number(shardSlider.value);
-        shardVal.textContent = String(shardCount);
-        patchSql({ shardCount });
-      });
-      shardField.append(shardLabel, shardSlider);
-
-      const stratField = document.createElement('div');
-      stratField.className = 'sdq-config-popover__field';
-      stratField.append(fieldLabel(t('config.partitioning')));
-      const select = document.createElement('select');
-      select.setAttribute('data-testid', 'config-partitioning');
-      for (const s of STRATEGIES) {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s === 'geographic' ? 'Geographic / spatial' : s;
-        if (s === cfg.partitioningStrategy) {
-          opt.selected = true;
-        }
-        select.append(opt);
-      }
-      select.addEventListener('change', () => {
-        patchSql({ partitioningStrategy: select.value as PartitioningStrategy });
-      });
-      stratField.append(select);
-
-      const keyField = document.createElement('div');
-      keyField.className = 'sdq-config-popover__field';
-      keyField.append(fieldLabel(t('config.partitionKey')));
-      const keyInput = document.createElement('input');
-      keyInput.type = 'text';
-      keyInput.placeholder = 'e.g. user_id';
-      keyInput.value = cfg.partitionKey ?? '';
-      keyInput.setAttribute('data-testid', 'config-partition-key');
-      keyInput.addEventListener('change', () => {
-        patchSql({ partitionKey: keyInput.value || undefined });
-      });
-      keyField.append(keyInput);
-
-      const skewField = document.createElement('div');
-      skewField.className = 'sdq-config-popover__field';
-      const skewLabel = fieldLabel(t('config.keySkew'), `${cfg.keySkew}%`);
-      const skewVal = skewLabel.lastElementChild as HTMLSpanElement;
-      const skewSlider = document.createElement('input');
-      skewSlider.type = 'range';
-      skewSlider.min = '0';
-      skewSlider.max = '100';
-      skewSlider.value = String(cfg.keySkew);
-      skewSlider.setAttribute('data-testid', 'config-key-skew');
-      skewSlider.addEventListener('input', () => {
-        const keySkew = Number(skewSlider.value);
-        skewVal.textContent = `${keySkew}%`;
-        patchSql({ keySkew });
-      });
-      skewField.append(skewLabel, skewSlider);
-
-      root.append(shardField, stratField, keyField, skewField);
-    }
-
-    if (node.config?.kind === 'nosql_db') {
-      let cfg = { ...node.config };
-      const patchNosql = (patch: Partial<typeof cfg>): void => {
-        cfg = { ...cfg, ...patch };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      };
-      appendAccessTopologyFields(root, cfg, patchNosql);
-    }
-
-    if (node.config?.kind === 'mq') {
-      let cfg = { ...node.config };
-      const durField = document.createElement('div');
-      durField.className = 'sdq-config-popover__field';
-      durField.append(fieldLabel(t('config.durability')));
-      const durSelect = document.createElement('select');
-      durSelect.setAttribute('data-testid', 'config-mq-durability');
-      for (const d of MQ_DURABILITIES) {
-        const opt = document.createElement('option');
-        opt.value = d;
-        opt.textContent = d;
-        if (d === cfg.durability) {
-          opt.selected = true;
-        }
-        durSelect.append(opt);
-      }
-      durSelect.addEventListener('change', () => {
-        cfg = { ...cfg, durability: durSelect.value as MqDurability };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      durField.append(durSelect);
-
-      const partField = document.createElement('div');
-      partField.className = 'sdq-config-popover__field';
-      const partLabel = fieldLabel(t('config.partitionCount'), String(cfg.partitionCount));
-      const partVal = partLabel.lastElementChild as HTMLSpanElement;
-      const partSlider = document.createElement('input');
-      partSlider.type = 'range';
-      partSlider.min = '1';
-      partSlider.max = '256';
-      partSlider.value = String(cfg.partitionCount);
-      partSlider.setAttribute('data-testid', 'config-mq-partitions');
-      partSlider.addEventListener('input', () => {
-        const partitionCount = Number(partSlider.value);
-        partVal.textContent = String(partitionCount);
-        cfg = { ...cfg, partitionCount };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      partField.append(partLabel, partSlider);
-      root.append(durField, partField);
-    }
-
-    if (node.config?.kind === 'ws') {
-      let cfg = { ...node.config };
-      const field = document.createElement('div');
-      field.className = 'sdq-config-popover__field';
-      const label = fieldLabel(t('config.fanOut'), String(cfg.fanOutLimit));
-      const value = label.lastElementChild as HTMLSpanElement;
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = '1';
-      slider.max = '100000';
-      slider.value = String(cfg.fanOutLimit);
-      slider.setAttribute('data-testid', 'config-ws-fanout');
-      slider.addEventListener('input', () => {
-        const fanOutLimit = Number(slider.value);
-        value.textContent = String(fanOutLimit);
-        cfg = { ...cfg, fanOutLimit };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      field.append(label, slider);
-      root.append(field);
-    }
-
-    if (node.config?.kind === 'lb') {
-      let cfg = { ...node.config };
-      const field = document.createElement('div');
-      field.className = 'sdq-config-popover__field';
-      field.append(fieldLabel(t('config.algorithm')));
-      const select = document.createElement('select');
-      select.setAttribute('data-testid', 'config-lb-algorithm');
-      for (const algo of LB_ALGORITHMS) {
-        const opt = document.createElement('option');
-        opt.value = algo;
-        opt.textContent = algo;
-        if (algo === cfg.algorithm) {
-          opt.selected = true;
-        }
-        select.append(opt);
-      }
-      select.addEventListener('change', () => {
-        cfg = { ...cfg, algorithm: select.value as LbAlgorithm };
-        currentNode = { ...node, config: cfg };
-        callbacks.onConfigChange(node.id, cfg);
-      });
-      field.append(select);
-      root.append(field);
-    }
+    renderConfigFields(
+      root,
+      node,
+      advancedExpanded,
+      (expanded) => {
+        advancedExpanded = expanded;
+      },
+      (config) => {
+        currentNode = { ...node, config };
+        callbacks.onConfigChange(node.id, config);
+      },
+    );
 
     const notesTitle = document.createElement('div');
     notesTitle.className = 'sdq-config-popover__notes-title';
@@ -472,6 +969,7 @@ export function mountConfigPopover(
     root,
     open(node, anchor) {
       anchorRect = anchor;
+      advancedExpanded = false;
       render(node);
       root.hidden = false;
       position(anchor);
@@ -480,6 +978,7 @@ export function mountConfigPopover(
       root.hidden = true;
       currentNode = null;
       anchorRect = null;
+      advancedExpanded = false;
     },
     destroy() {
       if (typeof window !== 'undefined') {
@@ -488,6 +987,7 @@ export function mountConfigPopover(
       root.remove();
       currentNode = null;
       anchorRect = null;
+      advancedExpanded = false;
     },
   };
 }
