@@ -483,6 +483,63 @@ describe('connection intent wiring (CI-02 / CI-03 / CI-05)', () => {
     expect(canvas.getGraph().nodes).toHaveLength(0);
     canvas.destroy();
   });
+
+  it('undo restores prior graph via __GAME_STATE__ after mutate; redo restores', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    const canvas = mountBlueprintCanvas(host);
+
+    placeComponentForTest(canvas, 'app_server', { x: 10, y: 10 });
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(1);
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true }),
+    );
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(0);
+    expect(canvas.getGraph().nodes).toHaveLength(0);
+
+    document.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'y', ctrlKey: true, bubbles: true }),
+    );
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(1);
+
+    canvas.undo();
+    placeComponentForTest(canvas, 'cdn', { x: 20, y: 20 });
+    expect(canvas.redo()).toBe(false);
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(1);
+    expect(window.__GAME_STATE__.graph.nodes[0]?.type).toBe('cdn');
+
+    expect(canvas.undo()).toBe(true);
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(0);
+    expect(canvas.undo()).toBe(false);
+
+    canvas.destroy();
+  });
+
+  it('exposes Undo/Redo buttons ≥44px when coarse pointer or narrow viewport', () => {
+    const host = document.createElement('div');
+    document.body.append(host);
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 480 });
+    const canvas = mountBlueprintCanvas(host);
+
+    const undoBtn = host.querySelector('[data-testid="canvas-undo"]') as HTMLButtonElement;
+    const redoBtn = host.querySelector('[data-testid="canvas-redo"]') as HTMLButtonElement;
+    const bar = host.querySelector('[data-testid="canvas-history"]') as HTMLElement;
+
+    expect(bar.classList.contains('sdq-blueprint-history--visible')).toBe(true);
+    const styles = document.getElementById('sdq-blueprint-styles')?.textContent ?? '';
+    expect(styles).toMatch(/\.sdq-blueprint-history button\s*\{[^}]*min-width:\s*44px/s);
+    expect(styles).toMatch(/\.sdq-blueprint-history button\s*\{[^}]*min-height:\s*44px/s);
+
+    placeComponentForTest(canvas, 'cdn', { x: 5, y: 5 });
+    undoBtn.click();
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(0);
+    redoBtn.click();
+    expect(window.__GAME_STATE__.graph.nodes).toHaveLength(1);
+
+    canvas.destroy();
+    Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024 });
+  });
 });
 
 describe('config popover mount', () => {

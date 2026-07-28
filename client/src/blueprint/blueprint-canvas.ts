@@ -10,7 +10,10 @@ import {
   type PressureLevel,
   type SimulationSettings,
 } from '@sdq/shared';
+import { createGraphHistory } from '../canvas/history';
+import { t } from '../i18n/t';
 import { PALETTE_DROP_EVENT, type PaletteDropDetail } from '../ui/palette';
+import { isCoarsePointer, PHONE_MAX_WIDTH } from '../ui/responsive';
 import { getGameState } from '../test-hook';
 import { getSession, setGraph as setSessionGraph } from '../session/session-store';
 import { buildNewNode, createNodeCard, type NodeCardHandle } from './node-card';
@@ -29,6 +32,8 @@ export interface BlueprintCanvas {
   getGraph(): ArchitectureGraph;
   setGraph(graph: ArchitectureGraph): void;
   updateSimulation(partial: Partial<SimulationSettings>): void;
+  undo(): boolean;
+  redo(): boolean;
   destroy(): void;
 }
 
@@ -99,6 +104,34 @@ function injectBlueprintStyles(): void {
     }
     .sdq-blueprint-link-hint[hidden] {
       display: none !important;
+    }
+    .sdq-blueprint-history {
+      position: fixed;
+      left: 236px;
+      bottom: 92px;
+      z-index: 20;
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .sdq-blueprint-history--visible {
+      display: flex;
+    }
+    .sdq-blueprint-history button {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 8px 12px;
+      border-radius: var(--sdq-radius-sm);
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-elevated);
+      color: var(--sdq-text);
+      cursor: pointer;
+      font: 600 13px var(--sdq-font);
+      touch-action: manipulation;
+    }
+    .sdq-blueprint-history button:disabled {
+      opacity: 0.45;
+      cursor: default;
     }
   `;
   document.head.append(style);
@@ -204,7 +237,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       ...graph,
       edges: graph.edges.map((e) => (e.id === edgeId ? { ...e, label: short } : e)),
     };
-    persist();
+    persist({ recordHistory: true });
     intentPopover.open(edgeId, short);
   };
 
@@ -270,8 +303,15 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   let lastLatencyMs: Record<string, number> | null = null;
   let lastPressureReasons: Record<string, string> | null = null;
 
-  const persist = (): void => {
+  const history = createGraphHistory();
+  let wasDragging = false;
+  let syncHistoryButtons = (): void => undefined;
+
+  const persist = (options: { recordHistory?: boolean } = {}): void => {
     graph = normalizeGraph(graph);
+    if (options.recordHistory) {
+      history.push(graph);
+    }
     if (getSession()) {
       setSessionGraph(graph);
     }
@@ -280,9 +320,14 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     publishInteraction();
     renderEdges();
     applyPressures();
+    syncHistoryButtons();
   };
 
-  const updateNode = (id: string, fn: (n: ComponentNode) => ComponentNode): void => {
+  const updateNode = (
+    id: string,
+    fn: (n: ComponentNode) => ComponentNode,
+    options: { recordHistory?: boolean } = {},
+  ): void => {
     graph = {
       ...graph,
       nodes: graph.nodes.map((n) => (n.id === id ? fn(n) : n)),
@@ -292,8 +337,64 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     if (node && card) {
       card.sync(node);
     }
-    persist();
+    persist({ recordHistory: options.recordHistory ?? true });
   };
+
+  const applyHistorySnapshot = (next: ArchitectureGraph): void => {
+    graph = normalizeGraph(next);
+    remountCards();
+    persist({ recordHistory: false });
+  };
+
+  const performUndo = (): boolean => {
+    const prev = history.undo();
+    if (!prev) {
+      return false;
+    }
+    applyHistorySnapshot(prev);
+    return true;
+  };
+
+  const performRedo = (): boolean => {
+    const next = history.redo();
+    if (!next) {
+      return false;
+    }
+    applyHistorySnapshot(next);
+    return true;
+  };
+
+  const historyBar = document.createElement('div');
+  historyBar.className = 'sdq-blueprint-history';
+  historyBar.setAttribute('data-testid', 'canvas-history');
+  const undoBtn = document.createElement('button');
+  undoBtn.type = 'button';
+  undoBtn.setAttribute('data-testid', 'canvas-undo');
+  undoBtn.textContent = t('undo.label');
+  const redoBtn = document.createElement('button');
+  redoBtn.type = 'button';
+  redoBtn.setAttribute('data-testid', 'canvas-redo');
+  redoBtn.textContent = t('redo.label');
+  historyBar.append(undoBtn, redoBtn);
+  root.append(historyBar);
+
+  const showHistoryChrome = (): boolean =>
+    isCoarsePointer() ||
+    (typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX_WIDTH);
+
+  syncHistoryButtons = (): void => {
+    const visible = showHistoryChrome();
+    historyBar.classList.toggle('sdq-blueprint-history--visible', visible);
+    undoBtn.disabled = !history.canUndo();
+    redoBtn.disabled = !history.canRedo();
+  };
+
+  undoBtn.addEventListener('click', () => {
+    performUndo();
+  });
+  redoBtn.addEventListener('click', () => {
+    performRedo();
+  });
 
   const applyPressures = (): void => {
     const sim = graph.simulation ?? DEFAULT_SIMULATION;
@@ -430,7 +531,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         if (linkingFrom === id) {
           setLinking(null);
         }
-        persist();
+        persist({ recordHistory: true });
       },
     });
     world.append(card.root);
@@ -453,13 +554,18 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       }
     }
     if (dragNodeId) {
+      wasDragging = true;
       const rect = root.getBoundingClientRect();
       const worldX = (ev.clientX - rect.left - panX) / scale - dragOffset.x;
       const worldY = (ev.clientY - rect.top - panY) / scale - dragOffset.y;
-      updateNode(dragNodeId, (n) => ({
-        ...n,
-        position: { x: worldX, y: worldY },
-      }));
+      updateNode(
+        dragNodeId,
+        (n) => ({
+          ...n,
+          position: { x: worldX, y: worldY },
+        }),
+        { recordHistory: false },
+      );
       return;
     }
     if (panning) {
@@ -486,7 +592,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         label: toNode ? defaultLabelForDestination(toNode.type) : 'REQ',
       };
       graph = { ...graph, edges: [...graph.edges, edge] };
-      persist();
+      persist({ recordHistory: true });
       setLinking(null);
       return true;
     }
@@ -504,6 +610,11 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         // Tap on out-handle: keep armed for a second tap on the target node.
         linkGesture = null;
       }
+      if (wasDragging) {
+        history.push(graph);
+        syncHistoryButtons();
+        wasDragging = false;
+      }
       dragNodeId = null;
       panning = false;
       return;
@@ -513,6 +624,11 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       if (!tryCompleteLink(ev.clientX, ev.clientY)) {
         setLinking(null);
       }
+    }
+    if (wasDragging) {
+      history.push(graph);
+      syncHistoryButtons();
+      wasDragging = false;
     }
     dragNodeId = null;
     panning = false;
@@ -534,7 +650,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     const node = buildNewNode(detail.type, { x, y }, nextId('node'));
     graph = { ...graph, nodes: [...graph.nodes, node] };
     addCard(node);
-    persist();
+    persist({ recordHistory: true });
   };
 
   root.addEventListener('pointerdown', (ev) => {
@@ -568,6 +684,25 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   root.addEventListener(PALETTE_DROP_EVENT, onPaletteDrop as EventListener);
 
   const onKeyDown = (ev: KeyboardEvent): void => {
+    const target = ev.target as HTMLElement;
+    const typing =
+      target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
+
+    if (!typing && (ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'z' && !ev.shiftKey) {
+      ev.preventDefault();
+      performUndo();
+      return;
+    }
+    if (
+      !typing &&
+      (ev.ctrlKey || ev.metaKey) &&
+      (ev.key.toLowerCase() === 'y' || (ev.key.toLowerCase() === 'z' && ev.shiftKey))
+    ) {
+      ev.preventDefault();
+      performRedo();
+      return;
+    }
+
     if (ev.key === 'Escape') {
       intentPopover.close();
       popover.close();
@@ -582,8 +717,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       return;
     }
     if ((ev.key === 'Delete' || ev.key === 'Backspace') && (selectedNodeId || selectedEdgeId)) {
-      const target = ev.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') {
+      if (typing) {
         return;
       }
       if (selectedEdgeId) {
@@ -594,7 +728,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         };
         selectedEdgeId = null;
         intentPopover.close();
-        persist();
+        persist({ recordHistory: true });
         return;
       }
       if (selectedNodeId) {
@@ -607,7 +741,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         cards.delete(selectedNodeId);
         selectedNodeId = null;
         popover.close();
-        persist();
+        persist({ recordHistory: true });
       }
     }
   };
@@ -615,6 +749,8 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
   document.addEventListener('keydown', onKeyDown);
 
   persist();
+  history.push(graph);
+  syncHistoryButtons();
 
   return {
     root,
@@ -622,7 +758,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
     setGraph(next) {
       graph = normalizeGraph(next);
       remountCards();
-      persist();
+      persist({ recordHistory: true });
     },
     updateSimulation(partial) {
       graph = {
@@ -632,8 +768,10 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
           ...partial,
         },
       };
-      persist();
+      persist({ recordHistory: true });
     },
+    undo: () => performUndo(),
+    redo: () => performRedo(),
     destroy() {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
@@ -646,6 +784,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         card.destroy();
       }
       zoomBar.remove();
+      historyBar.remove();
       linkHint.remove();
       world.remove();
     },
