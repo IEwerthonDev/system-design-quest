@@ -1,8 +1,8 @@
-import type { Problem } from '../schema/problem';
+import type { ProblemDefinition } from '../schema/problem';
 
 export const URL_SHORTENER_ID = 'url-shortener';
 
-export const URL_SHORTENER: Problem = {
+export const URL_SHORTENER: ProblemDefinition = {
   id: URL_SHORTENER_ID,
   company: 'Bit.ly',
   title: 'Encurtador de URL',

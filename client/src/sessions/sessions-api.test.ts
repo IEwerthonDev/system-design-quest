@@ -3,11 +3,17 @@ import type { DesignSessionRecord, DesignSessionUpsertInput } from '@sdq/shared'
 import {
   getSession,
   listSessions,
+  mergeSessionsLww,
+  pickNewerSession,
   resetSessionsRemoteAvailabilityForTests,
   SessionsApiError,
   upsertSession,
 } from './sessions-api';
-import { resetLocalSessions, SESSIONS_STORAGE_KEY } from './local-sessions';
+import {
+  resetLocalSessions,
+  SESSIONS_STORAGE_KEY,
+  upsertLocalSession,
+} from './local-sessions';
 
 const sampleGraph = { nodes: [], edges: [] };
 
@@ -80,14 +86,14 @@ describe('sessions-api', () => {
     });
 
     const listed = await listSessions(
-      { nickname: 'alice', status: 'in_progress' },
+      { nickname: 'alice', status: 'approved' },
       { fetchFn, baseUrl: 'http://localhost:3000' },
     );
 
     expect(listed).toHaveLength(1);
     expect(listed[0]?.playerNickname).toBe('alice');
     expect(fetchFn).toHaveBeenCalledWith(
-      'http://localhost:3000/api/sessions?nickname=alice&status=in_progress',
+      'http://localhost:3000/api/sessions?nickname=alice&status=approved',
     );
   });
 
@@ -168,5 +174,121 @@ describe('sessions-api', () => {
     expect(fetchFn).not.toHaveBeenCalled();
     expect(record.updatedAt).toBe('2026-07-27T15:00:00.000Z');
     resetLocalSessions(storage);
+  });
+
+  it('pickNewerSession / mergeSessionsLww prefer newer updatedAt', () => {
+    const older: DesignSessionRecord = {
+      ...sampleRecord,
+      id: 'sess-1',
+      status: 'in_progress',
+      updatedAt: '2026-07-27T10:00:00.000Z',
+    };
+    const newer: DesignSessionRecord = {
+      ...sampleRecord,
+      id: 'sess-1',
+      status: 'approved',
+      updatedAt: '2026-07-27T12:00:00.000Z',
+    };
+    expect(pickNewerSession(older, newer).status).toBe('approved');
+    expect(pickNewerSession(newer, older).status).toBe('approved');
+    expect(mergeSessionsLww([older], [newer])[0]?.status).toBe('approved');
+    expect(mergeSessionsLww([newer], [older])[0]?.status).toBe('approved');
+  });
+
+  it('listSessions: remote newer wins over local cache', async () => {
+    const storage = memoryStorage();
+    upsertLocalSession(sampleInput, {
+      storage,
+      now: () => '2026-07-27T10:00:00.000Z',
+    });
+
+    const remoteNewer: DesignSessionRecord = {
+      ...sampleRecord,
+      status: 'approved',
+      updatedAt: '2026-07-27T14:00:00.000Z',
+      createdAt: '2026-07-27T10:00:00.000Z',
+    };
+    const fetchFn = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ sessions: [remoteNewer] }),
+    });
+
+    const listed = await listSessions(
+      { nickname: 'alice' },
+      { fetchFn, baseUrl: 'http://localhost:3000', storage },
+    );
+    expect(listed).toHaveLength(1);
+    expect(listed[0]?.status).toBe('approved');
+    expect(listed[0]?.updatedAt).toBe('2026-07-27T14:00:00.000Z');
+  });
+
+  it('listSessions: local newer wins over remote', async () => {
+    const storage = memoryStorage();
+    upsertLocalSession(
+      { ...sampleInput, status: 'partial' },
+      { storage, now: () => '2026-07-27T16:00:00.000Z' },
+    );
+
+    const remoteOlder: DesignSessionRecord = {
+      ...sampleRecord,
+      status: 'in_progress',
+      updatedAt: '2026-07-27T12:00:00.000Z',
+    };
+    const fetchFn = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ sessions: [remoteOlder] }),
+    });
+
+    const listed = await listSessions(
+      { nickname: 'alice' },
+      { fetchFn, baseUrl: 'http://localhost:3000', storage },
+    );
+    expect(listed[0]?.status).toBe('partial');
+    expect(listed[0]?.updatedAt).toBe('2026-07-27T16:00:00.000Z');
+  });
+
+  it('404 fallback still uses localStorage and invokes onFallbackNotice', async () => {
+    const storage = memoryStorage();
+    const onFallbackNotice = vi.fn();
+    const fetchFn = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({ message: 'Not found' }),
+    });
+
+    const record = await upsertSession(sampleInput, {
+      fetchFn,
+      baseUrl: '',
+      storage,
+      now: () => '2026-07-27T12:00:00.000Z',
+      onFallbackNotice,
+    });
+
+    expect(record.id).toBe('sess-1');
+    expect(onFallbackNotice).toHaveBeenCalledTimes(1);
+    expect(storage.getItem(SESSIONS_STORAGE_KEY)).toContain('sess-1');
+  });
+
+  it('onFallbackNotice errors do not crash fallback', async () => {
+    const storage = memoryStorage();
+    const fetchFn = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      json: async () => ({}),
+    });
+
+    await expect(
+      upsertSession(sampleInput, {
+        fetchFn,
+        baseUrl: '',
+        storage,
+        now: () => '2026-07-27T12:00:00.000Z',
+        onFallbackNotice: () => {
+          throw new Error('toast failed');
+        },
+      }),
+    ).resolves.toMatchObject({ id: 'sess-1' });
   });
 });

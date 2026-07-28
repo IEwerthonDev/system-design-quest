@@ -1,9 +1,11 @@
 import type { LeaderboardEntry } from '@sdq/shared';
 
+export type MaybePromise<T> = T | Promise<T>;
+
 export interface LeaderboardStore {
-  add(entry: LeaderboardEntry): void;
-  listByProblem(problemId: string, limit: number): LeaderboardEntry[];
-  reset(): void;
+  add(entry: LeaderboardEntry): MaybePromise<void>;
+  listByProblem(problemId: string, limit: number): MaybePromise<LeaderboardEntry[]>;
+  reset(): MaybePromise<void>;
 }
 
 export class InMemoryLeaderboardStore implements LeaderboardStore {

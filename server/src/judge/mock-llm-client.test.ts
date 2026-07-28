@@ -79,8 +79,8 @@ describe('createMockLlmClient', () => {
   it('returns deterministic JudgePartialResult per judge role and graph tier', async () => {
     const goodGraph = getGoldenGraph('good');
 
-    const rigorous = await mockJudgePartial('rigorous', goodGraph);
-    const pragmatic = await mockJudgePartial('pragmatic', goodGraph);
+    const rigorous = await mockJudgePartial('rigorous', goodGraph, 'en');
+    const pragmatic = await mockJudgePartial('pragmatic', goodGraph, 'en');
 
     expect(rigorous.score).toBe(82);
     expect(pragmatic.score).toBe(86);
@@ -89,7 +89,7 @@ describe('createMockLlmClient', () => {
   });
 
   it('returns bad-tier partial with blocker critical issue', async () => {
-    const bad = await mockJudgePartial('rigorous', getGoldenGraph('bad'));
+    const bad = await mockJudgePartial('rigorous', getGoldenGraph('bad'), 'en');
 
     expect(bad.score).toBe(30);
     expect(bad.criticalIssues).toContainEqual(
@@ -98,10 +98,15 @@ describe('createMockLlmClient', () => {
   });
 
   it('returns medium-tier partial mentioning scale gaps', async () => {
-    const medium = await mockJudgePartial('pragmatic', getGoldenGraph('medium'));
+    const medium = await mockJudgePartial('pragmatic', getGoldenGraph('medium'), 'en');
 
     expect(medium.score).toBe(73);
     expect(medium.criticalIssues.some((issue) => issue.title.includes('cache'))).toBe(true);
+  });
+
+  it('defaults mock narrative to pt-BR when locale omitted', async () => {
+    const rigorous = await mockJudgePartial('rigorous', getGoldenGraph('good'));
+    expect(rigorous.rationale).toMatch(/escalabilidade|Atende/);
   });
 
   it('returns the same result for repeated calls with the same prompt', async () => {

@@ -89,6 +89,26 @@ describe('judge API client', () => {
     expect(window.__GAME_STATE__.judgingStep).toBeNull();
   });
 
+  it('POST body includes locale from the JudgeInput payload', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify(sampleResult), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+
+    const inputWithLocale: JudgeInput = { ...sampleInput, locale: 'en' };
+    const promise = submitForJudging(inputWithLocale, () => undefined, {
+      fetchFn,
+      stepIntervalMs: 1_000,
+    });
+    await vi.runAllTimersAsync();
+    await promise;
+
+    const body = JSON.parse(fetchFn.mock.calls[0]![1].body as string) as JudgeInput;
+    expect(body.locale).toBe('en');
+  });
+
   it('throws timeout JudgeApiError when request exceeds configured timeout', async () => {
     const fetchFn = vi.fn((_url: string, init?: RequestInit) => {
       return new Promise<Response>((_resolve, reject) => {

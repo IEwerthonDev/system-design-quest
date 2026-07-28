@@ -1,17 +1,20 @@
 import { createHash } from 'node:crypto';
-import type { ArchitectureGraph } from '@sdq/shared';
+import type { ArchitectureGraph, Locale } from '@sdq/shared';
 import { getGoldenGraph, type GoldenGraphTier } from '@sdq/shared';
 import type { JudgePartialResult } from '@sdq/shared';
 import {
   getUrlShortenerPartialResult,
   type JudgeRole,
 } from './fixtures/url-shortener-responses';
+import { DEFAULT_JUDGE_LOCALE } from './locale';
 
 export type { JudgeRole } from './fixtures/url-shortener-responses';
 
 export interface JudgePrompt {
   role: JudgeRole;
   graph: ArchitectureGraph;
+  locale?: Locale;
+  text?: string;
 }
 
 export interface LlmClient {
@@ -78,7 +81,8 @@ export function createMockLlmClient(): LlmClient {
   return {
     async completeJson<T>(prompt: JudgePrompt): Promise<T> {
       const tier = resolveGraphTier(prompt.graph);
-      const partial = getUrlShortenerPartialResult(prompt.role, tier);
+      const locale = prompt.locale ?? DEFAULT_JUDGE_LOCALE;
+      const partial = getUrlShortenerPartialResult(prompt.role, tier, locale);
       return partial as T;
     },
   };
@@ -87,7 +91,8 @@ export function createMockLlmClient(): LlmClient {
 export async function mockJudgePartial(
   role: JudgeRole,
   graph: ArchitectureGraph,
+  locale: Locale = DEFAULT_JUDGE_LOCALE,
 ): Promise<JudgePartialResult> {
   const client = createMockLlmClient();
-  return client.completeJson<JudgePartialResult>({ role, graph });
+  return client.completeJson<JudgePartialResult>({ role, graph, locale });
 }

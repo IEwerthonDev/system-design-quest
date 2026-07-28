@@ -1,6 +1,7 @@
 import { DEFAULT_SIMULATION, getProblem, normalizeGraph, URL_SHORTENER_ID, verdictToSessionStatus } from '@sdq/shared';
 import type { DesignSessionRecord, DesignSessionStatus, DesignSessionUpsertInput } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
+import { getLocale } from '../i18n/locale';
 import { getCurrentStep } from '../guided/guided-mode';
 import { mountGuidedOverlay } from '../guided/guided-overlay';
 import type { ExperienceLevel } from '../storage/preferences';
@@ -27,6 +28,9 @@ import { mountSessionHeader } from '../ui/session-header';
 import { mountSettingsPanel } from '../ui/settings-panel';
 import { mountSimControls } from '../ui/sim-controls';
 import { mountProblemDrawer } from '../ui/problem-drawer';
+import { t } from '../i18n/t';
+import { shareDesign } from '../share/share-design';
+import { bindAbandonTracking, track } from '../analytics/track';
 import {
   advancePhase,
   createSession,
@@ -71,6 +75,8 @@ export interface MountPhaseNavigationOptions {
   submitLeaderboardScoreFn?: typeof submitLeaderboardScore;
   upsertSessionFn?: typeof upsertSession;
   getNickname?: () => string;
+  /** Injectable analytics emitter (tests). */
+  trackFn?: typeof track;
   now?: () => number;
 }
 
@@ -136,8 +142,20 @@ export function mountPhaseNavigation(
   const submitScore = options.submitLeaderboardScoreFn ?? submitLeaderboardScore;
   const getNickname = options.getNickname ?? getOrCreateNickname;
   const upsertSessionFn = options.upsertSessionFn ?? upsertSession;
+  const emitTrack = options.trackFn ?? track;
 
   let beginnerMode = experienceLevel === 'beginner';
+  let lastTrackedPhase: GamePhase | null = null;
+  let reachedResult = false;
+
+  emitTrack('problem_start', { problemId, mode });
+
+  const unbindAbandon = bindAbandonTracking({
+    getProblemId: () => problemId,
+    getPhase: () => getSession()?.phase ?? lastTrackedPhase,
+    hasReachedResult: () => reachedResult,
+    trackFn: emitTrack,
+  });
 
   const shell = document.createElement('div');
   shell.className = 'sdq-phase-shell';
@@ -223,11 +241,14 @@ export function mountPhaseNavigation(
       return;
     }
     const status = verdictToSessionStatus(judgeResult.verdict);
-    const ok = await persistDesignSession(status);
-    if (!ok) {
-      return;
+    // Pending confirm → same upsert as Confirmar, then open; already confirmed → open only
+    if (confirmModal) {
+      const ok = await persistDesignSession(status);
+      if (!ok) {
+        return;
+      }
+      destroyConfirmModal();
     }
-    destroyConfirmModal();
     options.onOpenSessions?.(status);
   };
 
@@ -268,6 +289,31 @@ export function mountPhaseNavigation(
   });
 
   const sessionHeader = mountSessionHeader(shell, problem.title);
+
+  const shareBtn = document.createElement('button');
+  shareBtn.type = 'button';
+  shareBtn.className = 'sdq-phase-share';
+  shareBtn.setAttribute('data-testid', 'share-design');
+  shareBtn.textContent = t('share.cta');
+  shareBtn.addEventListener('click', () => {
+    void shareDesign({
+      problemId,
+      graph: getGraph(),
+      onCopied: (message) => {
+        shareBtn.textContent = message;
+        window.setTimeout(() => {
+          shareBtn.textContent = t('share.cta');
+        }, 1600);
+      },
+      onOversized: (_json, message) => {
+        shareBtn.textContent = message;
+        window.setTimeout(() => {
+          shareBtn.textContent = t('share.cta');
+        }, 2800);
+      },
+    });
+  });
+  sessionHeader.trailingSlot.append(shareBtn);
 
   const settingsPanel = mountSettingsPanel(shell, {
     anchor: sessionHeader.trailingSlot,
@@ -323,6 +369,7 @@ export function mountPhaseNavigation(
       requirements: getRequirements(),
       graph: normalizeGraph(graph),
       mode,
+      locale: getLocale(),
     }),
     onSubmitStart: () => {
       if (mode === 'speedrun') {
@@ -361,6 +408,18 @@ export function mountPhaseNavigation(
     const session = getSession();
     const phase = session?.phase ?? 'briefing';
     const visibility = getPhaseLayerVisibility(phase);
+
+    if (phase !== lastTrackedPhase) {
+      lastTrackedPhase = phase;
+      if (phase === 'requirements') {
+        emitTrack('phase_requirements', { problemId });
+      } else if (phase === 'canvas') {
+        emitTrack('phase_canvas', { problemId });
+      } else if (phase === 'result') {
+        reachedResult = true;
+        emitTrack('phase_result', { problemId });
+      }
+    }
 
     briefingPanel.root.hidden = !visibility.briefing;
     requirementsPanel.root.hidden = !visibility.requirements;
@@ -449,6 +508,7 @@ export function mountPhaseNavigation(
     root: shell,
     sync,
     destroy: () => {
+      unbindAbandon();
       unbindGlossaryShortcut();
       glossaryPanel.destroy();
       unsubscribeGraphChanges?.();

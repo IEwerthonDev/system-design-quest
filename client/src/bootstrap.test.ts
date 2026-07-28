@@ -96,4 +96,56 @@ describe('bootstrapApp', () => {
     bootstrapApp(container, null, { storage });
     expect(container.querySelector('[data-testid="settings-open"]')).toBeNull();
   });
+
+  it('restores shared architecture from URL hash without opening library', async () => {
+    const { encodeShare } = await import('./share/codec');
+    const encoded = encodeShare({
+      v: 1,
+      problemId: 'url-shortener',
+      graph: {
+        nodes: [
+          {
+            id: 'shared-1',
+            type: 'app_server',
+            label: 'App',
+            position: { x: 0, y: 0, z: 0 },
+          },
+        ],
+        edges: [],
+      },
+    });
+    expect(encoded.ok).toBe(true);
+    if (!encoded.ok) {
+      return;
+    }
+
+    bootstrapApp(container, null, {
+      storage,
+      location: { hash: `#${encoded.hash}` } as Location,
+    });
+
+    expect(mountPhaseNavigation).toHaveBeenCalledWith(
+      container,
+      expect.objectContaining({
+        problemId: 'url-shortener',
+        designSession: expect.objectContaining({
+          problemId: 'url-shortener',
+          playerNickname: '',
+          graph: expect.objectContaining({
+            nodes: [expect.objectContaining({ id: 'shared-1' })],
+          }),
+        }),
+      }),
+    );
+    expect(mountProblemLibrary).not.toHaveBeenCalled();
+  });
+
+  it('ignores malformed share hash and shows library', () => {
+    bootstrapApp(container, null, {
+      storage,
+      location: { hash: '#sdq1.not-valid!!!' } as Location,
+    });
+    expect(mountProblemLibrary).toHaveBeenCalled();
+    expect(mountPhaseNavigation).not.toHaveBeenCalled();
+  });
 });

@@ -3,7 +3,7 @@
   "promote_threshold": 2,
   "window_days": 45,
   "quarantine_threshold": 2,
-  "next_id": 6,
+  "next_id": 10,
   "lessons": [
     {
       "id": "L-001",
@@ -94,6 +94,78 @@
       ],
       "created": "2026-07-27T21:21:31Z",
       "last_seen": "2026-07-27T21:21:31Z"
+    },
+    {
+      "id": "L-006",
+      "key": "spec_precision_gap::when a feature inherits speedrun ranking assert elapsedms asc score tie break and keep the spec ac wording aligned with that order",
+      "text": "When a feature inherits speedrun ranking, assert elapsedMs-asc (score tie-break) and keep the spec AC wording aligned with that order",
+      "signal": "spec_precision_gap",
+      "scope": "leaderboard",
+      "status": "candidate",
+      "features": [
+        "hobby-platform"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md LB AC2 / design.md Leaderboard ordering (leaderboard)"
+      ],
+      "created": "2026-07-28T16:18:13Z",
+      "last_seen": "2026-07-28T16:18:13Z"
+    },
+    {
+      "id": "L-007",
+      "key": "spec_precision_gap::assert client soft fail ui for remote store outages error empty state and non blocking writes not only server 503",
+      "text": "Assert client soft-fail UI for remote store outages (error empty-state and non-blocking writes), not only server 503",
+      "signal": "spec_precision_gap",
+      "scope": "client/leaderboard",
+      "status": "candidate",
+      "features": [
+        "hobby-platform"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "LB AC3 / leaderboard-panel.ts:178 (client/leaderboard)"
+      ],
+      "created": "2026-07-28T16:18:13Z",
+      "last_seen": "2026-07-28T16:18:13Z"
+    },
+    {
+      "id": "L-008",
+      "key": "spec_precision_gap::when ui shows both i18n labels and derived percentages assert locale toggle updates copy without changing the percent value",
+      "text": "When UI shows both i18n labels and derived percentages, assert locale toggle updates copy without changing the percent value",
+      "signal": "spec_precision_gap",
+      "scope": "client/i18n",
+      "status": "candidate",
+      "features": [
+        "hobby-platform"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "Progress AC3 / problem-library (client/i18n)"
+      ],
+      "created": "2026-07-28T16:18:13Z",
+      "last_seen": "2026-07-28T16:18:13Z"
+    },
+    {
+      "id": "L-009",
+      "key": "spec_precision_gap::when a shortcut has multiple bindings ctrl y or ctrl shift z assert each binding path in tests",
+      "text": "When a shortcut has multiple bindings (Ctrl+Y or Ctrl+Shift+Z), assert each binding path in tests",
+      "signal": "spec_precision_gap",
+      "scope": "client/canvas",
+      "status": "candidate",
+      "features": [
+        "hobby-platform"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "UX-02 AC3 Ctrl+Shift+Z (client/canvas)"
+      ],
+      "created": "2026-07-28T16:18:13Z",
+      "last_seen": "2026-07-28T16:18:13Z"
     }
   ]
 }

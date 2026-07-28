@@ -22,34 +22,43 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | UI redesign + company-branded problems + mobile polish |
-| **Próximo passo** | Dogfood on phone at production URL |
-| **Feature ativa** | minimalist theme + home navigation on `main` |
-| **Branch** | `main` |
-| **Bloqueios** | Leaderboard still needs external API / durable store; sessions on Hobby = browser `localStorage` |
+| **Fase atual** | `hobby-platform` Verify PASS — ready to merge |
+| **Próximo passo** | Push `feature/hobby-platform` + PR → merge to `main` → configure Vercel env (KV/Blob/Edge/Cron) → redeploy |
+| **Feature ativa** | `hobby-platform` (Verify PASS — see validation.md) |
+| **Branch** | `feature/hobby-platform` |
+| **Bloqueios** | Prod durable path needs Vercel env from `.env.example`; 5 non-blocking spec-precision gaps in validation.md |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
+| **Neon** | Deferred (NEON-01): KV sufficient for session history, leaderboard, progress %, daily stats |
 
 ### Deploy note (Hobby)
 
-- **Serves:** Vite client `dist/client` + serverless `api/judge.js` (esbuild CJS bundle from `server/src/vercel/api-judge.ts`)
-- **Sessions on Hobby:** client falls back to `localStorage` (`sdq-sessions`) when `PUT/GET /api/sessions` returns 404/405 or network fails; optional `VITE_SESSIONS_MODE=local`
+- **Serves:** Vite client `dist/client` + serverless `api/*.js` (judge, sessions, leaderboard, cron, optional export) via esbuild from `server/src/vercel/`
+- **Sessions / leaderboard on Hobby:** Vercel KV primary (AD-025); client `localStorage` fallback when remote missing/fails; optional `VITE_SESSIONS_MODE=local`
 - **Mobile:** tap-to-add when `(pointer: coarse)` or width ≤768; HTML5 DnD remains desktop path
-- **Does not serve:** Fastify sessions/leaderboard routes (leaderboard still deferred)
-- **Env:** optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock; `VITE_API_URL` for remote sessions/leaderboard when available
-- **Build:** esbuild judge bundle then `client:build`; quality gate `nx run-many -t lint test`
+- **Env:** Documented in `.env.example` — `KV_*`, optional `BLOB_READ_WRITE_TOKEN`, `EDGE_CONFIG` / `VITE_EDGE_CONFIG`, `CRON_SECRET`; optional `LLM_API_KEY` / `LLM_BASE_URL` / `LLM_MODEL`; mock judge when key missing; `JUDGE_USE_MOCK=true` forces mock
+- **Build:** esbuild api bundles (judge/sessions/leaderboard/cron) then `client:build`; quality gate `nx run-many -t lint test`
 - **Production:** https://system-design-quest.vercel.app
+- **Cron:** `vercel.json` schedules `GET/POST /api/cron` daily (`0 6 * * *`); auth via `Authorization: Bearer CRON_SECRET`
 
-### AD-022 (active)
+### AD-022 (superseded by AD-025)
 
 Hobby preview = static Vite client + thin serverless `POST /api/judge` (not full Fastify). Hybrid LLM: real when `LLM_API_KEY` set, mock otherwise (including production). Design sessions persist via localStorage fallback on Hobby (AD-021 server store still used when Fastify `/api/sessions` is reachable).
 
 ### AD-023 (active)
 
 Mobile web playability: phone layout uses left overlay drawer + COMPONENTS FAB (canvas-first, Playground-style); sim controls strip always shows Start, Speed, Traffic, and Reads vs Writes sliders; palette tap places nodes; canvas/nodes use `touch-action: none` for pan/drag; connection via out-handle + second tap; selected nodes expose delete control.
+
+### AD-024 (active)
+
+UI + problem copy + AI Judge narrative are bilingual (`en` \| `pt-BR`); preference persisted (`sdq-locale`); default `pt-BR`. Industry jargon stays English in both locales. Controls on problem library.
+
+### AD-025 (active)
+
+Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leaderboard, cron, optional export). Hybrid LLM unchanged. Sessions + leaderboard on Vercel KV; `localStorage` fallback. Fastify + injectable stores for local/dev. Neon deferred unless KV cannot serve required queries.
 
 ---
 
@@ -67,7 +76,7 @@ Mobile web playability: phone layout uses left overlay drawer + COMPONENTS FAB (
 | AD-008 | superseded by AD-018 | **Conexões com fluxo animado** via `TubeGeometry` shader | Substituído por SVG paths + packet animation CSS/JS |
 | AD-009 | superseded by AD-018 | **Catálogo 3D GLB** no canvas de sessão | Sessão usa ícones 2D; GLB/`component-lab` orphan ok |
 | AD-010 | active | **Testes:** lógica em unit (Vitest), canvas via `window.__GAME_STATE__` hook | Sem WebGL; assert grafo + estado de interação |
-| AD-011 | active | **Idioma UI: PT-BR** com termos técnicos em inglês quando padrão da indústria | Usuário brasileiro; termos como "Load Balancer" permanecem em inglês |
+| AD-011 | superseded by AD-024 | **Idioma UI: PT-BR** com termos técnicos em inglês quando padrão da indústria | Usuário brasileiro; termos como "Load Balancer" permanecem em inglês |
 | AD-012 | active | **Branch `main` = produção**; features em `feature/<story-slug>` | Fluxo Git solicitado pelo usuário |
 | AD-013 | active | **Newbie-friendly é pilar de produto**, não polish | Feedback do [vídeo nvZch2Z7eMM](https://www.youtube.com/watch?v=nvZch2Z7eMM): iniciantes travam no canvas; tutorial + Modo Guiado desde o MVP |
 | AD-014 | active | **URL Shortener = primeiro problema (tutorial guiado)**; YouTube = Medium na biblioteca | Progressão Easy → Medium → Hard |
@@ -78,8 +87,10 @@ Mobile web playability: phone layout uses left overlay drawer + COMPONENTS FAB (
 | AD-019 | active | **`ArchitectureGraph` inclui** `replicas`, `config` tipado (cache/cdn/sql), `implementationNotes`, `simulation` global; juiz recebe no prompt | Configuração e notes fazem parte do artefato julgado |
 | AD-020 | active | **Simulação determinística client-side**; Start on/off; Speed só animação; Traffic + R/W + reps/configs → pressão `ok\|warn\|hot` | Pedagógico sem rede; testável em Vitest |
 | AD-021 | active | **Design sessions** persistem via Fastify `/api/sessions` + `SessionStore` (JSON file em prod, in-memory em testes); auth surrogate = nickname; status `approved\|rejected\|partial\|in_progress`; cap 50/nickname | Playground-parity dashboard; reusa padrão DI do leaderboard |
-| AD-022 | active | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
+| AD-022 | superseded by AD-025 | **Hobby preview** = Vite static + serverless `POST /api/judge` (esbuild CJS); hybrid LLM (key → real, else mock incl. production); sessions on Hobby via client `localStorage` fallback when `/api/sessions` missing; leaderboard still deferred | Unblocks AI judge + approved-session history on free preview without Fastify/durable DB |
 | AD-023 | active | **Mobile web canvas** = phone bottom dock + tap-to-add; `touch-action: none` drag/pan; arm+tap (or drag) connect; delete control on selected nodes | HTML5 DnD fails on touch; thumb-zone / 44px targets from mobile-app-ui-design + mobile-touch |
+| AD-024 | active | **Bilingual EN/PT-BR** — UI + problem copy + Judge narrative; `sdq-locale`; default `pt-BR`; jargon stays English; library locale buttons | Supersedes AD-011; user request full-system locale including AI Judge |
+| AD-025 | active | **Hobby durable platform** — thin `api/*.js` (judge/sessions/leaderboard/cron/export); KV for sessions+leaderboard; localStorage fallback; Fastify+DI for local; Neon deferred | Supersedes AD-022; KV-first Hobby ROI without full Fastify on Vercel |
 
 ---
 

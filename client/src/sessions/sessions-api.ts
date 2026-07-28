@@ -27,6 +27,8 @@ export interface SessionsApiOptions {
   preferLocal?: boolean;
   storage?: Storage;
   now?: () => string;
+  /** Non-blocking notice when falling back to local sessions (404/network). */
+  onFallbackNotice?: () => void;
 }
 
 export interface ListSessionsQuery {
@@ -71,6 +73,14 @@ function isRemoteSessionsMissing(response: Response): boolean {
   return response.status === 404 || response.status === 405;
 }
 
+function notifyFallback(options: SessionsApiOptions): void {
+  try {
+    options.onFallbackNotice?.();
+  } catch {
+    // Notice must never crash session flows
+  }
+}
+
 function toApiErrorFromLocal(err: unknown): never {
   if (err instanceof LocalSessionsError) {
     const status = err.code === 'NOT_FOUND' ? 404 : 400;
@@ -82,6 +92,40 @@ function toApiErrorFromLocal(err: unknown): never {
 async function readErrorMessage(response: Response, fallback: string): Promise<string> {
   const body = (await response.json().catch(() => ({}))) as { message?: string };
   return body.message ?? fallback;
+}
+
+/** Prefer the record with the newer ISO `updatedAt` (last-write-wins). */
+export function pickNewerSession(
+  a: DesignSessionRecord,
+  b: DesignSessionRecord,
+): DesignSessionRecord {
+  return a.updatedAt >= b.updatedAt ? a : b;
+}
+
+/** Merge remote + local by id using LWW on `updatedAt`. */
+export function mergeSessionsLww(
+  remote: DesignSessionRecord[],
+  local: DesignSessionRecord[],
+): DesignSessionRecord[] {
+  const byId = new Map<string, DesignSessionRecord>();
+  for (const session of remote) {
+    byId.set(session.id, session);
+  }
+  for (const session of local) {
+    const existing = byId.get(session.id);
+    byId.set(session.id, existing ? pickNewerSession(existing, session) : session);
+  }
+  return [...byId.values()];
+}
+
+function filterByStatus(
+  sessions: DesignSessionRecord[],
+  status?: DesignSessionStatus,
+): DesignSessionRecord[] {
+  if (status === undefined) {
+    return sessions;
+  }
+  return sessions.filter((session) => session.status === status);
 }
 
 export async function upsertSession(
@@ -108,6 +152,7 @@ export async function upsertSession(
 
     if (isRemoteSessionsMissing(response)) {
       remoteSessionsUnavailable = true;
+      notifyFallback(options);
       try {
         return upsertLocalSession(input, { storage: options.storage, now: options.now });
       } catch (err) {
@@ -122,12 +167,22 @@ export async function upsertSession(
       );
     }
 
-    return (await response.json()) as DesignSessionRecord;
+    const remote = (await response.json()) as DesignSessionRecord;
+    try {
+      const local = upsertLocalSession(input, {
+        storage: options.storage,
+        now: () => remote.updatedAt,
+      });
+      return pickNewerSession(remote, local);
+    } catch {
+      return remote;
+    }
   } catch (err) {
     if (err instanceof SessionsApiError) {
       throw err;
     }
     remoteSessionsUnavailable = true;
+    notifyFallback(options);
     try {
       return upsertLocalSession(input, { storage: options.storage, now: options.now });
     } catch (localErr) {
@@ -156,6 +211,7 @@ export async function listSessions(
 
     if (isRemoteSessionsMissing(response)) {
       remoteSessionsUnavailable = true;
+      notifyFallback(options);
       return listLocalSessions(query, { storage: options.storage });
     }
 
@@ -167,12 +223,18 @@ export async function listSessions(
     }
 
     const body = (await response.json()) as { sessions: DesignSessionRecord[] };
-    return body.sessions;
+    const local = listLocalSessions(
+      { nickname: query.nickname },
+      { storage: options.storage },
+    );
+    // LWW across devices, then honor the requested status filter (remote may be stale).
+    return filterByStatus(mergeSessionsLww(body.sessions, local), query.status);
   } catch (err) {
     if (err instanceof SessionsApiError) {
       throw err;
     }
     remoteSessionsUnavailable = true;
+    notifyFallback(options);
     return listLocalSessions(query, { storage: options.storage });
   }
 }
@@ -197,6 +259,7 @@ export async function getSession(
 
     if (isRemoteSessionsMissing(response)) {
       remoteSessionsUnavailable = true;
+      notifyFallback(options);
       try {
         return getLocalSession(id, { storage: options.storage });
       } catch (err) {
@@ -211,12 +274,19 @@ export async function getSession(
       );
     }
 
-    return (await response.json()) as DesignSessionRecord;
+    const remote = (await response.json()) as DesignSessionRecord;
+    try {
+      const local = getLocalSession(id, { storage: options.storage });
+      return pickNewerSession(remote, local);
+    } catch {
+      return remote;
+    }
   } catch (err) {
     if (err instanceof SessionsApiError) {
       throw err;
     }
     remoteSessionsUnavailable = true;
+    notifyFallback(options);
     try {
       return getLocalSession(id, { storage: options.storage });
     } catch (localErr) {

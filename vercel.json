@@ -1,15 +1,32 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx esbuild server/src/vercel/api-judge.ts --bundle --platform=node --format=cjs --outfile=api/judge.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx nx run client:build",
+  "buildCommand": "npx esbuild server/src/vercel/api-judge.ts --bundle --platform=node --format=cjs --outfile=api/judge.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx esbuild server/src/vercel/api-sessions.ts --bundle --platform=node --format=cjs --outfile=api/sessions.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx esbuild server/src/vercel/api-leaderboard.ts --bundle --platform=node --format=cjs --outfile=api/leaderboard.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx esbuild server/src/vercel/api-cron.ts --bundle --platform=node --format=cjs --outfile=api/cron.js --alias:@sdq/shared=./libs/shared/src/index.ts && npx nx run client:build",
   "outputDirectory": "dist/client",
   "installCommand": "npm install",
   "framework": "vite",
   "functions": {
     "api/judge.js": {
       "maxDuration": 60
+    },
+    "api/sessions.js": {
+      "maxDuration": 30
+    },
+    "api/leaderboard.js": {
+      "maxDuration": 30
+    },
+    "api/cron.js": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "0 6 * * *"
+    }
+  ],
   "rewrites": [
+    { "source": "/api/sessions/:id", "destination": "/api/sessions?id=:id" },
+    { "source": "/api/leaderboard/:problemId", "destination": "/api/leaderboard?problemId=:problemId" },
     { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
   ]
 }

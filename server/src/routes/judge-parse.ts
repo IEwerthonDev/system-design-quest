@@ -4,6 +4,7 @@ import {
   type ArchitectureGraph,
   type GameMode,
   type JudgeInput,
+  type Locale,
 } from '@sdq/shared';
 
 type ParseResult =
@@ -16,6 +17,10 @@ function isStringArray(value: unknown): value is string[] {
 
 function isGameMode(value: unknown): value is GameMode {
   return value === 'study' || value === 'speedrun';
+}
+
+function isLocale(value: unknown): value is Locale {
+  return value === 'en' || value === 'pt-BR';
 }
 
 function isArchitectureGraph(value: unknown): value is ArchitectureGraph {
@@ -36,6 +41,7 @@ export function parseJudgeRequestBody(body: unknown): ParseResult {
   const requirements = record.requirements;
   const graph = record.graph;
   const mode = record.mode;
+  const localeRaw = record.locale;
 
   if (typeof problemId !== 'string' || problemId.trim() === '') {
     return { ok: false, message: 'problemId must be a non-empty string' };
@@ -67,6 +73,10 @@ export function parseJudgeRequestBody(body: unknown): ParseResult {
     return { ok: false, message: 'mode must be "study" or "speedrun"' };
   }
 
+  if (localeRaw !== undefined && !isLocale(localeRaw)) {
+    return { ok: false, message: 'locale must be "en" or "pt-BR" when provided' };
+  }
+
   return {
     ok: true,
     input: {
@@ -77,6 +87,7 @@ export function parseJudgeRequestBody(body: unknown): ParseResult {
       },
       graph,
       mode,
+      locale: isLocale(localeRaw) ? localeRaw : 'pt-BR',
     },
   };
 }

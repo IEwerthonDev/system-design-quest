@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach } from 'vitest';
 import type { Difficulty } from '@sdq/shared';
 import { listProblemsByDifficulty } from '@sdq/shared';
 import {
+  completionPercentByDifficulty,
   countCompletedByDifficulty,
   isProblemCompleted,
   isQualifyingCompletion,
@@ -88,6 +89,24 @@ describe('progress storage', () => {
     const easy = countCompletedByDifficulty('easy', idsForDifficulty, storage);
     expect(easy.completed).toBe(2);
     expect(easy.total).toBe(7);
+  });
+
+  it('completionPercentByDifficulty returns approved/total percent and persists across reload', () => {
+    const idsForDifficulty = (difficulty: Difficulty) =>
+      listProblemsByDifficulty(difficulty).map((problem) => problem.id);
+
+    expect(completionPercentByDifficulty('easy', idsForDifficulty, storage)).toBe(0);
+
+    recordCompletion('url-shortener', 'PASS', 85, storage);
+    const percent = completionPercentByDifficulty('easy', idsForDifficulty, storage);
+    expect(percent).toBe(Math.round((1 / 7) * 100));
+
+    const reloaded = new MemoryStorage();
+    const raw = storage.getItem(PROGRESS_STORAGE_KEY);
+    if (raw) {
+      reloaded.setItem(PROGRESS_STORAGE_KEY, raw);
+    }
+    expect(completionPercentByDifficulty('easy', idsForDifficulty, reloaded)).toBe(percent);
   });
 
   it('persists to storage key sdq-progress', () => {

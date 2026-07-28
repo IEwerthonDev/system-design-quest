@@ -25,10 +25,14 @@ export type {
   Difficulty,
   EstimatedMinutes,
   JudgeRubric,
+  Locale,
   Problem,
+  ProblemCopy,
+  ProblemDefinition,
   ProblemMetrics,
   SuggestedRequirements,
 } from './schema/problem';
+export { attachBilingualCopy, localizeProblem } from './i18n/localize-problem';
 export type {
   FeedbackItem,
   GameMode,
