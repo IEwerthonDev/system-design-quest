@@ -18,18 +18,23 @@ describe('sandbox panel drawer exclusivity', () => {
     host = document.createElement('div');
     document.body.append(host);
 
-    let workload: ReturnType<typeof mountWorkloadPanel>;
-    let mentor: ReturnType<typeof mountMentorPanel>;
+    const refs: {
+      workload?: ReturnType<typeof mountWorkloadPanel>;
+      mentor?: ReturnType<typeof mountMentorPanel>;
+    } = {};
 
-    workload = mountWorkloadPanel(host, {
+    refs.workload = mountWorkloadPanel(host, {
       getSettings: () => ({ ...DEFAULT_SIMULATION }),
       onChange: vi.fn(),
-      onOpen: () => mentor.close(),
+      onOpen: () => refs.mentor?.close(),
     });
-    mentor = mountMentorPanel(host, {
+    refs.mentor = mountMentorPanel(host, {
       getFindings: () => [],
-      onOpen: () => workload.close(),
+      onOpen: () => refs.workload?.close(),
     });
+
+    const workload = refs.workload;
+    const mentor = refs.mentor;
 
     mentor.open();
     expect(mentor.isOpen()).toBe(true);
