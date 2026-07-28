@@ -22,14 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `node-access-roles` shipping |
-| **Próximo passo** | Smoke: SQL/NoSQL paper config → Leitura/Escrita + locale on canvas |
-| **Feature ativa** | `node-access-roles` |
-| **Branch** | `feature/node-access-roles` → merge `main` |
+| **Fase atual** | `node-access-roles` merged to `main` + production READY |
+| **Próximo passo** | Smoke: SQL/NoSQL paper config → Leitura/Escrita; switch EN/PT-BR on canvas |
+| **Feature ativa** | none (node-access-roles shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
-| **Verification** | Gate 668 (shared 117 + client 411 + server 140); lint green |
+| **Verification** | Gate 668; lint green; commits `fc67dde` · `7333b50` · `84f23de` |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | Pending this feature (prior judge hotfix `ef2a69d` / `dpl_LeU1Rp45bGMP8SjQW18FHvNzt4hd`) |
+| **Deployment** | `dpl_HZVeAyGcd3QsxZVjsDngveBiXivc` READY (`84f23de`) |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
 | **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
 | **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 `59a9c94` |
