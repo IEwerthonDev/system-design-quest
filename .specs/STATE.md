@@ -22,21 +22,43 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `auth-google` Execute → ship |
-| **Próximo passo** | Add `GOOGLE_CLIENT_ID` + `GOOGLE_CLIENT_SECRET` in Vercel (Google Cloud OAuth Web client); verify Sign in on prod |
-| **Feature ativa** | `auth-google` |
-| **Branch** | `feature/auth-google` → merge `main` |
-| **Bloqueios** | Google OAuth client credentials (user must create in Google Cloud Console) |
+| **Fase atual** | `auth-google` shipped — secret rotated; agent smoke PASS; human nick/import optional confirm |
+| **Próximo passo** | Optional human: Sign in → claim nick → import guest progress. Next product work: pick next feature (e.g. polish) |
+| **Feature ativa** | `auth-google` (done on prod) |
+| **Branch** | `main` |
+| **Bloqueios** | none |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
-| **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*`; sessions + LB POST gated |
+| **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1A guest OK · 2B unique public nick · 3B import prompt · 4A logout→guest |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_6nPREDdz9QKhnMYZ9CBfQJEAV6qT` — READY (`api/auth` live) |
-| **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL — missing GOOGLE_CLIENT_ID/SECRET |
+| **Deployment** | `dpl_8HEqwdJ9LefY1ap2y5HWXDfiFKrd` — READY (redeploy after secret rotation; was `dpl_6QXzKG3APaYgXGUp7hsqBK295Nh6`) |
+| **Env set** | KV_* · AUTH_SECRET · AUTH_BASE_URL · GOOGLE_CLIENT_ID · GOOGLE_CLIENT_SECRET (rotated) |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
 | **Bugfix** | Confirm session upsert uses localStorage fallback on Hobby |
 | **UI fix** | Voltar in session-header leading; Componentes palette minimizable |
 | **Neon** | Deferred (NEON-01): KV sufficient for session history, leaderboard, progress %, daily stats |
+
+### Context Checkpoint (2026-07-28)
+
+| Sinal | Status |
+| ----- | ------ |
+| Chat length | AMBER — ops thread (smoke + rotate + commit/push/deploy) |
+| Uncommitted done work | GREEN after this commit — STATE only; `.agents/` / `skills-lock.json` stay untracked |
+| Spec drift | GREEN — Handoff matches prod (secret rotated + redeploy) |
+| Gate confidence | GREEN — agent smoke re-PASS post-rotation; nick/import needs human Google account |
+| Task clarity | GREEN — commit STATE → push → Vercel prod |
+
+**Veredito:** GREEN for ops close-out (user asked commit/push/deploy).
+
+**Agent smoke (post-rotation):** home 200 · `/api/auth/me` guest · “Entrar com Google” → Google OAuth (PKCE + prod callback). Latest prod `dpl_8HEqwdJ9LefY1ap2y5HWXDfiFKrd` READY.
+
+**Prompt para nova sessão:**
+```
+Branch main. auth-google on prod; STATE handoff committed after secret rotation.
+Read .specs/STATE.md Handoff.
+Optional: human Sign in → nick → guest import smoke.
+Next product: pick feature (polish or other). No auth feature work unless human smoke fails.
+```
 
 ### Deploy note (Hobby)
 
