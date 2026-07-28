@@ -4,20 +4,6 @@
   "outputDirectory": "dist/client",
   "installCommand": "npm install",
   "framework": "vite",
-  "functions": {
-    "api/judge.js": {
-      "maxDuration": 60
-    },
-    "api/sessions.js": {
-      "maxDuration": 30
-    },
-    "api/leaderboard.js": {
-      "maxDuration": 30
-    },
-    "api/cron.js": {
-      "maxDuration": 60
-    }
-  },
   "crons": [
     {
       "path": "/api/cron",

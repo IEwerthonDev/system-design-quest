@@ -22,11 +22,11 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `hobby-platform` Verify PASS — ready to merge |
-| **Próximo passo** | Push `feature/hobby-platform` + PR → merge to `main` → configure Vercel env (KV/Blob/Edge/Cron) → redeploy |
-| **Feature ativa** | `hobby-platform` (Verify PASS — see validation.md) |
-| **Branch** | `feature/hobby-platform` |
-| **Bloqueios** | Prod durable path needs Vercel env from `.env.example`; 5 non-blocking spec-precision gaps in validation.md |
+| **Fase atual** | `hobby-platform` merged to `main` — production deploy in progress |
+| **Próximo passo** | Confirm prod READY; configure Vercel KV/Blob/Edge/Cron env from `.env.example` |
+| **Feature ativa** | `hobby-platform` on `main` (PR #2 squash `91273d0` + deploy fix) |
+| **Branch** | `main` |
+| **Bloqueios** | Prod durable path needs Vercel env (KV/Blob/Edge/Cron); CLI deploy needed buildCommand/functions fix |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |
