@@ -324,9 +324,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Each Easy Core id has `structuralDepth: 'deep'` (or implied by Core set) + ≥1 antiPattern or configRule
-- [ ] Catalog/Deep asserts pass for Easy
-- [ ] Commit: `feat(shared): deep structural rubrics for Core Easy problems`
+- [x] Each Easy Core id has `structuralDepth: 'deep'` (or implied by Core set) + ≥1 antiPattern or configRule
+- [x] Catalog/Deep asserts pass for Easy
+- [x] Commit: `feat(shared): deep structural rubrics for Core Easy problems`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -343,9 +343,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Anti-pattern and configRule fixtures fire blockers/majors as designed
-- [ ] hitRate-too-low on url-shortener changes structural outcome
-- [ ] Commit: `feat(shared): deep anti-pattern and config rule evaluation`
+- [x] Anti-pattern and configRule fixtures fire blockers/majors as designed
+- [x] hitRate-too-low on url-shortener changes structural outcome
+- [x] Commit: `feat(shared): deep anti-pattern and config rule evaluation`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -362,9 +362,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] 6 Core Medium/Hard ids enriched; Hard scale ≥2 lines
-- [ ] Stripe/zoom anti-patterns covered in tests
-- [ ] Commit: `feat(shared): deep structural rubrics for Core Medium and Hard`
+- [x] 6 Core Medium/Hard ids enriched; Hard scale ≥2 lines
+- [x] Stripe/zoom anti-patterns covered in tests
+- [x] Commit: `feat(shared): deep structural rubrics for Core Medium and Hard`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -381,9 +381,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] ≥3 discrimination pairs green
-- [ ] Catalog: Baseline 27 + Deep Core 13
-- [ ] Commit: `test(shared): expand discrimination suite and Core Deep coverage`
+- [x] ≥3 discrimination pairs green
+- [x] Catalog: Baseline 27 + Deep Core 13
+- [x] Commit: `test(shared): expand discrimination suite and Core Deep coverage`
 
 **Tests:** unit  
 **Gate:** quick shared  
@@ -400,9 +400,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Scale block visible when `scaleNarrative` non-empty
-- [ ] Tests assert content via DOM / `__GAME_STATE__` as per existing patterns
-- [ ] Commit: `feat(client): show scale narrative on judge result panel`
+- [x] Scale block visible when `scaleNarrative` non-empty
+- [x] Tests assert content via DOM / `__GAME_STATE__` as per existing patterns
+- [x] Commit: `feat(client): show scale narrative on judge result panel`
 
 **Tests:** unit  
 **Gate:** quick client  
@@ -419,9 +419,9 @@ Phase 6 (UI + ship)       T18 → T19
 
 **Done when:**
 
-- [ ] Bundle contains structural-first path
-- [ ] `npx nx run-many -t lint test` passes
-- [ ] Commit: `build(api): rebuild judge bundle for structural-first pipeline`
+- [x] Bundle contains structural-first path
+- [x] `npx nx run-many -t lint test` passes
+- [x] Commit: `build(api): rebuild judge bundle for structural-first pipeline`
 
 **Tests:** full suite  
 **Gate:** full  

@@ -22,14 +22,16 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `judge-realism` Execute — Batch 2 (T8–T13 / P3+P4) **complete** |
-| **Próximo passo** | Batch 3 (T14–T19 / P5+P6) → Verifier |
+| **Fase atual** | `judge-realism` Execute — Batch 3 (T14–T19 / P5+P6) **complete**; all T1–T19 done |
+| **Próximo passo** | Verifier sub-agent (author ≠ verifier) → write `validation.md` |
 | **Feature ativa** | `judge-realism` (Complex) |
 | **Branch** | `feature/judge-realism` |
-| **Bloqueios** | None for Batch 2 — hard-gate + scale PASS gate + scale-critical configs wired |
+| **Bloqueios** | None — Baseline 27 + Deep Core 13 + discrimination ≥3 pairs + scale UI + Hobby rebuild verified |
 | **Batch 1 commits** | T1 `b2cdfae` · T2 `4c5fd5c` · T3 `7e704c7` · T4 `e883a51` · T5 `da9868e` · T6 `c0a04a0` · T7 `7b207a0` |
 | **Batch 2 commits** | T8 `fb6a826` · T9 `64f03b6` · T10 `6eafc0a` · T11 `22fd3b1` · T12 `e74099d` · T13 `3d6665f` |
-| **Gate** | shared 99 + server 137 + client 406 passed (0 failed) |
+| **Batch 3 commits** | T14 `0a6692b` · T15 `12e545a` · T16 `bdbd5bc` · T17 `a2abd99` · T18 `9b4bc17` · T19 (esbuild rebuild; `api/judge.js` gitignored — see T19 commit) |
+| **Gate** | shared 115 + server 137 + client 408 = 660 passed (0 failed); lint green |
+| **T19 note** | Rebuilt via `esbuild` from `scripts/vercel-build.sh` entry; bundle contains `evaluateStructuralRubric` / `scaleNarrative`; artifact not committed (`.gitignore`) |
 | **KV** | `sdq-sessions-kv` + user/nick maps |
 | **Auth** | AD-026: cookie `sdq_session`; `/api/auth/*` → Google 302; sessions + LB POST gated |
 | **Decisões discuss** | 1C·2A·4C; Baseline27+Core13; 5A·6A·7B·8B·9A; Design **Approach A** + AD-027/028 |
@@ -43,24 +45,24 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Neon** | Deferred (NEON-01) |
 | **Note** | Tier-2 catalog now 26 types (+`websocket_gateway` for AD-028 ws config) |
 
-### Context Checkpoint (2026-07-28 Batch 2)
+### Context Checkpoint (2026-07-28 Batch 3)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — Batch 2 worker T8–T13 only |
-| Uncommitted | GREEN — T8–T13 committed; docs handoff pending this commit |
-| Spec drift | GREEN — Approach A hard-gate + AD-028 configs |
-| Gate confidence | GREEN — shared 99 + server 137 + client 406 |
-| Task clarity | GREEN — next = Batch 3 T14–T19 |
+| Chat length | GREEN — Batch 3 worker T14–T19 only |
+| Uncommitted | GREEN — T14–T19 committed; docs handoff in this commit |
+| Spec drift | GREEN — Deep Core 13 + discrimination + scale UI |
+| Gate confidence | GREEN — shared 115 + server 137 + client 408; full lint+test |
+| Task clarity | GREEN — next = Verifier |
 
-**Veredito:** GREEN for starting Batch 3 in a fresh worker.
+**Veredito:** GREEN for Verifier dispatch.
 
-**Prompt para Batch 3:**
+**Prompt para Verifier:**
 ```
-Branch feature/judge-realism. Batch 2 (T8–T13) complete.
-Read .specs/STATE.md Handoff + .specs/features/judge-realism/tasks.md T14–T19.
-Execute Batch 3 only (Phases 5+6 = T14→T19). One atomic commit per task. Do not push. Do not spawn sub-agents.
-Gate: npx nx test shared / client / full per task.
+Branch feature/judge-realism. All T1–T19 committed. Execute Verifier (author ≠ verifier).
+Read .specs/features/judge-realism/spec.md + tasks.md + validate.md skill reference.
+Diff: b2cdfae^..HEAD (or Batch 1–3 range). Write .specs/features/judge-realism/validation.md.
+Gate: npx nx run-many -t lint test
 ```
 
 ### Deploy note (Hobby)
