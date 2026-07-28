@@ -22,11 +22,11 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | Tasks draft — awaiting approval on `hobby-platform/tasks.md` |
-| **Próximo passo** | User approves tasks → Execute on `feature/hobby-platform` (4 batches T1–T20) + Verifier |
+| **Fase atual** | Execute — Batch 1 (Phase 1 T1–T5) in progress via sub-agent |
+| **Próximo passo** | Await Batch 1 summary → dispatch Batch 2 (T6–T10) |
 | **Feature ativa** | `hobby-platform` |
-| **Branch** | `main` → create `feature/hobby-platform` at Execute |
-| **Bloqueios** | Tasks not approved; Vercel KV/Blob/Edge/Cron env for durable path in prod |
+| **Branch** | `feature/hobby-platform` |
+| **Bloqueios** | Vercel KV/Blob/Edge/Cron env for durable path in prod |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_4jggm7UQ399uxbSAj7KhzoSsbRES` (Spiral Out / Hobby) — READY |
 | **Mobile UX** | Phone ≤768: left drawer + COMPONENTS FAB; sim strip (Start + Speed/Traffic/R/W sliders); compact header card; tap-to-add; touch drag/pan |

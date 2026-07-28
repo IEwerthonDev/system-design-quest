@@ -10,7 +10,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design**: `.specs/features/hobby-platform/design.md`  
 **Spec**: `.specs/features/hobby-platform/spec.md`  
-**Status**: Draft (awaiting approval)
+**Status**: In Progress (Execute Batch 1)
 
 **Branch at Execute start:** `feature/hobby-platform` from `main`
 
