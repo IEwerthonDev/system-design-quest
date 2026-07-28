@@ -44,6 +44,30 @@ Seen once or not yet corroborated. Tracked, not trusted.
 - evidence: edge from≈to / svg-edges (client/blueprint)
 - last seen: 2026-07-27T21:21:31Z
 
+### L-006 — When a feature inherits speedrun ranking, assert elapsedMs-asc (score tie-break) and keep the spec AC wording aligned with that order
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `leaderboard` · harmful: 0
+- features: hobby-platform
+- evidence: spec.md LB AC2 / design.md Leaderboard ordering (leaderboard)
+- last seen: 2026-07-28T16:18:13Z
+
+### L-007 — Assert client soft-fail UI for remote store outages (error empty-state and non-blocking writes), not only server 503
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `client/leaderboard` · harmful: 0
+- features: hobby-platform
+- evidence: LB AC3 / leaderboard-panel.ts:178 (client/leaderboard)
+- last seen: 2026-07-28T16:18:13Z
+
+### L-008 — When UI shows both i18n labels and derived percentages, assert locale toggle updates copy without changing the percent value
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `client/i18n` · harmful: 0
+- features: hobby-platform
+- evidence: Progress AC3 / problem-library (client/i18n)
+- last seen: 2026-07-28T16:18:13Z
+
+### L-009 — When a shortcut has multiple bindings (Ctrl+Y or Ctrl+Shift+Z), assert each binding path in tests
+- signal: `spec_precision_gap` · recurrence: 1 feature(s) · scope: `client/canvas` · harmful: 0
+- features: hobby-platform
+- evidence: UX-02 AC3 Ctrl+Shift+Z (client/canvas)
+- last seen: 2026-07-28T16:18:13Z
+
 ## Quarantined (failed when applied — ignore)
 
 A confirmed lesson that recurred alongside failure. Kept for the maintainer to review.

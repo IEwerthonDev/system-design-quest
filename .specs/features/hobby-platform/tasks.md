@@ -10,7 +10,7 @@ Implement these tasks with the `tlc-spec-driven` skill: **activate it by name an
 
 **Design**: `.specs/features/hobby-platform/design.md`  
 **Spec**: `.specs/features/hobby-platform/spec.md`  
-**Status**: Execute complete (T1–T20) — Verifier in progress
+**Status**: Done — Verify PASS (`e83c51f` validation.md)
 
 **Batch 1 results:** T1 `ba6f3e1`, T2 `5d96a3d`, T3 `3aa6c44`, T4 `9d74d52`, T5 `480e4d7` — 506 tests passed, 0 failed.
 
