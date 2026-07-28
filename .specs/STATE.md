@@ -22,28 +22,28 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `link-validity-sim-realism` — Execute done, ship pending |
-| **Próximo passo** | Merge PR → production deploy; smoke: link preview colors + mentor bottlenecks |
-| **Feature ativa** | `link-validity-sim-realism` |
-| **Branch** | `feature/link-validity-sim-realism` |
+| **Fase atual** | `link-validity-sim-realism` merged to `main` + production READY |
+| **Próximo passo** | Smoke UI: link preview colors + Study Mode findings without Start |
+| **Feature ativa** | none (`link-validity-sim-realism` shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034 |
-| **Gate** | `nx run-many -t lint test` |
-| **PR** | (pending) |
+| **Gate** | lint+test green pre-merge |
+| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/6 (squash `736d155`) |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | previous study-mode READY; this feature not yet production |
+| **Deployment** | `dpl_8XTES2vo299ESnRtqbr8BfLuSXJB` READY |
 
-### Context Checkpoint (2026-07-28 link-validity)
+### Context Checkpoint (2026-07-28 link-validity ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | AMBER — multi-task ship (user continued) |
-| Uncommitted | docs only after T7 |
+| Chat length | AMBER — shipped |
+| Uncommitted | docs commit |
 | Spec drift | GREEN |
-| Gate confidence | pending full gate |
-| Task clarity | GREEN — T1–T6 committed |
+| Gate confidence | GREEN |
+| Task clarity | GREEN — done |
 
-**Veredito:** GREEN — proceed to gate + ship
+**Veredito:** GREEN — shipped
 
 ### Deploy note (Hobby)
 
