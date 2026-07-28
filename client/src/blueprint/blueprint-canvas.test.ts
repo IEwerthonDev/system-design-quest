@@ -149,8 +149,8 @@ describe('blueprint canvas', () => {
     ) as HTMLButtonElement;
     expect(detailsBtn.querySelector('svg')).toBeTruthy();
     expect(detailsBtn.getAttribute('aria-label')).toMatch(/configurações/i);
-    expect(popover.textContent).toMatch(/HIT RATE/i);
-    expect(popover.textContent).toMatch(/AI judges read these notes/i);
+    expect(popover.textContent).toMatch(/Hit rate/i);
+    expect(popover.textContent).toMatch(/juízes de IA|AI judges/i);
     expect(popover.querySelector('[data-testid="config-hit-rate"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-notes"]')).toBeTruthy();
 
@@ -183,6 +183,8 @@ describe('blueprint canvas', () => {
     ).click();
 
     expect(popover.hidden).toBe(false);
+    expect(popover.querySelector('[data-testid="config-access-pattern"]')).toBeTruthy();
+    expect(popover.querySelector('[data-testid="config-topology-role"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-shard-count"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-partitioning"]')).toBeTruthy();
     expect(popover.querySelector('[data-testid="config-key-skew"]')).toBeTruthy();
@@ -580,7 +582,7 @@ describe('config popover mount', () => {
       anchor,
     );
     expect(popover.root.hidden).toBe(false);
-    expect(popover.root.textContent).toMatch(/AI judges read these notes/i);
+    expect(popover.root.textContent).toMatch(/juízes de IA|AI judges/i);
     popover.destroy();
   });
 

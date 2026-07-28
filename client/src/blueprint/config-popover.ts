@@ -1,11 +1,15 @@
 import {
   getComponentMeta,
+  type AccessPattern,
   type ComponentConfig,
   type ComponentNode,
+  type DbTopologyRole,
   type LbAlgorithm,
   type MqDurability,
   type PartitioningStrategy,
 } from '@sdq/shared';
+import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
+import { t } from '../i18n/t';
 
 export interface ConfigPopoverCallbacks {
   onClose(): void;
@@ -23,6 +27,8 @@ export interface ConfigPopover {
 const STRATEGIES: PartitioningStrategy[] = ['hash', 'range', 'geographic', 'list'];
 const LB_ALGORITHMS: LbAlgorithm[] = ['round_robin', 'least_conn', 'ip_hash'];
 const MQ_DURABILITIES: MqDurability[] = ['memory', 'disk'];
+const ACCESS_PATTERNS: AccessPattern[] = ['read', 'write', 'read_write'];
+const TOPOLOGY_ROLES: DbTopologyRole[] = ['primary', 'replica', 'standalone'];
 
 function injectStyles(): void {
   if (document.getElementById('sdq-config-popover-styles')) {
@@ -72,6 +78,68 @@ function injectStyles(): void {
   document.head.append(style);
 }
 
+function fieldLabel(text: string, valueText?: string): HTMLLabelElement {
+  const label = document.createElement('label');
+  const name = document.createElement('span');
+  name.textContent = text;
+  label.append(name);
+  if (valueText !== undefined) {
+    const value = document.createElement('span');
+    value.textContent = valueText;
+    label.append(value);
+  }
+  return label;
+}
+
+function appendAccessTopologyFields(
+  root: HTMLElement,
+  cfg: { accessPattern: AccessPattern; topologyRole: DbTopologyRole },
+  onPatch: (patch: {
+    accessPattern?: AccessPattern;
+    topologyRole?: DbTopologyRole;
+  }) => void,
+): void {
+  const accessField = document.createElement('div');
+  accessField.className = 'sdq-config-popover__field';
+  accessField.append(fieldLabel(t('config.accessPattern')));
+  const accessSelect = document.createElement('select');
+  accessSelect.setAttribute('data-testid', 'config-access-pattern');
+  for (const pattern of ACCESS_PATTERNS) {
+    const opt = document.createElement('option');
+    opt.value = pattern;
+    opt.textContent = t(`config.access.${pattern}`);
+    if (pattern === cfg.accessPattern) {
+      opt.selected = true;
+    }
+    accessSelect.append(opt);
+  }
+  accessSelect.addEventListener('change', () => {
+    onPatch({ accessPattern: accessSelect.value as AccessPattern });
+  });
+  accessField.append(accessSelect);
+
+  const topoField = document.createElement('div');
+  topoField.className = 'sdq-config-popover__field';
+  topoField.append(fieldLabel(t('config.topologyRole')));
+  const topoSelect = document.createElement('select');
+  topoSelect.setAttribute('data-testid', 'config-topology-role');
+  for (const role of TOPOLOGY_ROLES) {
+    const opt = document.createElement('option');
+    opt.value = role;
+    opt.textContent = t(`config.topology.${role}`);
+    if (role === cfg.topologyRole) {
+      opt.selected = true;
+    }
+    topoSelect.append(opt);
+  }
+  topoSelect.addEventListener('change', () => {
+    onPatch({ topologyRole: topoSelect.value as DbTopologyRole });
+  });
+  topoField.append(topoSelect);
+
+  root.append(accessField, topoField);
+}
+
 export function mountConfigPopover(
   host: HTMLElement,
   callbacks: ConfigPopoverCallbacks,
@@ -83,10 +151,27 @@ export function mountConfigPopover(
   root.hidden = true;
   host.append(root);
 
-  let currentId: string | null = null;
+  let currentNode: ComponentNode | null = null;
+  let anchorRect: DOMRect | null = null;
+
+  const onLocaleChange = (): void => {
+    if (currentNode && !root.hidden) {
+      render(currentNode);
+      if (anchorRect) {
+        position(anchorRect);
+      }
+    }
+  };
+
+  const position = (anchor: DOMRect): void => {
+    const top = Math.min(window.innerHeight - 320, anchor.bottom + 8);
+    const left = Math.min(window.innerWidth - 320, Math.max(8, anchor.left));
+    root.style.top = `${top}px`;
+    root.style.left = `${left}px`;
+  };
 
   const render = (node: ComponentNode): void => {
-    currentId = node.id;
+    currentNode = node;
     const meta = getComponentMeta(node.type);
     root.innerHTML = '';
 
@@ -100,7 +185,7 @@ export function mountConfigPopover(
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'sdq-config-popover__close';
-    close.setAttribute('aria-label', 'Fechar');
+    close.setAttribute('aria-label', t('config.close'));
     close.textContent = '×';
     close.addEventListener('click', () => callbacks.onClose());
     header.append(dot, title, close);
@@ -112,39 +197,34 @@ export function mountConfigPopover(
     root.append(header, desc);
 
     if (node.config?.kind === 'cache') {
+      let cfg = node.config;
       const field = document.createElement('div');
       field.className = 'sdq-config-popover__field';
-      const label = document.createElement('label');
-      const name = document.createElement('span');
-      name.textContent = 'HIT RATE';
-      const value = document.createElement('span');
-      value.textContent = `${node.config.hitRate}%`;
-      label.append(name, value);
+      const label = fieldLabel(t('config.hitRate'), `${cfg.hitRate}%`);
+      const value = label.lastElementChild as HTMLSpanElement;
       const slider = document.createElement('input');
       slider.type = 'range';
       slider.min = '0';
       slider.max = '100';
-      slider.value = String(node.config.hitRate);
+      slider.value = String(cfg.hitRate);
       slider.setAttribute('data-testid', 'config-hit-rate');
       slider.addEventListener('input', () => {
         const hitRate = Number(slider.value);
         value.textContent = `${hitRate}%`;
-        callbacks.onConfigChange(node.id, { kind: 'cache', hitRate });
+        cfg = { kind: 'cache', hitRate };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
       field.append(label, slider);
       root.append(field);
     }
 
     if (node.config?.kind === 'cdn') {
-      const cfg = node.config;
+      let cfg = { ...node.config };
       const hitField = document.createElement('div');
       hitField.className = 'sdq-config-popover__field';
-      const hitLabel = document.createElement('label');
-      const hitName = document.createElement('span');
-      hitName.textContent = 'HIT RATE';
-      const hitVal = document.createElement('span');
-      hitVal.textContent = `${cfg.hitRate}%`;
-      hitLabel.append(hitName, hitVal);
+      const hitLabel = fieldLabel(t('config.hitRate'), `${cfg.hitRate}%`);
+      const hitVal = hitLabel.lastElementChild as HTMLSpanElement;
       const hitSlider = document.createElement('input');
       hitSlider.type = 'range';
       hitSlider.min = '0';
@@ -154,18 +234,16 @@ export function mountConfigPopover(
       hitSlider.addEventListener('input', () => {
         const hitRate = Number(hitSlider.value);
         hitVal.textContent = `${hitRate}%`;
-        callbacks.onConfigChange(node.id, { ...cfg, hitRate });
+        cfg = { ...cfg, hitRate };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
       hitField.append(hitLabel, hitSlider);
 
       const ttlField = document.createElement('div');
       ttlField.className = 'sdq-config-popover__field';
-      const ttlLabel = document.createElement('label');
-      const ttlName = document.createElement('span');
-      ttlName.textContent = 'TTL (SECONDS)';
-      const ttlVal = document.createElement('span');
-      ttlVal.textContent = String(cfg.ttlSeconds);
-      ttlLabel.append(ttlName, ttlVal);
+      const ttlLabel = fieldLabel(t('config.ttl'), String(cfg.ttlSeconds));
+      const ttlVal = ttlLabel.lastElementChild as HTMLSpanElement;
       const ttlSlider = document.createElement('input');
       ttlSlider.type = 'range';
       ttlSlider.min = '1';
@@ -175,22 +253,28 @@ export function mountConfigPopover(
       ttlSlider.addEventListener('input', () => {
         const ttlSeconds = Number(ttlSlider.value);
         ttlVal.textContent = String(ttlSeconds);
-        callbacks.onConfigChange(node.id, { ...cfg, ttlSeconds });
+        cfg = { ...cfg, ttlSeconds };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
       ttlField.append(ttlLabel, ttlSlider);
       root.append(hitField, ttlField);
     }
 
     if (node.config?.kind === 'sql_db') {
-      const cfg = node.config;
+      let cfg = { ...node.config };
+      const patchSql = (patch: Partial<typeof cfg>): void => {
+        cfg = { ...cfg, ...patch };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
+      };
+
+      appendAccessTopologyFields(root, cfg, patchSql);
+
       const shardField = document.createElement('div');
       shardField.className = 'sdq-config-popover__field';
-      const shardLabel = document.createElement('label');
-      const shardName = document.createElement('span');
-      shardName.textContent = 'SHARD COUNT';
-      const shardVal = document.createElement('span');
-      shardVal.textContent = String(cfg.shardCount);
-      shardLabel.append(shardName, shardVal);
+      const shardLabel = fieldLabel(t('config.shardCount'), String(cfg.shardCount));
+      const shardVal = shardLabel.lastElementChild as HTMLSpanElement;
       const shardSlider = document.createElement('input');
       shardSlider.type = 'range';
       shardSlider.min = '1';
@@ -200,14 +284,13 @@ export function mountConfigPopover(
       shardSlider.addEventListener('input', () => {
         const shardCount = Number(shardSlider.value);
         shardVal.textContent = String(shardCount);
-        callbacks.onConfigChange(node.id, { ...cfg, shardCount });
+        patchSql({ shardCount });
       });
       shardField.append(shardLabel, shardSlider);
 
       const stratField = document.createElement('div');
       stratField.className = 'sdq-config-popover__field';
-      const stratLabel = document.createElement('label');
-      stratLabel.innerHTML = '<span>PARTITIONING STRATEGY</span>';
+      stratField.append(fieldLabel(t('config.partitioning')));
       const select = document.createElement('select');
       select.setAttribute('data-testid', 'config-partitioning');
       for (const s of STRATEGIES) {
@@ -220,38 +303,27 @@ export function mountConfigPopover(
         select.append(opt);
       }
       select.addEventListener('change', () => {
-        callbacks.onConfigChange(node.id, {
-          ...cfg,
-          partitioningStrategy: select.value as PartitioningStrategy,
-        });
+        patchSql({ partitioningStrategy: select.value as PartitioningStrategy });
       });
-      stratField.append(stratLabel, select);
+      stratField.append(select);
 
       const keyField = document.createElement('div');
       keyField.className = 'sdq-config-popover__field';
-      const keyLabel = document.createElement('label');
-      keyLabel.innerHTML = '<span>PARTITION KEY (OPTIONAL)</span>';
+      keyField.append(fieldLabel(t('config.partitionKey')));
       const keyInput = document.createElement('input');
       keyInput.type = 'text';
       keyInput.placeholder = 'e.g. user_id';
       keyInput.value = cfg.partitionKey ?? '';
       keyInput.setAttribute('data-testid', 'config-partition-key');
       keyInput.addEventListener('change', () => {
-        callbacks.onConfigChange(node.id, {
-          ...cfg,
-          partitionKey: keyInput.value || undefined,
-        });
+        patchSql({ partitionKey: keyInput.value || undefined });
       });
-      keyField.append(keyLabel, keyInput);
+      keyField.append(keyInput);
 
       const skewField = document.createElement('div');
       skewField.className = 'sdq-config-popover__field';
-      const skewLabel = document.createElement('label');
-      const skewName = document.createElement('span');
-      skewName.textContent = 'KEY SKEW / HOT PARTITION';
-      const skewVal = document.createElement('span');
-      skewVal.textContent = `${cfg.keySkew}%`;
-      skewLabel.append(skewName, skewVal);
+      const skewLabel = fieldLabel(t('config.keySkew'), `${cfg.keySkew}%`);
+      const skewVal = skewLabel.lastElementChild as HTMLSpanElement;
       const skewSlider = document.createElement('input');
       skewSlider.type = 'range';
       skewSlider.min = '0';
@@ -261,19 +333,28 @@ export function mountConfigPopover(
       skewSlider.addEventListener('input', () => {
         const keySkew = Number(skewSlider.value);
         skewVal.textContent = `${keySkew}%`;
-        callbacks.onConfigChange(node.id, { ...cfg, keySkew });
+        patchSql({ keySkew });
       });
       skewField.append(skewLabel, skewSlider);
 
       root.append(shardField, stratField, keyField, skewField);
     }
 
+    if (node.config?.kind === 'nosql_db') {
+      let cfg = { ...node.config };
+      const patchNosql = (patch: Partial<typeof cfg>): void => {
+        cfg = { ...cfg, ...patch };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
+      };
+      appendAccessTopologyFields(root, cfg, patchNosql);
+    }
+
     if (node.config?.kind === 'mq') {
-      const cfg = node.config;
+      let cfg = { ...node.config };
       const durField = document.createElement('div');
       durField.className = 'sdq-config-popover__field';
-      const durLabel = document.createElement('label');
-      durLabel.innerHTML = '<span>DURABILITY</span>';
+      durField.append(fieldLabel(t('config.durability')));
       const durSelect = document.createElement('select');
       durSelect.setAttribute('data-testid', 'config-mq-durability');
       for (const d of MQ_DURABILITIES) {
@@ -286,21 +367,16 @@ export function mountConfigPopover(
         durSelect.append(opt);
       }
       durSelect.addEventListener('change', () => {
-        callbacks.onConfigChange(node.id, {
-          ...cfg,
-          durability: durSelect.value as MqDurability,
-        });
+        cfg = { ...cfg, durability: durSelect.value as MqDurability };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
-      durField.append(durLabel, durSelect);
+      durField.append(durSelect);
 
       const partField = document.createElement('div');
       partField.className = 'sdq-config-popover__field';
-      const partLabel = document.createElement('label');
-      const partName = document.createElement('span');
-      partName.textContent = 'PARTITION COUNT';
-      const partVal = document.createElement('span');
-      partVal.textContent = String(cfg.partitionCount);
-      partLabel.append(partName, partVal);
+      const partLabel = fieldLabel(t('config.partitionCount'), String(cfg.partitionCount));
+      const partVal = partLabel.lastElementChild as HTMLSpanElement;
       const partSlider = document.createElement('input');
       partSlider.type = 'range';
       partSlider.min = '1';
@@ -310,22 +386,20 @@ export function mountConfigPopover(
       partSlider.addEventListener('input', () => {
         const partitionCount = Number(partSlider.value);
         partVal.textContent = String(partitionCount);
-        callbacks.onConfigChange(node.id, { ...cfg, partitionCount });
+        cfg = { ...cfg, partitionCount };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
       partField.append(partLabel, partSlider);
       root.append(durField, partField);
     }
 
     if (node.config?.kind === 'ws') {
-      const cfg = node.config;
+      let cfg = { ...node.config };
       const field = document.createElement('div');
       field.className = 'sdq-config-popover__field';
-      const label = document.createElement('label');
-      const name = document.createElement('span');
-      name.textContent = 'FAN-OUT LIMIT';
-      const value = document.createElement('span');
-      value.textContent = String(cfg.fanOutLimit);
-      label.append(name, value);
+      const label = fieldLabel(t('config.fanOut'), String(cfg.fanOutLimit));
+      const value = label.lastElementChild as HTMLSpanElement;
       const slider = document.createElement('input');
       slider.type = 'range';
       slider.min = '1';
@@ -335,18 +409,19 @@ export function mountConfigPopover(
       slider.addEventListener('input', () => {
         const fanOutLimit = Number(slider.value);
         value.textContent = String(fanOutLimit);
-        callbacks.onConfigChange(node.id, { ...cfg, fanOutLimit });
+        cfg = { ...cfg, fanOutLimit };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
       field.append(label, slider);
       root.append(field);
     }
 
     if (node.config?.kind === 'lb') {
-      const cfg = node.config;
+      let cfg = { ...node.config };
       const field = document.createElement('div');
       field.className = 'sdq-config-popover__field';
-      const label = document.createElement('label');
-      label.innerHTML = '<span>ALGORITHM</span>';
+      field.append(fieldLabel(t('config.algorithm')));
       const select = document.createElement('select');
       select.setAttribute('data-testid', 'config-lb-algorithm');
       for (const algo of LB_ALGORITHMS) {
@@ -359,48 +434,60 @@ export function mountConfigPopover(
         select.append(opt);
       }
       select.addEventListener('change', () => {
-        callbacks.onConfigChange(node.id, {
-          ...cfg,
-          algorithm: select.value as LbAlgorithm,
-        });
+        cfg = { ...cfg, algorithm: select.value as LbAlgorithm };
+        currentNode = { ...node, config: cfg };
+        callbacks.onConfigChange(node.id, cfg);
       });
-      field.append(label, select);
+      field.append(select);
       root.append(field);
     }
 
     const notesTitle = document.createElement('div');
     notesTitle.className = 'sdq-config-popover__notes-title';
-    notesTitle.textContent = 'IMPLEMENTATION NOTES';
+    notesTitle.textContent = t('config.notes');
     const notes = document.createElement('textarea');
     notes.setAttribute('data-testid', 'config-notes');
-    notes.placeholder = 'e.g. cache-aside; 5m TTL; LRU eviction; invalidate on write';
+    notes.placeholder = t('config.notesPlaceholder');
     notes.value = node.implementationNotes ?? node.note ?? '';
     notes.addEventListener('change', () => {
       callbacks.onNotesChange(node.id, notes.value);
+      currentNode = {
+        ...node,
+        implementationNotes: notes.value,
+        config: currentNode?.config ?? node.config,
+      };
     });
     const hint = document.createElement('p');
     hint.className = 'sdq-config-popover__hint';
-    hint.textContent = 'The AI judges read these notes when scoring your design.';
+    hint.textContent = t('config.notesHint');
 
     root.append(notesTitle, notes, hint);
   };
 
+  if (typeof window !== 'undefined') {
+    window.addEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+  }
+
   return {
     root,
     open(node, anchor) {
+      anchorRect = anchor;
       render(node);
       root.hidden = false;
-      const top = Math.min(window.innerHeight - 320, anchor.bottom + 8);
-      const left = Math.min(window.innerWidth - 320, Math.max(8, anchor.left));
-      root.style.top = `${top}px`;
-      root.style.left = `${left}px`;
+      position(anchor);
     },
     close() {
       root.hidden = true;
-      currentId = null;
+      currentNode = null;
+      anchorRect = null;
     },
     destroy() {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+      }
       root.remove();
+      currentNode = null;
+      anchorRect = null;
     },
   };
 }

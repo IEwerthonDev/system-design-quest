@@ -52,7 +52,43 @@ export type UiStringKey =
   | 'auth.merge.failed'
   | 'auth.error'
   | 'auth.ok'
-  | 'speedrun.signInToRank';
+  | 'speedrun.signInToRank'
+  | 'config.close'
+  | 'config.notes'
+  | 'config.notesHint'
+  | 'config.notesPlaceholder'
+  | 'config.hitRate'
+  | 'config.ttl'
+  | 'config.shardCount'
+  | 'config.partitioning'
+  | 'config.partitionKey'
+  | 'config.keySkew'
+  | 'config.durability'
+  | 'config.partitionCount'
+  | 'config.fanOut'
+  | 'config.algorithm'
+  | 'config.accessPattern'
+  | 'config.topologyRole'
+  | 'config.access.read'
+  | 'config.access.write'
+  | 'config.access.read_write'
+  | 'config.topology.primary'
+  | 'config.topology.replica'
+  | 'config.topology.standalone'
+  | 'config.badge.read'
+  | 'config.badge.write'
+  | 'config.badge.read_write'
+  | 'config.badge.replica'
+  | 'config.badge.standalone'
+  | 'canvas.reps'
+  | 'canvas.aria.incReplicas'
+  | 'canvas.aria.decReplicas'
+  | 'canvas.aria.delete'
+  | 'canvas.aria.config'
+  | 'palette.title'
+  | 'palette.fab'
+  | 'palette.hint'
+  | 'palette.collapse';
 
 export type UiCatalog = Record<UiStringKey, string>;
 
@@ -113,6 +149,44 @@ export const CATALOG_EN: UiCatalog = {
   'auth.error': 'Google sign-in failed. You can keep playing as a guest.',
   'auth.ok': 'Signed in successfully.',
   'speedrun.signInToRank': 'Sign in with a public nickname to appear on the ranking.',
+  'config.close': 'Close',
+  'config.notes': 'Implementation notes',
+  'config.notesHint': 'The AI judges read these notes when scoring your design.',
+  'config.notesPlaceholder':
+    'e.g. cache-aside; 5m TTL; LRU eviction; invalidate on write',
+  'config.hitRate': 'Hit rate',
+  'config.ttl': 'TTL (seconds)',
+  'config.shardCount': 'Shard count',
+  'config.partitioning': 'Partitioning strategy',
+  'config.partitionKey': 'Partition key (optional)',
+  'config.keySkew': 'Key skew / hot partition',
+  'config.durability': 'Durability',
+  'config.partitionCount': 'Partition count',
+  'config.fanOut': 'Fan-out limit',
+  'config.algorithm': 'Algorithm',
+  'config.accessPattern': 'Access pattern',
+  'config.topologyRole': 'Topology role',
+  'config.access.read': 'Read',
+  'config.access.write': 'Write',
+  'config.access.read_write': 'Read & write',
+  'config.topology.primary': 'Primary',
+  'config.topology.replica': 'Replica',
+  'config.topology.standalone': 'Standalone',
+  'config.badge.read': 'R',
+  'config.badge.write': 'W',
+  'config.badge.read_write': 'R+W',
+  'config.badge.replica': 'repl',
+  'config.badge.standalone': 'solo',
+  'canvas.reps': '{n} reps',
+  'canvas.aria.incReplicas': 'Increase replicas',
+  'canvas.aria.decReplicas': 'Decrease replicas',
+  'canvas.aria.delete': 'Remove component',
+  'canvas.aria.config': 'Component settings',
+  'palette.title': 'Components',
+  'palette.fab': 'COMPONENTS',
+  'palette.hint':
+    'Tap a component to place it on the canvas. Drag cards and use the ○→ handle to connect.',
+  'palette.collapse': 'Minimize components',
 };
 
 export type { Locale };

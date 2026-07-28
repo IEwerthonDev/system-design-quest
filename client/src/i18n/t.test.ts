@@ -49,6 +49,9 @@ describe('UI string catalogs + t()', () => {
     for (const prefix of requiredPrefixes) {
       expect(keys.some((key) => key.startsWith(prefix))).toBe(true);
     }
+    expect(keys.some((key) => key.startsWith('config.'))).toBe(true);
+    expect(keys.some((key) => key.startsWith('canvas.'))).toBe(true);
+    expect(keys.some((key) => key.startsWith('palette.'))).toBe(true);
     expect(Object.keys(CATALOG_PT_BR).sort()).toEqual(Object.keys(CATALOG_EN).sort());
   });
 

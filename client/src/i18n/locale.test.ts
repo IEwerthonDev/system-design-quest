@@ -1,5 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
-import { DEFAULT_LOCALE, getLocale, LOCALE_STORAGE_KEY, setLocale } from './locale';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  DEFAULT_LOCALE,
+  getLocale,
+  LOCALE_CHANGE_EVENT,
+  LOCALE_STORAGE_KEY,
+  setLocale,
+} from './locale';
 
 class MemoryStorage implements Storage {
   private data = new Map<string, string>();
@@ -54,5 +60,19 @@ describe('locale preference storage', () => {
 
     storage.setItem(LOCALE_STORAGE_KEY, 'pt');
     expect(getLocale(storage)).toBe('pt-BR');
+  });
+
+  it(`dispatches ${LOCALE_CHANGE_EVENT} on window when locale changes`, () => {
+    const handler = vi.fn();
+    window.addEventListener(LOCALE_CHANGE_EVENT, handler);
+    setLocale('en', storage);
+    expect(handler).toHaveBeenCalledTimes(1);
+    const event = handler.mock.calls[0]?.[0] as CustomEvent<{ locale: string }>;
+    expect(event.type).toBe(LOCALE_CHANGE_EVENT);
+    expect(event.detail).toEqual({ locale: 'en' });
+
+    setLocale('pt-BR', storage);
+    expect(handler).toHaveBeenCalledTimes(2);
+    window.removeEventListener(LOCALE_CHANGE_EVENT, handler);
   });
 });

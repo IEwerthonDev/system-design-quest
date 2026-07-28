@@ -17,4 +17,18 @@ export function t(key: string, locale?: Locale, storage?: Storage): string {
   return catalog[key] ?? key;
 }
 
+/** Resolve `t(key)` then replace `{name}` placeholders from `vars`. */
+export function tReplace(
+  key: string,
+  vars: Record<string, string | number>,
+  locale?: Locale,
+  storage?: Storage,
+): string {
+  let out = t(key, locale, storage);
+  for (const [name, value] of Object.entries(vars)) {
+    out = out.replaceAll(`{${name}}`, String(value));
+  }
+  return out;
+}
+
 export type { UiStringKey };

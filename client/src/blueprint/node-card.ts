@@ -1,10 +1,14 @@
 import {
   defaultConfigForType,
   getComponentMeta,
+  type AccessPattern,
   type ComponentNode,
   type ComponentType,
+  type DbTopologyRole,
   type PressureLevel,
 } from '@sdq/shared';
+import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
+import { t, tReplace } from '../i18n/t';
 
 const CATEGORY_BORDER: Record<string, string> = {
   client: '#60A5FA',
@@ -221,48 +225,105 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   minus.type = 'button';
   minus.className = 'sdq-node__rep-btn';
   minus.textContent = '−';
-  minus.setAttribute('aria-label', 'Diminuir replicas');
   const repsLabel = document.createElement('span');
   repsLabel.dataset.testid = `replicas-${node.id}`;
   const plus = document.createElement('button');
   plus.type = 'button';
   plus.className = 'sdq-node__rep-btn';
   plus.textContent = '+';
-  plus.setAttribute('aria-label', 'Aumentar replicas');
   const del = document.createElement('button');
   del.type = 'button';
   del.className = 'sdq-node__delete';
   del.setAttribute('data-testid', `node-delete-${node.id}`);
-  del.setAttribute('aria-label', 'Remover componente');
   del.textContent = '×';
   const details = document.createElement('button');
   details.type = 'button';
   details.className = 'sdq-node__details';
   details.setAttribute('data-testid', `node-details-${node.id}`);
-  details.setAttribute('aria-label', 'Configurações do componente');
-  details.setAttribute('title', 'Configurações do componente');
   details.innerHTML =
     '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/></svg>';
   footer.append(minus, repsLabel, plus, details, del);
 
   root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, footer);
 
+  let latestNode = node;
+
+  const applyChromeLabels = (): void => {
+    minus.setAttribute('aria-label', t('canvas.aria.decReplicas'));
+    plus.setAttribute('aria-label', t('canvas.aria.incReplicas'));
+    del.setAttribute('aria-label', t('canvas.aria.delete'));
+    details.setAttribute('aria-label', t('canvas.aria.config'));
+    details.setAttribute('title', t('canvas.aria.config'));
+  };
+
+  const badgeTextForDb = (
+    accessPattern: AccessPattern,
+    topologyRole: DbTopologyRole,
+    shardSuffix?: string,
+  ): string => {
+    const parts: string[] = [];
+    if (accessPattern !== 'read_write') {
+      parts.push(t(`config.badge.${accessPattern}`));
+    } else if (topologyRole !== 'primary' && !shardSuffix) {
+      parts.push(t('config.badge.read_write'));
+    }
+    if (topologyRole === 'replica') {
+      parts.push(t('config.badge.replica'));
+    } else if (topologyRole === 'standalone') {
+      parts.push(t('config.badge.standalone'));
+    }
+    if (shardSuffix) {
+      parts.unshift(shardSuffix);
+    }
+    return parts.join('·');
+  };
+
   const sync = (n: ComponentNode): void => {
+    latestNode = n;
+    applyChromeLabels();
     const reps = n.replicas ?? 1;
     root.style.left = `${n.position.x}px`;
     root.style.top = `${n.position.y}px`;
     const suffix = n.type === 'app_server' && reps > 1 ? ` x${reps}` : '';
     labelEl.textContent = `${n.label}${suffix}`;
-    repsLabel.textContent = `${reps} rep${reps === 1 ? '' : 's'}`;
+    repsLabel.textContent = tReplace('canvas.reps', { n: reps });
 
-    if (n.config?.kind === 'sql_db' && n.config.shardCount > 1) {
-      badgeEl.hidden = false;
-      badgeEl.textContent = `${n.config.shardCount}sh`;
+    const cfg = n.config;
+    if (cfg?.kind === 'sql_db') {
+      const nonDefaultAccess = cfg.accessPattern !== 'read_write';
+      const nonDefaultRole = cfg.topologyRole !== 'primary';
+      const multiShard = cfg.shardCount > 1;
+      if (multiShard || nonDefaultAccess || nonDefaultRole) {
+        badgeEl.hidden = false;
+        badgeEl.textContent = badgeTextForDb(
+          cfg.accessPattern,
+          cfg.topologyRole,
+          multiShard ? `${cfg.shardCount}sh` : undefined,
+        );
+      } else {
+        badgeEl.hidden = true;
+      }
+    } else if (cfg?.kind === 'nosql_db') {
+      const nonDefaultAccess = cfg.accessPattern !== 'read_write';
+      const nonDefaultRole = cfg.topologyRole !== 'primary';
+      if (nonDefaultAccess || nonDefaultRole) {
+        badgeEl.hidden = false;
+        badgeEl.textContent = badgeTextForDb(cfg.accessPattern, cfg.topologyRole);
+      } else {
+        badgeEl.hidden = true;
+      }
     } else {
       badgeEl.hidden = true;
     }
   };
   sync(node);
+
+  const onLocaleChange = (): void => {
+    sync(latestNode);
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+  }
 
   root.addEventListener('pointerdown', (ev) => {
     const t = ev.target as HTMLElement;
@@ -289,12 +350,12 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
 
   minus.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    const current = Number.parseInt(repsLabel.textContent ?? '1', 10) || 1;
+    const current = latestNode.replicas ?? 1;
     callbacks.onReplicasChange(node.id, Math.max(1, current - 1));
   });
   plus.addEventListener('click', (ev) => {
     ev.stopPropagation();
-    const current = Number.parseInt(repsLabel.textContent ?? '1', 10) || 1;
+    const current = latestNode.replicas ?? 1;
     callbacks.onReplicasChange(node.id, current + 1);
   });
   del.addEventListener('click', (ev) => {
@@ -362,6 +423,9 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     },
     sync,
     destroy() {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+      }
       root.remove();
     },
   };

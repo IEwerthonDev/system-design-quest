@@ -4,6 +4,8 @@ import {
   type ComponentCategory,
   type ComponentType,
 } from '@sdq/shared';
+import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
+import { t } from '../i18n/t';
 import { bindComponentTooltip } from './glossary';
 import {
   applyPaletteCollapsed,
@@ -276,8 +278,6 @@ export function mountPalette(
   fab.type = 'button';
   fab.className = 'sdq-palette-fab';
   fab.setAttribute('data-testid', 'palette-fab');
-  fab.textContent = 'COMPONENTES';
-  fab.setAttribute('aria-label', 'Abrir componentes');
 
   const palette = document.createElement('aside');
   palette.className = 'sdq-palette';
@@ -307,15 +307,12 @@ export function mountPalette(
 
   const title = document.createElement('div');
   title.className = 'sdq-palette__title';
-  title.textContent = 'Componentes';
 
   const collapseBtn = document.createElement('button');
   collapseBtn.type = 'button';
   collapseBtn.className = 'sdq-palette__collapse';
   collapseBtn.setAttribute('data-testid', 'palette-collapse');
   collapseBtn.setAttribute('aria-expanded', 'true');
-  collapseBtn.setAttribute('aria-label', 'Minimizar componentes');
-  collapseBtn.title = 'Minimizar';
   collapseBtn.textContent = '«';
   collapseBtn.addEventListener('click', () => {
     if (isPhoneLayout()) {
@@ -324,6 +321,7 @@ export function mountPalette(
     }
     const collapsed = !palette.classList.contains('sdq-palette--collapsed');
     applyPaletteCollapsed(collapsed, false);
+    refreshChrome();
   });
 
   header.append(title, collapseBtn);
@@ -332,8 +330,29 @@ export function mountPalette(
   const hint = document.createElement('p');
   hint.className = 'sdq-palette__hint';
   hint.setAttribute('data-testid', 'palette-tap-hint');
-  hint.textContent = 'Toque em um componente para colocá-lo no canvas. Arraste os cards e use o ponto ○→ para ligar.';
   palette.append(hint);
+
+  const refreshChrome = (): void => {
+    fab.textContent = t('palette.fab');
+    fab.setAttribute('aria-label', t('palette.fab'));
+    title.textContent = t('palette.title');
+    hint.textContent = t('palette.hint');
+    const collapsed = palette.classList.contains('sdq-palette--collapsed');
+    collapseBtn.setAttribute('aria-label', t('palette.collapse'));
+    collapseBtn.title = t('palette.collapse');
+    // Preserve collapse glyph after applyPaletteCollapsed may have set it.
+    if (!collapsed && !isPhoneLayout()) {
+      collapseBtn.textContent = '«';
+    }
+  };
+  refreshChrome();
+
+  const onLocaleChange = (): void => {
+    refreshChrome();
+  };
+  if (typeof window !== 'undefined') {
+    window.addEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+  }
   if (typeof window !== 'undefined' && window.innerWidth <= PHONE_MAX_WIDTH) {
     hint.style.display = 'block';
   }

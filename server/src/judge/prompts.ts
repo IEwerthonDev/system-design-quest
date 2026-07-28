@@ -142,6 +142,7 @@ function buildJudgePrompt(
     'Return JSON matching JudgePartialResult: score (0-100), strengths (array), criticalIssues (array), improvements (array), requirementCoverage (array of {requirement,type,status,explanation}), rationale (string).',
     'Every list field MUST be a JSON array (use [] when empty) — never omit them or return an object.',
     'In rationale and criticalIssues, honor structural blockers and include the required scale analysis.',
+    'On sql_db / nosql_db configs, accessPattern (read|write|read_write) and topologyRole (primary|replica|standalone) matter for CQRS and replica scoring — treat them as intentional design signals.',
   ].join('\n');
 }
 

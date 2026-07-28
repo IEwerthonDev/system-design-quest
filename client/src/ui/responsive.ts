@@ -1,3 +1,5 @@
+import { t } from '../i18n/t';
+
 export const TABLET_MAX_WIDTH = 1024;
 export const PHONE_MAX_WIDTH = 768;
 export const LAYOUT_TABLET_CLASS = 'sdq-layout--tablet';
@@ -302,11 +304,8 @@ export function syncPaletteCollapseButton(collapsed: boolean, phoneMode: boolean
     return;
   }
   btn.textContent = collapsed ? (phoneMode ? '✕' : '»') : phoneMode ? '✕' : '«';
-  btn.title = collapsed ? 'Fechar' : phoneMode ? 'Fechar' : 'Minimizar';
-  btn.setAttribute(
-    'aria-label',
-    collapsed || phoneMode ? 'Fechar componentes' : 'Minimizar componentes',
-  );
+  btn.title = t('palette.collapse');
+  btn.setAttribute('aria-label', t('palette.collapse'));
   btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
 }
 
