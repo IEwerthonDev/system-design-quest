@@ -25,8 +25,8 @@ describe('createSessionService', () => {
     service = createSessionService(store);
   });
 
-  it('rejects invalid nicknames', () => {
-    const result = service.upsert(upsertInput({ playerNickname: 'ab' }));
+  it('rejects invalid nicknames', async () => {
+    const result = await service.upsert(upsertInput({ playerNickname: 'ab' }));
     expect(result).toEqual({
       ok: false,
       code: 'INVALID_NICKNAME',
@@ -34,31 +34,33 @@ describe('createSessionService', () => {
     });
   });
 
-  it('re-upserting the same id does not inflate the count', () => {
+  it('re-upserting the same id does not inflate the count', async () => {
     const now = () => '2026-07-27T12:00:00.000Z';
-    expect(service.upsert(upsertInput({ id: 'same' }), now).ok).toBe(true);
-    expect(service.upsert(upsertInput({ id: 'same', status: 'approved' }), now).ok).toBe(true);
-    expect(service.list('alice')).toHaveLength(1);
+    expect((await service.upsert(upsertInput({ id: 'same' }), now)).ok).toBe(true);
+    expect((await service.upsert(upsertInput({ id: 'same', status: 'approved' }), now)).ok).toBe(
+      true,
+    );
+    expect(await service.list('alice')).toHaveLength(1);
   });
 
-  it('evicts the oldest other session when the 51st distinct id is upserted', () => {
+  it('evicts the oldest other session when the 51st distinct id is upserted', async () => {
     for (let i = 0; i < SESSION_CAP_PER_NICKNAME; i += 1) {
       const ts = `2026-07-27T10:${String(i).padStart(2, '0')}:00.000Z`;
-      const result = service.upsert(
+      const result = await service.upsert(
         upsertInput({ id: `sess-${i}` }),
         () => ts,
       );
       expect(result.ok).toBe(true);
     }
 
-    expect(service.list('alice')).toHaveLength(SESSION_CAP_PER_NICKNAME);
+    expect(await service.list('alice')).toHaveLength(SESSION_CAP_PER_NICKNAME);
 
-    const result = service.upsert(
+    const result = await service.upsert(
       upsertInput({ id: 'sess-newest' }),
       () => '2026-07-27T11:00:00.000Z',
     );
     expect(result.ok).toBe(true);
-    const list = service.list('alice');
+    const list = await service.list('alice');
     expect(list).toHaveLength(SESSION_CAP_PER_NICKNAME);
     expect(list.find((s) => s.id === 'sess-0')).toBeUndefined();
     expect(list.find((s) => s.id === 'sess-newest')).toBeDefined();

@@ -1,11 +1,16 @@
 import type { DesignSessionRecord, DesignSessionStatus } from '@sdq/shared';
 
+export type MaybePromise<T> = T | Promise<T>;
+
 export interface SessionStore {
-  upsert(record: DesignSessionRecord): DesignSessionRecord;
-  getById(id: string): DesignSessionRecord | null;
-  listByNickname(nickname: string, status?: DesignSessionStatus): DesignSessionRecord[];
-  delete(id: string): void;
-  reset(): void;
+  upsert(record: DesignSessionRecord): MaybePromise<DesignSessionRecord>;
+  getById(id: string): MaybePromise<DesignSessionRecord | null>;
+  listByNickname(
+    nickname: string,
+    status?: DesignSessionStatus,
+  ): MaybePromise<DesignSessionRecord[]>;
+  delete(id: string): MaybePromise<void>;
+  reset(): MaybePromise<void>;
 }
 
 export class InMemorySessionStore implements SessionStore {

@@ -31,14 +31,14 @@ export interface UpsertSessionError {
 export type UpsertSessionOutcome = UpsertSessionResult | UpsertSessionError;
 
 export interface SessionService {
-  upsert(input: DesignSessionUpsertInput, now?: () => string): UpsertSessionOutcome;
-  list(nickname: string, status?: DesignSessionStatus): DesignSessionRecord[];
-  get(id: string): DesignSessionRecord | null;
+  upsert(input: DesignSessionUpsertInput, now?: () => string): Promise<UpsertSessionOutcome>;
+  list(nickname: string, status?: DesignSessionStatus): Promise<DesignSessionRecord[]>;
+  get(id: string): Promise<DesignSessionRecord | null>;
 }
 
 export function createSessionService(store: SessionStore): SessionService {
   return {
-    upsert(input, now = () => new Date().toISOString()) {
+    async upsert(input, now = () => new Date().toISOString()) {
       const nickname = normalizeNickname(input.playerNickname);
       if (!isValidNickname(nickname)) {
         return {
@@ -80,7 +80,7 @@ export function createSessionService(store: SessionStore): SessionService {
         };
       }
 
-      const existing = store.getById(input.id);
+      const existing = await store.getById(input.id);
       const timestamp = now();
       let status = input.status;
       if (input.judgeResult?.verdict) {
@@ -109,9 +109,9 @@ export function createSessionService(store: SessionStore): SessionService {
         record.mode = input.mode;
       }
 
-      store.upsert(record);
+      await store.upsert(record);
 
-      const forNick = store.listByNickname(nickname);
+      const forNick = await store.listByNickname(nickname);
       if (forNick.length > SESSION_CAP_PER_NICKNAME) {
         const others = forNick
           .filter((session) => session.id !== record.id)
@@ -120,19 +120,19 @@ export function createSessionService(store: SessionStore): SessionService {
         for (let i = 0; i < excess; i += 1) {
           const victim = others[i];
           if (victim) {
-            store.delete(victim.id);
+            await store.delete(victim.id);
           }
         }
       }
 
-      return { ok: true, record: store.getById(record.id)! };
+      return { ok: true, record: (await store.getById(record.id))! };
     },
 
-    list(nickname, status) {
+    async list(nickname, status) {
       return store.listByNickname(normalizeNickname(nickname), status);
     },
 
-    get(id) {
+    async get(id) {
       return store.getById(id);
     },
   };

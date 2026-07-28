@@ -118,7 +118,7 @@ export async function registerSessionRoutes(
         });
       }
 
-      const result = service.upsert(parsed.input);
+      const result = await service.upsert(parsed.input);
       if (!result.ok) {
         return reply.code(400).send({
           error: 'Invalid request',
@@ -159,7 +159,7 @@ export async function registerSessionRoutes(
         status = statusRaw as DesignSessionStatus;
       }
 
-      const sessions = service.list(nickname, status);
+      const sessions = await service.list(nickname, status);
       return reply.code(200).send({ nickname, sessions });
     },
   );
@@ -170,7 +170,7 @@ export async function registerSessionRoutes(
       request: FastifyRequest<{ Params: { id: string } }>,
       reply: FastifyReply,
     ) => {
-      const session = service.get(request.params.id);
+      const session = await service.get(request.params.id);
       if (!session) {
         return reply.code(404).send({
           error: 'Not found',
