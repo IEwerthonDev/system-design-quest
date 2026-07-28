@@ -140,4 +140,38 @@ describe('session store', () => {
       nonFunctional: ['B'],
     });
   });
+
+  it('hydrateFromDesignSession restores prior judgeResult when present', () => {
+    const judgeResult = {
+      verdict: 'PASS' as const,
+      score: 88,
+      summary: 'Solid design.',
+      nextStep: 'Add monitoring.',
+      strengths: [],
+      criticalIssues: [],
+      improvements: [],
+      requirementCoverage: [],
+      judgeDebate: {
+        rigorous: 'ok',
+        pragmatic: 'ok',
+        consensus: 'PASS',
+      },
+      scaleNarrative: 'Handles target load with cache.',
+    };
+    const record: DesignSessionRecord = {
+      id: 'persisted-judged',
+      problemId: 'url-shortener',
+      playerNickname: 'alice',
+      status: 'approved',
+      graph: sampleGraph,
+      requirements: { functional: [], nonFunctional: [] },
+      mode: 'study',
+      judgeResult,
+      createdAt: '2026-07-27T10:00:00.000Z',
+      updatedAt: '2026-07-27T12:00:00.000Z',
+    };
+    const session = hydrateFromDesignSession(record);
+    expect(session.judgeResult).toEqual(judgeResult);
+    expect(window.__GAME_STATE__.judgeResult).toEqual(judgeResult);
+  });
 });
