@@ -480,4 +480,27 @@ describe('evaluateSimulation', () => {
     const order = { ok: 0, warn: 1, hot: 2 } as const;
     expect(order[result.nodes.primary!]).toBeGreaterThanOrEqual(order[result.nodes.replica!]);
   });
+
+  it('returns baseline metrics fields without chaos', () => {
+    const result = evaluateSimulation(urlShortenerFixture(90, 1));
+    expect(result.errorRate).toBeGreaterThanOrEqual(0);
+    expect(result.availability).toBeGreaterThan(0);
+    expect(result.avgLatencyMs).toBeGreaterThanOrEqual(0);
+    expect(result.p99LatencyMs).toBeGreaterThanOrEqual(result.p95LatencyMs);
+  });
+
+  it('instance_crash drops availability vs baseline', () => {
+    const graph = urlShortenerFixture(90, 2);
+    const baseline = evaluateSimulation(graph);
+    const crashed = evaluateSimulation(graph, { eventId: 'instance_crash', targetNodeId: 'app' });
+    expect(crashed.availability).toBeLessThan(baseline.availability);
+  });
+
+  it('cache_stampede increases db pressure vs high hit rate baseline', () => {
+    const graph = urlShortenerFixture(95, 5);
+    const baseline = evaluateSimulation(graph);
+    const stampede = evaluateSimulation(graph, { eventId: 'cache_stampede' });
+    const order = { ok: 0, warn: 1, hot: 2 } as const;
+    expect(order[stampede.nodes.db!]).toBeGreaterThanOrEqual(order[baseline.nodes.db!]);
+  });
 });

@@ -55,8 +55,25 @@ export {
   resolveIngressRps,
 } from './schema/normalize-graph';
 export { edgeReadWeight, evaluateSimulation } from './simulation/evaluate-simulation';
-export type { SimulationEvaluation } from './simulation/evaluate-simulation';
+export type { SimulationEvaluation, ChaosContext } from './simulation/evaluate-simulation';
 export { analyzeTopology } from './simulation/analyze-topology';
+export {
+  getChaosEvent,
+  listChaosEvents,
+  QUICK_CHAOS_IDS,
+} from './resilience/failure-catalog';
+export type {
+  ChaosEventDef,
+  ChaosEventGroup,
+  ChaosEventId,
+  ChaosEventScope,
+} from './resilience/failure-catalog';
+export { pickChaosTarget, resolveChaosEffects } from './resilience/chaos-modifiers';
+export type { ChaosEffects } from './resilience/chaos-modifiers';
+export { deriveLiveMetrics } from './resilience/derive-live-metrics';
+export type { LiveMetrics, SloStatus, SloTargets } from './resilience/derive-live-metrics';
+export { runResilienceProbe } from './resilience/run-resilience-probe';
+export type { ResilienceResult, ResilienceVerdict } from './resilience/run-resilience-probe';
 export type { ComponentCategory, ComponentType, ComponentTypeMeta } from './schema/component-types';
 export type {
   Difficulty,
