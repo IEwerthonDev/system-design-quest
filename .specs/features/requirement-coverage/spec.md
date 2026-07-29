@@ -106,7 +106,7 @@ Result: the learner cannot tell which requirement their architecture actually sa
 **Acceptance Criteria**:
 
 1. WHEN an LLM list field contains strings THEN each SHALL become a `FeedbackItem` whose `title` and `explanation` are that string, with empty `howToImprove`/`whyItMatters` and no `severity`.
-2. WHEN an LLM item is an object missing fields THEN missing string fields SHALL default to `''` and `severity`/`relatedComponents` SHALL be preserved when valid.
+2. WHEN an LLM item is an object missing fields THEN missing string fields SHALL default to `''`, EXCEPT that a missing `title` SHALL fall back to `explanation` so every card renders a heading; `severity` SHALL be preserved only when it is one of `blocker`/`major`/`minor`, and `relatedComponents` SHALL keep only string entries.
 3. WHEN an LLM item is neither string nor object (null, number) THEN it SHALL be dropped.
 4. WHEN a coerced string item is present THEN it SHALL NOT count as a blocker for AD-016 verdict rules.
 

@@ -200,7 +200,7 @@ const CODE_STRATEGY_PATTERN =
   /base62|base 62|hash|uuid|snowflake|kgs|key generation|unique|unico|unica|colisao/i;
 
 /** Lowercase + strip diacritics so "colisão" and "COLISAO" match the same keywords. */
-export function normalizeRequirementText(text: string): string {
+function normalizeRequirementText(text: string): string {
   return ` ${text
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -379,7 +379,7 @@ function collectPathFacts(graph: ArchitectureGraph): {
   return { storeReachable, storeViaApp, storeWithCache, cacheOnReadPathHitRate };
 }
 
-export function collectGraphFacts(graph: ArchitectureGraph): GraphFacts {
+function collectGraphFacts(graph: ArchitectureGraph): GraphFacts {
   const normalized = normalizeGraph(graph);
   const nodes = normalized.nodes;
   const stores = nodesOfSet(nodes, STORE_TYPES);

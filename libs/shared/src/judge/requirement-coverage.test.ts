@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { ArchitectureGraph, ComponentNode } from '../schema/architecture-graph';
 import type { ComponentType } from '../schema/component-types';
 import type { ReqCoverageItem } from '../schema/judge';
-import {
-  analyzeRequirementCoverage,
-  classifyRequirement,
-  collectGraphFacts,
-} from './requirement-coverage';
+import { analyzeRequirementCoverage, classifyRequirement } from './requirement-coverage';
 import { URL_SHORTENER } from '../problems/url-shortener';
 
 const SHORTENER_REQS = URL_SHORTENER.suggestedRequirements;
@@ -162,7 +158,7 @@ describe('analyzeRequirementCoverage — functional paths (RC-01)', () => {
     expect(statusOf(items, SHORTENER_REQS.functional[1]!)).toBe('missing');
   });
 
-  it('does not cover write path when the store is present but disconnected', () => {
+  it('covers neither write nor read when the store is present but disconnected', () => {
     const items = coverage(
       graph(
         [node('web', 'client_web'), node('app', 'app_server'), node('db', 'sql_db')],
@@ -171,6 +167,7 @@ describe('analyzeRequirementCoverage — functional paths (RC-01)', () => {
     );
 
     expect(statusOf(items, SHORTENER_REQS.functional[0]!)).toBe('missing');
+    expect(statusOf(items, SHORTENER_REQS.functional[1]!)).toBe('missing');
   });
 
   it('flags an unclassifiable requirement as partial and says it was not verifiable', () => {
@@ -198,6 +195,35 @@ describe('analyzeRequirementCoverage — non-functional configs (RC-02)', () => 
 
     expect(statusOf(coverage(shortenerGraph({ hitRate: 95 })), latencyReq)).toBe('covered');
     expect(statusOf(coverage(shortenerGraph({ hitRate: 50 })), latencyReq)).toBe('partial');
+  });
+
+  it('downgrades latency to partial when the cache sits off the read path', () => {
+    const items = coverage(
+      graph(
+        [
+          node('web', 'client_web'),
+          node('app', 'app_server', { replicas: 3 }),
+          node('cache', 'cache_redis', {
+            config: { kind: 'cache', hitRate: 99, eviction: 'lru', maxMemoryGb: 16 },
+          }),
+          node('db', 'sql_db'),
+        ],
+        [
+          ['web', 'app'],
+          ['app', 'cache'],
+          ['app', 'db'],
+        ],
+      ),
+    );
+
+    expect(statusOf(items, SHORTENER_REQS.nonFunctional[0]!)).toBe('partial');
+    expect(statusOf(items, SHORTENER_REQS.functional[1]!)).toBe('partial');
+  });
+
+  it('marks latency missing when no cache or CDN exists at all', () => {
+    expect(
+      statusOf(coverage(shortenerGraph({ withCache: false })), SHORTENER_REQS.nonFunctional[0]!),
+    ).toBe('missing');
   });
 
   it('covers throughput only with balancing, app replicas and cache', () => {
@@ -237,6 +263,33 @@ describe('analyzeRequirementCoverage — non-functional configs (RC-02)', () => 
       ),
     );
     expect(statusOf(noSignal, uniquenessReq)).toBe('partial');
+
+    const defaultPartitioningOnly = coverage(
+      graph(
+        [
+          node('web', 'client_web'),
+          node('app', 'app_server'),
+          node('db', 'sql_db', {
+            label: 'Store',
+            config: {
+              kind: 'sql_db',
+              shardCount: 4,
+              partitioningStrategy: 'hash',
+              keySkew: 0,
+              accessPattern: 'read_write',
+              topologyRole: 'primary',
+              replicationFactor: 1,
+              consistency: 'strong',
+            },
+          }),
+        ],
+        [
+          ['web', 'app'],
+          ['app', 'db'],
+        ],
+      ),
+    );
+    expect(statusOf(defaultPartitioningOnly, uniquenessReq)).toBe('partial');
 
     const noteSignal = coverage(
       graph(
@@ -298,15 +351,19 @@ describe('analyzeRequirementCoverage — edge cases (RC-05)', () => {
     expect(statusOf(items, SHORTENER_REQS.nonFunctional[0]!)).toBe('covered');
   });
 
-  it('treats bidirectional edges as traversable in both directions', () => {
-    const facts = collectGraphFacts({
-      nodes: [node('web', 'client_web'), node('app', 'app_server'), node('db', 'sql_db')],
-      edges: [
-        { id: 'e0', from: 'web', to: 'app', direction: 'forward' },
-        { id: 'e1', from: 'db', to: 'app', direction: 'bidirectional' },
-      ],
+  it('covers the write path when the store is linked by a bidirectional edge', () => {
+    const items = analyzeRequirementCoverage({
+      requirements: { functional: ['Usuário pode encurtar uma URL longa'], nonFunctional: [] },
+      locale: 'pt-BR',
+      graph: {
+        nodes: [node('web', 'client_web'), node('app', 'app_server'), node('db', 'sql_db')],
+        edges: [
+          { id: 'e0', from: 'web', to: 'app', direction: 'forward' },
+          { id: 'e1', from: 'db', to: 'app', direction: 'bidirectional' },
+        ],
+      },
     });
 
-    expect(facts.storeViaApp).toBe(true);
+    expect(statusOf(items, 'Usuário pode encurtar uma URL longa')).toBe('covered');
   });
 });

@@ -456,6 +456,25 @@ describe('judgeStructuralOnly', () => {
     expect(result.verdict).toBe('PASS');
     expect(result.requirementCoverage.map((item) => item.status)).toEqual(['covered', 'missing']);
   });
+
+  it('keeps score and verdict unchanged when requirements are declared (reporting only)', async () => {
+    const graph = getGoldenGraph('good');
+    const requirements = {
+      functional: ['Usuário pode encurtar uma URL longa'],
+      nonFunctional: ['Disponibilidade de 99,9% para operações de leitura'],
+    };
+
+    const structuralBare = judgeStructuralOnly(makeInput(graph));
+    const structuralDeclared = judgeStructuralOnly(makeInput(graph, requirements));
+    expect(structuralDeclared.score).toBe(structuralBare.score);
+    expect(structuralDeclared.verdict).toBe(structuralBare.verdict);
+
+    const client = createMockLlmClient();
+    const llmBare = await judgeSubmission(makeInput(graph), client);
+    const llmDeclared = await judgeSubmission(makeInput(graph, requirements), client);
+    expect(llmDeclared.score).toBe(llmBare.score);
+    expect(llmDeclared.verdict).toBe(llmBare.verdict);
+  });
 });
 
 describe('judgeSubmission', () => {
