@@ -22,36 +22,36 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `design-mode-chrome` in progress |
-| **Próximo passo** | Full gate → Verify → PR → deploy |
-| **Feature ativa** | `design-mode-chrome` |
-| **Branch** | `feature/design-mode-chrome` |
+| **Fase atual** | `design-mode-chrome` shipped |
+| **Próximo passo** | Pick next roadmap feature |
+| **Feature ativa** | (none) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
-| **Decisões** | AD-038 · AD-033/035/037 extended |
-| **Gate** | `nx run-many -t lint test --skip-nx-cache` |
-| **Verify** | pending |
-| **PR** | pending |
+| **Decisões** | AD-031·032·033·034·035·036·037·**038** |
+| **Gate** | `nx run-many -t lint test --skip-nx-cache` green |
+| **Verify** | PASS — `.specs/features/design-mode-chrome/validation.md` |
+| **PR** | [#10](https://github.com/IEwerthonDev/system-design-quest/pull/10) squash-merged |
 | **Production URL** | https://system-design-quest.vercel.app |
+| **Deploy** | `dpl_6f5nPHoWJJtHGLnJfsJXAuP77zmL` READY · sha `4380d79` |
 
-### Context Checkpoint (2026-07-29 design-mode-chrome)
+### Context Checkpoint (2026-07-29 design-mode-chrome ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — fresh session on resume prompt |
-| Uncommitted | AMBER — implementing; commit per task |
-| Spec drift | GREEN — Speedrun stays chaos-free; Practice+Sandbox get full chrome |
-| Gate confidence | pending full gate |
-| Task clarity | GREEN — T1–T7 |
+| Chat length | GREEN — specify→implement→verify→ship |
+| Uncommitted | STATE handoff only |
+| Spec drift | GREEN — Speedrun excluded; Practice+Sandbox full chrome |
+| Gate confidence | GREEN — Verify PASS + prod READY |
+| Task clarity | GREEN — feature shipped |
 
 **Veredito:** GREEN
 
-**Clarification (Speedrun vs AD-037):** Chaos Lab / Quick Chaos / Live Metrics remain **unavailable in Speedrun** (ranking fairness). “All design modes” = Sandbox + Practice (`study`).
+**Clarification:** Speedrun stays without Chaos/Metrics/Carga/Mentor (AD-037). Design modes = Sandbox + Practice.
 
 **Prompt para nova sessão:**
 ```
-Branch feature/design-mode-chrome. Read .specs/STATE.md Handoff + .specs/features/design-mode-chrome/{spec,tasks}.md.
-Continue remaining tasks / Verify / PR / deploy if incomplete.
-Gate: nx run-many -t lint test --skip-nx-cache
+Branch main. design-mode-chrome shipped (PR #10, prod dpl_6f5nPHoWJJtHGLnJfsJXAuP77zmL).
+Read .specs/STATE.md Handoff + docs/ROADMAP.md for next feature.
 ```
 
 
