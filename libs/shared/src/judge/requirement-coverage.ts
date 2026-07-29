@@ -56,6 +56,8 @@ const CAPABILITY_KEYWORDS: Record<RequirementCapability, string[]> = {
   write_path: [
     'encurtar',
     'criar',
+    'gerar',
+    'generate',
     'cadastr',
     'postar',
     'publicar',

@@ -112,8 +112,8 @@ describe('buildRigorousPrompt / buildPragmaticPrompt', () => {
 });
 
 describe('buildRequirementCoverage', () => {
-  it('populates every declared requirement with coverage status', async () => {
-    const graph = getGoldenGraph('medium');
+  it('populates every declared requirement from the graph analysis (RC-03 AC4)', async () => {
+    const graph = getGoldenGraph('good');
     const rigorous = await mockJudgePartial('rigorous', graph);
     const pragmatic = await mockJudgePartial('pragmatic', graph);
     const input = makeInput(graph, {
@@ -129,11 +129,11 @@ describe('buildRequirementCoverage', () => {
       'Redirect HTTP 302',
       '100k read RPS',
     ]);
-    expect(coverage.every((item) => item.status === 'missing')).toBe(true);
+    expect(coverage.every((item) => item.status !== 'missing')).toBe(true);
     expect(coverage.every((item) => item.explanation.length > 0)).toBe(true);
   });
 
-  it('merges LLM-provided coverage and does not invent covered from golden tiers', async () => {
+  it('lets the LLM downgrade a covered requirement (RC-03 AC1)', async () => {
     const graph = getGoldenGraph('good');
     const rigorous = await mockJudgePartial('rigorous', graph);
     const pragmatic = await mockJudgePartial('pragmatic', graph);
@@ -143,8 +143,8 @@ describe('buildRequirementCoverage', () => {
         {
           requirement: 'Encurtar URL',
           type: 'functional',
-          status: 'covered',
-          explanation: 'LLM found shorten path',
+          status: 'missing',
+          explanation: 'LLM found no shorten path',
         },
       ],
     };
@@ -155,17 +155,99 @@ describe('buildRequirementCoverage', () => {
 
     const coverage = buildRequirementCoverage(input, withLlmCoverage, pragmatic);
 
-    expect(coverage).toEqual([
+    expect(coverage[0]).toEqual(
       expect.objectContaining({
         requirement: 'Encurtar URL',
-        status: 'covered',
-        explanation: 'LLM found shorten path',
-      }),
-      expect.objectContaining({
-        requirement: 'Redirect HTTP 302',
         status: 'missing',
+        explanation: 'LLM found no shorten path',
       }),
-    ]);
+    );
+    expect(coverage[1]!.status).not.toBe('missing');
+  });
+
+  it('ignores LLM upgrades above the graph analysis (RC-03 AC2)', async () => {
+    const graph = getGoldenGraph('medium');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: [],
+      nonFunctional: ['Redirect responde em menos de 100 ms no percentil 99'],
+    });
+    const baseline = buildRequirementCoverage(input, rigorous, pragmatic);
+    expect(baseline[0]!.status).toBe('missing');
+
+    const optimistic: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Redirect responde em menos de 100 ms no percentil 99',
+          type: 'nonFunctional',
+          status: 'covered',
+          explanation: 'LLM claims low latency',
+        },
+      ],
+    };
+
+    const coverage = buildRequirementCoverage(input, optimistic, pragmatic);
+
+    expect(coverage[0]!.status).toBe('missing');
+    expect(coverage[0]!.explanation).not.toBe('LLM claims low latency');
+  });
+
+  it('matches LLM items despite case, accent and punctuation drift (RC-03 AC3)', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: ['Usuário pode encurtar uma URL longa'],
+      nonFunctional: [],
+    });
+    const drifted: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: '  usuario pode encurtar uma url longa!  ',
+          type: 'functional',
+          status: 'partial',
+          explanation: 'LLM saw only a partial write path',
+        },
+      ],
+    };
+
+    const coverage = buildRequirementCoverage(input, drifted, pragmatic);
+
+    expect(coverage[0]).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        explanation: 'LLM saw only a partial write path',
+      }),
+    );
+  });
+
+  it('falls back to a locale explanation when the LLM downgrade has none', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: ['Usuário pode encurtar uma URL longa em um link curto único'],
+      nonFunctional: [],
+    });
+    const noExplanation = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Usuário pode encurtar uma URL longa em um link curto único',
+          type: 'functional',
+          status: 'missing',
+          explanation: '   ',
+        },
+      ],
+    } as typeof rigorous;
+
+    const coverage = buildRequirementCoverage(input, noExplanation, pragmatic);
+
+    expect(coverage[0]!.status).toBe('missing');
+    expect(coverage[0]!.explanation.trim().length).toBeGreaterThan(0);
   });
 
   it('returns empty array when no requirements were declared', async () => {
@@ -215,7 +297,7 @@ describe('mergeConsensus', () => {
     expect(merged.requirementCoverage).toEqual([
       expect.objectContaining({
         requirement: 'Encurtar URL',
-        status: 'missing',
+        status: 'covered',
       }),
     ]);
   });
@@ -292,6 +374,22 @@ describe('judgeStructuralOnly', () => {
     expect(result.structuralCodes ?? []).not.toContain('missing_component');
     expect(result.scaleNarrative.length).toBeGreaterThan(0);
   });
+
+  it('grades coverage per requirement instead of all-covered on a PASS graph (RC-03)', () => {
+    const result = judgeStructuralOnly({
+      problemId: URL_SHORTENER_ID,
+      requirements: {
+        functional: ['Usuário pode encurtar uma URL longa'],
+        nonFunctional: ['Disponibilidade de 99,9% para operações de leitura'],
+      },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'pt-BR',
+    });
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.requirementCoverage.map((item) => item.status)).toEqual(['covered', 'missing']);
+  });
 });
 
 describe('judgeSubmission', () => {
@@ -339,7 +437,7 @@ describe('judgeSubmission', () => {
       expect.objectContaining({
         requirement: 'Gerar link curto',
         type: 'functional',
-        status: 'missing',
+        status: 'covered',
       }),
       expect.objectContaining({
         requirement: 'Alta disponibilidade',
