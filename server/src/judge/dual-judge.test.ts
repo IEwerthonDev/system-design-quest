@@ -5,6 +5,7 @@ import type { FeedbackItem, JudgePartialResult } from '@sdq/shared';
 import {
   assertScaleNarrative,
   buildRequirementCoverage,
+  coerceFeedbackItems,
   judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
@@ -300,6 +301,71 @@ describe('mergeConsensus', () => {
         status: 'covered',
       }),
     ]);
+  });
+});
+
+describe('coerceFeedbackItems (RC-04)', () => {
+  it('turns plain strings into FeedbackItem without severity', () => {
+    const items = coerceFeedbackItems(['Load balancer é ponto único de falha']);
+
+    expect(items).toEqual([
+      {
+        title: 'Load balancer é ponto único de falha',
+        explanation: 'Load balancer é ponto único de falha',
+        howToImprove: '',
+        whyItMatters: '',
+      },
+    ]);
+    expect(items[0]!.severity).toBeUndefined();
+  });
+
+  it('fills missing fields and preserves severity and related components', () => {
+    const items = coerceFeedbackItems([
+      { title: 'Sem cache', severity: 'blocker', relatedComponents: ['cache_redis', 7] },
+      { explanation: 'Somente explicação' },
+      { title: 'Ignora severidade inválida', severity: 'catastrophic' },
+    ]);
+
+    expect(items[0]).toEqual({
+      title: 'Sem cache',
+      explanation: '',
+      howToImprove: '',
+      whyItMatters: '',
+      severity: 'blocker',
+      relatedComponents: ['cache_redis'],
+    });
+    expect(items[1]).toEqual(
+      expect.objectContaining({ title: 'Somente explicação', explanation: 'Somente explicação' }),
+    );
+    expect(items[2]!.severity).toBeUndefined();
+  });
+
+  it('drops entries that are neither strings nor usable objects', () => {
+    expect(coerceFeedbackItems([null, 7, '', '   ', {}, [], undefined])).toEqual([]);
+    expect(coerceFeedbackItems('not an array')).toEqual([]);
+  });
+
+  it('keeps a live-LLM string critical issue from flipping the verdict to FAIL', async () => {
+    const client: LlmClient = {
+      async completeJson<T>(): Promise<T> {
+        return {
+          score: 95,
+          strengths: ['Cache Redis no caminho de leitura'],
+          criticalIssues: ['Load balancer sem redundância'],
+          improvements: ['Adicionar réplica do LB'],
+          requirementCoverage: [],
+          rationale: 'Modelo respondeu com strings. Análise de escala: 100k RPS de leitura.',
+        } as T;
+      },
+    };
+
+    const result = await judgeSubmission(makeInput(getGoldenGraph('good')), client);
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.criticalIssues.some((issue) => issue.title === 'Load balancer sem redundância')).toBe(
+      true,
+    );
+    expect(result.strengths.every((item) => item.title.length > 0)).toBe(true);
   });
 });
 

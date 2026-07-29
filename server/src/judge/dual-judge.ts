@@ -26,6 +26,57 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+const FEEDBACK_SEVERITIES: ReadonlySet<string> = new Set(['blocker', 'major', 'minor']);
+
+/**
+ * Coerce LLM feedback lists into `FeedbackItem[]`.
+ * Live models answer with plain strings, so the string becomes title + explanation and carries
+ * no severity — it can never fake an AD-016 blocker.
+ */
+export function coerceFeedbackItems(value: unknown): FeedbackItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const items: FeedbackItem[] = [];
+  for (const raw of value) {
+    if (typeof raw === 'string') {
+      const text = raw.trim();
+      if (text.length > 0) {
+        items.push({ title: text, explanation: text, howToImprove: '', whyItMatters: '' });
+      }
+      continue;
+    }
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+      continue;
+    }
+
+    const record = raw as Record<string, unknown>;
+    const title = typeof record.title === 'string' ? record.title.trim() : '';
+    const explanation = typeof record.explanation === 'string' ? record.explanation : '';
+    if (title.length === 0 && explanation.trim().length === 0) {
+      continue;
+    }
+
+    const item: FeedbackItem = {
+      title: title.length > 0 ? title : explanation,
+      explanation,
+      howToImprove: typeof record.howToImprove === 'string' ? record.howToImprove : '',
+      whyItMatters: typeof record.whyItMatters === 'string' ? record.whyItMatters : '',
+    };
+    if (typeof record.severity === 'string' && FEEDBACK_SEVERITIES.has(record.severity)) {
+      item.severity = record.severity as FeedbackItem['severity'];
+    }
+    if (Array.isArray(record.relatedComponents)) {
+      item.relatedComponents = record.relatedComponents.filter(
+        (component): component is string => typeof component === 'string',
+      );
+    }
+    items.push(item);
+  }
+  return items;
+}
+
 /**
  * Coerce LLM JSON into a safe JudgePartialResult.
  * Live models sometimes omit arrays or return objects — that used to crash mergeConsensus.
@@ -36,9 +87,9 @@ export function normalizeJudgePartialResult(raw: unknown): JudgePartialResult {
   const score = typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : 0;
   return {
     score: Math.max(0, Math.min(100, Math.round(score))),
-    strengths: asArray<FeedbackItem>(value.strengths),
-    criticalIssues: asArray<FeedbackItem>(value.criticalIssues),
-    improvements: asArray<FeedbackItem>(value.improvements),
+    strengths: coerceFeedbackItems(value.strengths),
+    criticalIssues: coerceFeedbackItems(value.criticalIssues),
+    improvements: coerceFeedbackItems(value.improvements),
     requirementCoverage: asArray<ReqCoverageItem>(value.requirementCoverage),
     rationale: typeof value.rationale === 'string' ? value.rationale : '',
   };
