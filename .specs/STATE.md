@@ -22,17 +22,17 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `requirement-coverage` — T1–T5 done, Verify |
-| **Próximo passo** | Verifier independente → PR → merge → `vercel --prod` + probe de produção |
-| **Feature ativa** | `requirement-coverage` |
-| **Branch** | `feature/requirement-coverage` |
+| **Fase atual** | `requirement-coverage` shipped |
+| **Próximo passo** | Smoke UI: julgar encurtador no browser e conferir a tabela de cobertura |
+| **Feature ativa** | none (`requirement-coverage` shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035·**036** |
-| **Gate** | `nx run-many -t lint test` green (shared 155 · server 152 · client 440) |
-| **Commits** | `501b2fc` docs · `6d03084` engine · `82a2899` judge merge · `e4ef0a0` FeedbackItem |
-| **PR** | pending |
+| **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 157 · server 153 · client 440) |
+| **Verify** | PASS 22/22 ACs — `.specs/features/requirement-coverage/validation.md` |
+| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/8 (squash `e88949f`) |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_8cVp8EABw1PUMxWDuExq8VdpVaA4` READY (pre-feature) |
+| **Deployment** | `system-design-quest-lqzr2su14` READY — probe do encurtador retorna 3 `covered` / 3 `partial` com explicações por capability |
 
 ### Context Checkpoint (2026-07-29 requirement-coverage)
 
