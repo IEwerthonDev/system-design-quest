@@ -118,6 +118,16 @@ export type {
   EvaluateStructuralRubricInput,
   StructuralReport,
 } from './judge/evaluate-structural-rubric';
+export {
+  analyzeRequirementCoverage,
+  classifyRequirement,
+  collectGraphFacts,
+  normalizeRequirementText,
+} from './judge/requirement-coverage';
+export type {
+  RequirementCapability,
+  RequirementCoverageInput,
+} from './judge/requirement-coverage';
 export { getGoldenGraph } from './judge/golden-graphs';
 export type { GoldenGraphTier } from './judge/golden-graphs';
 export {
