@@ -3,6 +3,7 @@ import { getGoldenGraph, type ArchitectureGraph, type JudgeResult } from '@sdq/s
 import { clearCachedJudgePayload } from '../judge/judge-api';
 import { setLocale } from '../i18n/locale';
 import { VERDICT_LABELS } from '../ui/result-panel';
+import { PALETTE_DROP_EVENT, PALETTE_MIME_TYPE } from '../ui/palette';
 import {
   canGoBackPhase,
   getPreviousPhase,
@@ -60,6 +61,19 @@ const sampleGraph: ArchitectureGraph = {
   ],
   edges: [],
 };
+
+function createPaletteDropEvent(type: string): Event {
+  const event = new Event('drop', { bubbles: true, cancelable: true });
+  Object.defineProperty(event, 'dataTransfer', {
+    value: {
+      dropEffect: 'none',
+      getData: (format: string) => (format === PALETTE_MIME_TYPE ? type : ''),
+    },
+  });
+  Object.defineProperty(event, 'clientX', { value: 120 });
+  Object.defineProperty(event, 'clientY', { value: 80 });
+  return event;
+}
 
 describe('phase navigation', () => {
   describe('phase machine back navigation', () => {
@@ -730,6 +744,23 @@ describe('phase navigation', () => {
       expect(
         container.querySelector('[data-testid="session-header"]')!.contains(toolbar),
       ).toBe(false);
+    });
+
+    it('processes one component drop after repeated session mount and destroy cycles', () => {
+      const canvas = document.createElement('canvas');
+      container.append(canvas);
+      for (let visit = 0; visit < 5; visit += 1) {
+        const nav = mountPhaseNavigation(container, { mode: 'study', canvas });
+        nav.destroy();
+      }
+
+      mountPhaseNavigation(container, { mode: 'study', canvas });
+      const placementHandler = vi.fn();
+      canvas.addEventListener(PALETTE_DROP_EVENT, placementHandler);
+
+      canvas.dispatchEvent(createPaletteDropEvent('app_server'));
+
+      expect(placementHandler).toHaveBeenCalledTimes(1);
     });
 
     it('mounts design chrome in sandbox canvas', () => {

@@ -804,6 +804,7 @@ export function mountPhaseNavigation(
       unsubscribeGraphChanges?.();
       guidedOverlay?.destroy();
       simControls.destroy();
+      palette.destroy();
       settingsPanel.root.remove();
       sessionHeader.destroy();
       problemDrawer?.destroy();

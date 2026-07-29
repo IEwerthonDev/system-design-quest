@@ -7,6 +7,7 @@ import {
   PALETTE_MIME_TYPE,
   PALETTE_CATEGORY_LABELS,
 } from './palette';
+import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
 
 /** jsdom lacks DragEvent — minimal event with dataTransfer + coordinates */
 function createDragEvent(
@@ -139,6 +140,42 @@ describe('component palette', () => {
     expect(event.detail.type).toBe('app_server');
     expect(event.detail.clientX).toBe(120);
     expect(event.detail.clientY).toBe(80);
+  });
+
+  it('dispatches one placement after repeated palette mount and destroy cycles', () => {
+    for (let visit = 0; visit < 5; visit += 1) {
+      const handle = mountPalette(container, { tier: 1, dropTarget });
+      handle.destroy();
+    }
+
+    mountPalette(container, { tier: 1, dropTarget });
+    const handler = vi.fn();
+    dropTarget.addEventListener(PALETTE_DROP_EVENT, handler);
+    const dataTransfer = createDataTransferMock();
+    dataTransfer.setData(PALETTE_MIME_TYPE, 'app_server');
+
+    dropTarget.dispatchEvent(
+      createDragEvent('drop', {
+        dataTransfer,
+        clientX: 120,
+        clientY: 80,
+      }),
+    );
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes palette chrome and its locale listener when destroyed', () => {
+    const removeListener = vi.spyOn(window, 'removeEventListener');
+    const handle = mountPalette(container, { tier: 1, dropTarget });
+
+    handle.destroy();
+
+    expect(handle.root.isConnected).toBe(false);
+    expect(handle.fab.isConnected).toBe(false);
+    expect(handle.backdrop.isConnected).toBe(false);
+    expect(removeListener).toHaveBeenCalledWith(LOCALE_CHANGE_EVENT, expect.any(Function));
+    removeListener.mockRestore();
   });
 
   it('tap-to-add places a component on phone / coarse pointer', () => {
