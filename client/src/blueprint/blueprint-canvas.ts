@@ -35,6 +35,7 @@ export interface BlueprintCanvas {
   getGraph(): ArchitectureGraph;
   setGraph(graph: ArchitectureGraph): void;
   updateSimulation(partial: Partial<SimulationSettings>): void;
+  refreshPressures(): void;
   undo(): boolean;
   redo(): boolean;
   destroy(): void;
@@ -425,7 +426,15 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
 
   const applyPressures = (): void => {
     const sim = graph.simulation ?? DEFAULT_SIMULATION;
-    if (!sim.running) {
+    const gameState = getGameState();
+    const chaos =
+      gameState.activeChaosEvent != null
+        ? {
+            eventId: gameState.activeChaosEvent,
+            targetNodeId: gameState.chaosTargetNodeId ?? undefined,
+          }
+        : null;
+    if (!sim.running && !chaos) {
       lastPressures = null;
       lastLatencyMs = null;
       lastPressureReasons = null;
@@ -438,7 +447,7 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
       (state as GameStateWithPressure).pressureReasons = null;
       return;
     }
-    const result = evaluateSimulation(graph);
+    const result = evaluateSimulation(graph, chaos);
     lastPressures = result.nodes;
     lastLatencyMs = result.latencyMs;
     lastPressureReasons = result.reasons;
@@ -874,6 +883,9 @@ export function mountBlueprintCanvas(host: HTMLElement): BlueprintCanvas {
         },
       };
       persist({ recordHistory: true });
+    },
+    refreshPressures() {
+      applyPressures();
     },
     undo: () => performUndo(),
     redo: () => performRedo(),
