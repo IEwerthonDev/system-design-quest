@@ -22,36 +22,36 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `chaos-lab` merged + production |
-| **Próximo passo** | Pick next roadmap feature (post–chaos-lab) |
-| **Feature ativa** | (none — chaos-lab shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `design-mode-chrome` in progress |
+| **Próximo passo** | Full gate → Verify → PR → deploy |
+| **Feature ativa** | `design-mode-chrome` |
+| **Branch** | `feature/design-mode-chrome` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034·035·036·**037** |
-| **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 175 · server 153 · client 445) |
-| **Verify** | PASS — `.specs/features/chaos-lab/validation.md` |
-| **PR** | [#9](https://github.com/IEwerthonDev/system-design-quest/pull/9) squash-merged |
+| **Decisões** | AD-038 · AD-033/035/037 extended |
+| **Gate** | `nx run-many -t lint test --skip-nx-cache` |
+| **Verify** | pending |
+| **PR** | pending |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deploy** | `dpl_7cUm91WHq47Sme4xuTuZ3X1P1znh` READY · sha `e6bf195` |
 
-### Context Checkpoint (2026-07-29 chaos-lab ship)
+### Context Checkpoint (2026-07-29 design-mode-chrome)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — smoke + PR + merge + deploy |
-| Uncommitted | STATE handoff only |
-| Spec drift | GREEN — AD-037 on main |
-| Gate confidence | GREEN — Verify PASS + browser smoke FAILED |
-| Task clarity | GREEN — feature shipped |
+| Chat length | GREEN — fresh session on resume prompt |
+| Uncommitted | AMBER — implementing; commit per task |
+| Spec drift | GREEN — Speedrun stays chaos-free; Practice+Sandbox get full chrome |
+| Gate confidence | pending full gate |
+| Task clarity | GREEN — T1–T7 |
 
 **Veredito:** GREEN
 
-**Smoke:** Modo Estudo → App Server + SQL → Quick Chaos Instance Crash → `__GAME_STATE__.resilienceReport[0].verdict === FAILED`
+**Clarification (Speedrun vs AD-037):** Chaos Lab / Quick Chaos / Live Metrics remain **unavailable in Speedrun** (ranking fairness). “All design modes” = Sandbox + Practice (`study`).
 
 **Prompt para nova sessão:**
 ```
-Branch main. chaos-lab shipped (PR #9, prod dpl_7cUm91WHq47Sme4xuTuZ3X1P1znh).
-Read .specs/STATE.md Handoff + docs/ROADMAP.md for next feature.
+Branch feature/design-mode-chrome. Read .specs/STATE.md Handoff + .specs/features/design-mode-chrome/{spec,tasks}.md.
+Continue remaining tasks / Verify / PR / deploy if incomplete.
+Gate: nx run-many -t lint test --skip-nx-cache
 ```
 
 
@@ -120,11 +120,12 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-030 | active | **Config depth + detailBonus** — expanded ComponentConfig (rate limiter, gateway, object storage, search, auth, compute, worker, notification; deepen cache/SQL/NoSQL/MQ; kafka kind); Advanced toggle; structural detailBonus ≤15 when no blockers; LLM prompts reward trade-off detail | Extends AD-028/029; config-depth 1B·2B·3B·4A |
 | AD-031 | active | **Sim v2** — absolute workload fields on `SimulationSettings`; path-aware RPS mode when absolute set; traffic 1–5 back-compat; edge intent weights; topology findings via `analyzeTopology` | Extends AD-020; study-mode realism |
 | AD-032 | active | **Sandbox Study Mode** — `GameMode` += `sandbox`; `__sandbox__` sentinel problem; library CTA; skip briefing/requirements; Practice rename for problem `study` | Freeform lab; AD-005 extended |
-| AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
+| AD-033 | active (extended) | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; chrome in Sandbox **and** Practice (`study`); not Speedrun | Cost-controlled AI mentor; Study Mode FAB stack |
 | AD-034 | active | **Link validity + sim realism** — `assessConnectionPair` ok/warn/invalid; live preview colors; invalid blocked; warn yellow edges; findings always-on; async MQ write relief; primary write concentration; `QUEUE_BACKLOG` + `HOT_PARTITION` | Pedagogue canvas + interview-realistic bottlenecks without discrete-event sim |
-| AD-035 | active | **Sandbox Workload + Mentor FAB/drawer** — both panels collapsed by default on all viewports; FAB chip opens; collapse button + backdrop/outside click closes; opening one closes the other; Componentes palette stays independent (AD-023) | Canvas-first Study Mode; mirrors Componentes phone FAB pattern on desktop too |
+| AD-035 | active (extended) | **Workload + Mentor FAB/drawer** — collapsed by default; FAB opens; mutual exclusion with Chaos/Metrics; mounts in Sandbox **and** Practice; right-edge stack with Caos (AD-038) | Canvas-first design chrome |
 | AD-036 | active | **Cobertura de requisitos derivada do grafo** — `analyzeRequirementCoverage` classifica cada requisito em capabilities (write/read path, uniqueness, latency, throughput, availability, …) e avalia contra grafo + configs; LLM só pode **rebaixar** status (match por texto normalizado), nunca inventar `covered`; caminho estrutural usa o mesmo engine; itens de feedback string do LLM são coeridos para `FeedbackItem` sem `capability` | Tabela de cobertura era sempre `missing` no caminho LLM (match exato de string) e sempre `covered` no estrutural; AD-027 structural-first estendido ao relatório de requisitos |
-| AD-037 | active | **Chaos Lab efêmero** — Quick Chaos + Live Metrics + Resilience Report em Sandbox/Practice only (não Speedrun); uma falha ativa por vez; probes isolados vs baseline; estado em `__GAME_STATE__` apenas (nunca em `ArchitectureGraph`/sessions/judge payload); mobile FAB/drawer + exclusão mútua com Workload/Mentor | Playground parity without discrete-event sim; ranking fairness; AD-020/031/034 preserved |
+| AD-037 | active (clarified) | **Chaos Lab efêmero** — Quick Chaos + Live Metrics + Resilience Report in **design modes** (Sandbox + Practice); **not Speedrun** (ranking fairness); one active failure; probes isolated; state in `__GAME_STATE__` only | Playground parity; ranking fairness preserved |
+| AD-038 | active | **Right-edge FAB stack** — CSS vars `--sdq-fab-stack-*`; bottom→top slots: Carga(0), Mentor(1), Caos(2), Metrics(3); gap 8px; inset 12px; ≥44px targets + safe-area | Study Mode minimized chrome; desktop + mobile |
 
 ---
 

@@ -45,11 +45,14 @@ function injectStyles(): void {
       align-items: center;
       gap: 8px;
       position: fixed;
-      right: 12px;
-      bottom: calc(128px + env(safe-area-inset-bottom, 0px));
+      right: var(--sdq-fab-stack-inset, 12px);
+      bottom: calc(
+        var(--sdq-fab-stack-base, calc(16px + env(safe-area-inset-bottom, 0px))) +
+          2 * (var(--sdq-fab-stack-size, 44px) + var(--sdq-fab-stack-gap, 8px))
+      );
       z-index: 19;
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--sdq-fab-stack-size, 44px);
+      min-width: var(--sdq-fab-stack-size, 44px);
       padding: 10px 14px;
       border-radius: var(--sdq-radius, 10px);
       border: 1px solid var(--sdq-accent-border, rgba(201,169,98,0.35));
@@ -64,12 +67,13 @@ function injectStyles(): void {
     .sdq-chaos-lab-fab[hidden] { display: none !important; }
     .sdq-chaos-lab {
       position: absolute;
-      right: 12px;
+      right: var(--sdq-fab-stack-inset, 12px);
       top: 72px;
       z-index: 23;
       width: min(420px, calc(100vw - 24px));
       max-height: min(70vh, 640px);
       overflow: auto;
+      overscroll-behavior: contain;
       background: var(--sdq-bg-elevated);
       border: 1px solid var(--sdq-border);
       border-radius: 12px;
@@ -150,6 +154,9 @@ function injectStyles(): void {
         max-height: min(70vh, 640px);
       }
       .sdq-chaos-lab__grid { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sdq-chaos-lab-backdrop { backdrop-filter: none; }
     }
   `;
   document.head.append(style);
@@ -240,6 +247,7 @@ export function mountChaosLabPanel(
   const applyChrome = (): void => {
     title.textContent = t('chaos.labTitle');
     fab.textContent = t('chaos.fab');
+    fab.setAttribute('aria-label', t('chaos.fab'));
     collapse.setAttribute('aria-label', t('chaos.collapse'));
     blurb.textContent = t('chaos.blurb');
     fab.hidden = !visible;

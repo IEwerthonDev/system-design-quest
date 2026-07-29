@@ -28,6 +28,12 @@
   --sdq-edge-stroke: rgba(255, 255, 255, 0.55);
   --sdq-hover-bg: #222226;
   --sdq-problem-tab-width: 32px;
+  /* Right-edge design FAB stack (AD-038): bottom→top slots 0=Carga, 1=Mentor, 2=Caos, 3=Metrics
+     bottom(N) = calc(var(--sdq-fab-stack-base) + N * (var(--sdq-fab-stack-size) + var(--sdq-fab-stack-gap))) */
+  --sdq-fab-stack-inset: 12px;
+  --sdq-fab-stack-gap: 8px;
+  --sdq-fab-stack-size: 44px;
+  --sdq-fab-stack-base: calc(16px + env(safe-area-inset-bottom, 0px));
 }
 
 html,

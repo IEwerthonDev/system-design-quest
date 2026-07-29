@@ -51,10 +51,14 @@ function injectStyles(): void {
       align-items: center;
       gap: 8px;
       position: fixed;
-      right: 12px;
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      right: var(--sdq-fab-stack-inset, 12px);
+      bottom: calc(
+        var(--sdq-fab-stack-base, calc(16px + env(safe-area-inset-bottom, 0px))) +
+          1 * (var(--sdq-fab-stack-size, 44px) + var(--sdq-fab-stack-gap, 8px))
+      );
       z-index: 19;
-      min-height: 44px;
+      min-height: var(--sdq-fab-stack-size, 44px);
+      min-width: var(--sdq-fab-stack-size, 44px);
       padding: 10px 14px;
       border-radius: var(--sdq-radius, 10px);
       border: 1px solid var(--sdq-accent-border, rgba(201,169,98,0.35));
@@ -69,10 +73,13 @@ function injectStyles(): void {
     .sdq-mentor-fab[hidden] { display: none !important; }
     .sdq-mentor {
       position: absolute;
-      right: 12px;
-      bottom: calc(72px + env(safe-area-inset-bottom));
+      right: var(--sdq-fab-stack-inset, 12px);
+      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
       z-index: 22;
       width: min(360px, calc(100vw - 24px));
+      max-height: min(55vh, 480px);
+      overflow: auto;
+      overscroll-behavior: contain;
       background: var(--sdq-bg-elevated);
       border: 1px solid var(--sdq-border);
       border-radius: 12px;
@@ -108,10 +115,15 @@ function injectStyles(): void {
       background: var(--sdq-bg);
       color: var(--sdq-text);
       border-radius: 6px;
-      min-width: 32px;
-      min-height: 32px;
+      min-width: 44px;
+      min-height: 44px;
       cursor: pointer;
+      touch-action: manipulation;
       font: inherit;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sdq-mentor-backdrop { backdrop-filter: none; }
+      .sdq-mentor--collapsed { transform: none; }
     }
     .sdq-mentor__actions {
       display: flex;
@@ -139,6 +151,7 @@ function injectStyles(): void {
       line-height: 1.4;
       max-height: 220px;
       overflow: auto;
+      overscroll-behavior: contain;
       margin: 0;
       padding: 8px;
       border-radius: 8px;

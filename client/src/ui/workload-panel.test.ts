@@ -33,6 +33,17 @@ describe('workload-panel', () => {
     panel.destroy();
   });
 
+  it('stacks Carga FAB on the right edge slot 0 with guideline polish', () => {
+    const panel = mount();
+    const css = document.getElementById('sdq-workload-styles')?.textContent ?? '';
+    expect(css).toMatch(/\.sdq-workload-fab[\s\S]*right:\s*var\(--sdq-fab-stack-inset/);
+    expect(css).not.toMatch(/\.sdq-workload-fab[\s\S]*left:\s*12px/);
+    expect(css).toContain('0 * (var(--sdq-fab-stack-size');
+    expect(css).toContain('overscroll-behavior: contain');
+    expect(css).toContain('prefers-reduced-motion: reduce');
+    panel.destroy();
+  });
+
   it('opens via FAB and closes via collapse and backdrop', () => {
     const panel = mount();
     panel.fab.click();

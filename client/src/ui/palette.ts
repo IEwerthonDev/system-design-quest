@@ -120,6 +120,7 @@ function injectPaletteStyles(root: HTMLElement): void {
       width: 220px;
       height: 100%;
       overflow-y: auto;
+      overscroll-behavior: contain;
       background: var(--sdq-bg-elevated, #141416);
       border-right: 1px solid var(--sdq-border, rgba(255,255,255,0.08));
       color: var(--sdq-text, #f4f4f5);

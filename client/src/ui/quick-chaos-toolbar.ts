@@ -42,6 +42,7 @@ function injectStyles(): void {
       flex-wrap: nowrap;
       gap: 6px;
       overflow-x: auto;
+      overscroll-behavior-x: contain;
       -webkit-overflow-scrolling: touch;
       padding-bottom: 2px;
     }

@@ -412,6 +412,7 @@ export function mountPhaseNavigation(
   let quickChaos: ReturnType<typeof mountQuickChaosToolbar> | null = null;
 
   const chaosEnabled = mode !== 'speedrun';
+  const designChrome = mode !== 'speedrun';
 
   const resolveSloTargets = (): SloTargets => {
     const sim = getGraph().simulation;
@@ -530,7 +531,7 @@ export function mountPhaseNavigation(
 
   const problemDrawer = isSandbox ? null : mountProblemDrawer(shell, problem);
 
-  workloadPanel = isSandbox
+  workloadPanel = designChrome
     ? mountWorkloadPanel(shell, {
         getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
         onChange: applySimPartial,
@@ -538,7 +539,7 @@ export function mountPhaseNavigation(
       })
     : null;
 
-  mentorPanel = isSandbox
+  mentorPanel = designChrome
     ? mountMentorPanel(shell, {
         getFindings: () => latestFindings,
         onOpen: () => closeOverlaysExcept('mentor'),

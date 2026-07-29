@@ -707,5 +707,63 @@ describe('phase navigation', () => {
       expect(list).toBeTruthy();
       expect(list!.textContent).toMatch(/SPOF|BOTTLENECK|SINGLE_PRIMARY|MISSING/i);
     });
+
+    it('mounts Carga/Mentor/Chaos/Metrics chrome in Practice study canvas', () => {
+      mountPhaseNavigation(container, { mode: 'study' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      expect(getSession()?.phase).toBe('canvas');
+      expect(container.querySelector('[data-testid="workload-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="mentor-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="chaos-lab-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="live-metrics-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="quick-chaos-toolbar"]')).toBeTruthy();
+    });
+
+    it('mounts design chrome in sandbox canvas', () => {
+      mountPhaseNavigation(container, { mode: 'sandbox', problemId: '__sandbox__' });
+      expect(getSession()?.phase).toBe('canvas');
+      expect(container.querySelector('[data-testid="workload-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="mentor-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="chaos-lab-fab"]')).toBeTruthy();
+      expect(container.querySelector('[data-testid="live-metrics-fab"]')).toBeTruthy();
+    });
+
+    it('does not mount design chrome FABs in speedrun', () => {
+      mountPhaseNavigation(container, { mode: 'speedrun' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      expect(getSession()?.phase).toBe('canvas');
+      expect(container.querySelector('[data-testid="workload-fab"]')).toBeNull();
+      expect(container.querySelector('[data-testid="mentor-fab"]')).toBeNull();
+      expect(container.querySelector('[data-testid="chaos-lab-fab"]')).toBeNull();
+      expect(container.querySelector('[data-testid="live-metrics-fab"]')).toBeNull();
+      expect(container.querySelector('[data-testid="quick-chaos-toolbar"]')).toBeNull();
+    });
+
+    it('closes other design drawers when Chaos Lab opens in Practice', () => {
+      mountPhaseNavigation(container, { mode: 'study' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      const workloadFab = container.querySelector<HTMLButtonElement>('[data-testid="workload-fab"]')!;
+      const chaosFab = container.querySelector<HTMLButtonElement>('[data-testid="chaos-lab-fab"]')!;
+      workloadFab.click();
+      expect(
+        container.querySelector('[data-testid="workload-panel"]')?.classList.contains(
+          'sdq-workload--collapsed',
+        ),
+      ).toBe(false);
+      chaosFab.click();
+      expect(
+        container.querySelector('[data-testid="chaos-lab-panel"]')?.classList.contains(
+          'sdq-chaos-lab--collapsed',
+        ),
+      ).toBe(false);
+      expect(
+        container.querySelector('[data-testid="workload-panel"]')?.classList.contains(
+          'sdq-workload--collapsed',
+        ),
+      ).toBe(true);
+    });
   });
 });
