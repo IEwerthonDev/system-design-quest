@@ -73,6 +73,7 @@ export interface PaletteHandle {
   toggle(): void;
   isOpen(): boolean;
   setVisible(visible: boolean): void;
+  destroy(): void;
 }
 
 export function resolvePaletteDropTarget(explicit?: HTMLElement): HTMLElement | null {
@@ -434,9 +435,9 @@ export function mountPalette(
 
   container.append(backdrop, fab, palette);
 
-  if (options.dropTarget) {
-    attachDropTarget(options.dropTarget);
-  }
+  const detachDropTarget = options.dropTarget
+    ? attachDropTarget(options.dropTarget)
+    : () => undefined;
 
   if (isPhoneLayout()) {
     closeDrawer();
@@ -457,6 +458,15 @@ export function mountPalette(
       if (!visible) {
         closeDrawer();
       }
+    },
+    destroy() {
+      detachDropTarget();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(LOCALE_CHANGE_EVENT, onLocaleChange);
+      }
+      backdrop.remove();
+      fab.remove();
+      palette.remove();
     },
   };
 }

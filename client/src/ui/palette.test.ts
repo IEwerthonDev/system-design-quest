@@ -141,6 +141,29 @@ describe('component palette', () => {
     expect(event.detail.clientY).toBe(80);
   });
 
+  it('dispatches one placement after repeated palette mount and destroy cycles', () => {
+    for (let visit = 0; visit < 5; visit += 1) {
+      const handle = mountPalette(container, { tier: 1, dropTarget });
+      handle.destroy();
+    }
+
+    mountPalette(container, { tier: 1, dropTarget });
+    const handler = vi.fn();
+    dropTarget.addEventListener(PALETTE_DROP_EVENT, handler);
+    const dataTransfer = createDataTransferMock();
+    dataTransfer.setData(PALETTE_MIME_TYPE, 'app_server');
+
+    dropTarget.dispatchEvent(
+      createDragEvent('drop', {
+        dataTransfer,
+        clientX: 120,
+        clientY: 80,
+      }),
+    );
+
+    expect(handler).toHaveBeenCalledTimes(1);
+  });
+
   it('tap-to-add places a component on phone / coarse pointer', () => {
     Object.defineProperty(window, 'innerWidth', { configurable: true, value: 390 });
     const matchMedia = vi.fn().mockImplementation((query: string) => ({
