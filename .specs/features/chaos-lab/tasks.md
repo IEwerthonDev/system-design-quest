@@ -5,7 +5,7 @@
 Implement these tasks with the `tlc-spec-driven` skill: **activate it by name and follow its Execute flow and Critical Rules.**
 
 **Design**: `.specs/features/chaos-lab/design.md`  
-**Status**: Approved → In Progress
+**Status**: Done
 
 ---
 
