@@ -22,35 +22,35 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `quick-chaos-in-drawer` shipped |
+| **Fase atual** | `palette-drop-lifecycle` bug fix shipped |
 | **Próximo passo** | Pick next roadmap feature |
 | **Feature ativa** | (none) |
 | **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035·036·037·038·**039** |
-| **Gate** | `nx run-many -t lint test --skip-nx-cache` green |
-| **Verify** | PASS — `.specs/features/design-mode-chrome/validation.md` (AD-039 = follow-up small change, gate green) |
-| **PR** | [#10](https://github.com/IEwerthonDev/system-design-quest/pull/10) · [#11](https://github.com/IEwerthonDev/system-design-quest/pull/11) squash-merged |
+| **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 175 · client 456 · server 153) |
+| **Verify** | PASS — `.specs/features/palette-drop-lifecycle/validation.md`; 2/2 mutants killed |
+| **PR** | [#12](https://github.com/IEwerthonDev/system-design-quest/pull/12) squash-merged |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deploy** | `dpl_AGmxXQWAV4d5P7PZPhHDfburU3Ss` READY · sha `28e8606` |
+| **Deploy** | `dpl_AB5y6VZWQkSnfvPFwbeFZjZs6DPa` READY · sha `23be062` |
 
-### Context Checkpoint (2026-07-29 design-mode-chrome ship)
+### Context Checkpoint (2026-07-29 palette drop fix)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — specify→implement→verify→ship |
+| Chat length | GREEN — one isolated bug fix |
 | Uncommitted | STATE handoff only |
-| Spec drift | GREEN — Speedrun excluded; Practice+Sandbox full chrome |
-| Gate confidence | GREEN — Verify PASS + prod READY |
-| Task clarity | GREEN — feature shipped |
+| Spec drift | GREEN — fix matches persistent-canvas lifecycle |
+| Gate confidence | GREEN — red/green + full gate + Verify PASS + prod READY |
+| Task clarity | GREEN — bug fixed and shipped |
 
 **Veredito:** GREEN
 
-**Clarification:** Speedrun stays without Chaos/Metrics/Carga/Mentor (AD-037). Design modes = Sandbox + Practice.
+**Root cause:** `mountPalette()` leaked one native canvas `drop` listener per session visit. Palette teardown now detaches the listener and removes palette chrome/locale subscriptions.
 
 **Prompt para nova sessão:**
 ```
-Branch main. design-mode-chrome shipped (PR #10, prod dpl_6f5nPHoWJJtHGLnJfsJXAuP77zmL).
+Branch main. palette-drop-lifecycle shipped (PR #12, prod dpl_AB5y6VZWQkSnfvPFwbeFZjZs6DPa).
 Read .specs/STATE.md Handoff + docs/ROADMAP.md for next feature.
 ```
 
