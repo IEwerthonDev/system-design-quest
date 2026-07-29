@@ -7,6 +7,7 @@ import {
   PALETTE_MIME_TYPE,
   PALETTE_CATEGORY_LABELS,
 } from './palette';
+import { LOCALE_CHANGE_EVENT } from '../i18n/locale';
 
 /** jsdom lacks DragEvent — minimal event with dataTransfer + coordinates */
 function createDragEvent(
@@ -162,6 +163,19 @@ describe('component palette', () => {
     );
 
     expect(handler).toHaveBeenCalledTimes(1);
+  });
+
+  it('removes palette chrome and its locale listener when destroyed', () => {
+    const removeListener = vi.spyOn(window, 'removeEventListener');
+    const handle = mountPalette(container, { tier: 1, dropTarget });
+
+    handle.destroy();
+
+    expect(handle.root.isConnected).toBe(false);
+    expect(handle.fab.isConnected).toBe(false);
+    expect(handle.backdrop.isConnected).toBe(false);
+    expect(removeListener).toHaveBeenCalledWith(LOCALE_CHANGE_EVENT, expect.any(Function));
+    removeListener.mockRestore();
   });
 
   it('tap-to-add places a component on phone / coarse pointer', () => {
