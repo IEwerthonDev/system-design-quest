@@ -146,9 +146,14 @@ describe('chaos lab UI panels', () => {
 
     expect(refs.chaos.fab.clientHeight >= 0).toBe(true);
     const fabStyle = document.getElementById('sdq-chaos-lab-styles')?.textContent ?? '';
-    expect(fabStyle).toContain('min-height: 44px');
+    expect(fabStyle).toContain('2 * (var(--sdq-fab-stack-size');
+    expect(fabStyle).toContain('overscroll-behavior: contain');
+    expect(fabStyle).toMatch(/min-height:\s*var\(--sdq-fab-stack-size,\s*44px\)|min-height:\s*44px/);
     const metricsStyle = document.getElementById('sdq-live-metrics-styles')?.textContent ?? '';
-    expect(metricsStyle).toContain('min-height: 44px');
+    expect(metricsStyle).toContain('3 * (var(--sdq-fab-stack-size');
+    expect(metricsStyle).toContain('font-variant-numeric: tabular-nums');
+    expect(metricsStyle).toContain('overscroll-behavior: contain');
+    expect(metricsStyle).toMatch(/min-height:\s*var\(--sdq-fab-stack-size,\s*44px\)|min-height:\s*44px/);
 
     refs.workload.destroy();
     refs.mentor.destroy();

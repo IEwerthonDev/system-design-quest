@@ -37,11 +37,14 @@ function injectStyles(): void {
       align-items: center;
       gap: 8px;
       position: fixed;
-      right: 12px;
-      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      right: var(--sdq-fab-stack-inset, 12px);
+      bottom: calc(
+        var(--sdq-fab-stack-base, calc(16px + env(safe-area-inset-bottom, 0px))) +
+          3 * (var(--sdq-fab-stack-size, 44px) + var(--sdq-fab-stack-gap, 8px))
+      );
       z-index: 19;
-      min-height: 44px;
-      min-width: 44px;
+      min-height: var(--sdq-fab-stack-size, 44px);
+      min-width: var(--sdq-fab-stack-size, 44px);
       padding: 10px 14px;
       border-radius: var(--sdq-radius, 10px);
       border: 1px solid var(--sdq-accent-border, rgba(201,169,98,0.35));
@@ -56,12 +59,13 @@ function injectStyles(): void {
     .sdq-live-metrics-fab[hidden] { display: none !important; }
     .sdq-live-metrics {
       position: absolute;
-      right: 12px;
+      right: var(--sdq-fab-stack-inset, 12px);
       top: 72px;
       z-index: 22;
       width: min(300px, calc(100vw - 24px));
       max-height: min(55vh, 480px);
       overflow: auto;
+      overscroll-behavior: contain;
       background: var(--sdq-bg-elevated);
       border: 1px solid var(--sdq-border);
       border-radius: 12px;
@@ -110,7 +114,10 @@ function injectStyles(): void {
       line-height: 1.35;
     }
     .sdq-live-metrics__label { color: var(--sdq-text-subtle); }
-    .sdq-live-metrics__value { font-weight: 700; }
+    .sdq-live-metrics__value {
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
     .sdq-live-metrics__slo {
       margin-top: 8px;
       padding-top: 8px;
@@ -144,6 +151,9 @@ function injectStyles(): void {
         max-height: min(60vh, 520px);
         width: min(100vw - 24px, 100%);
       }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sdq-live-metrics-backdrop { backdrop-filter: none; }
     }
   `;
   document.head.append(style);
@@ -199,6 +209,7 @@ export function mountLiveMetricsPanel(
     const locale = getLocale();
     title.textContent = t('metrics.title');
     fab.textContent = t('metrics.fab');
+    fab.setAttribute('aria-label', t('metrics.fab'));
     collapse.setAttribute('aria-label', t('metrics.collapse'));
     fab.hidden = !visible;
     root.hidden = !visible || !openState;
