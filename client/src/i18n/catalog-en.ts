@@ -183,7 +183,36 @@ export type UiStringKey =
   | 'mentor.bottlenecks'
   | 'mentor.improve'
   | 'mentor.missing'
-  | 'mentor.error';
+  | 'mentor.error'
+  | 'metrics.title'
+  | 'metrics.fab'
+  | 'metrics.collapse'
+  | 'metrics.empty'
+  | 'metrics.totalRps'
+  | 'metrics.avgLatency'
+  | 'metrics.p95p99'
+  | 'metrics.errorRate'
+  | 'metrics.availability'
+  | 'metrics.budgetBurn'
+  | 'metrics.slos'
+  | 'metrics.met'
+  | 'metrics.missed'
+  | 'metrics.hottest'
+  | 'metrics.activeFailing'
+  | 'chaos.quickTitle'
+  | 'chaos.clear'
+  | 'chaos.labTitle'
+  | 'chaos.fab'
+  | 'chaos.collapse'
+  | 'chaos.blurb'
+  | 'chaos.infra'
+  | 'chaos.network'
+  | 'chaos.reportTitle'
+  | 'chaos.reportEmpty'
+  | 'chaos.colEvent'
+  | 'chaos.colMetrics'
+  | 'chaos.colStatus'
+  | 'chaos.replicaTip';
 
 export type UiCatalog = Record<UiStringKey, string>;
 
@@ -378,6 +407,37 @@ export const CATALOG_EN: UiCatalog = {
   'mentor.improve': 'How to improve?',
   'mentor.missing': 'Am I missing something?',
   'mentor.error': 'Mentor error',
+  'metrics.title': 'Live Metrics',
+  'metrics.fab': 'METRICS',
+  'metrics.collapse': 'Minimize metrics',
+  'metrics.empty': 'Start the simulation or add components to see live metrics.',
+  'metrics.totalRps': 'Total RPS',
+  'metrics.avgLatency': 'Avg latency',
+  'metrics.p95p99': 'p95 / p99',
+  'metrics.errorRate': 'Error rate',
+  'metrics.availability': 'Availability',
+  'metrics.budgetBurn': 'Budget burn',
+  'metrics.slos': 'Problem SLOs',
+  'metrics.met': 'met',
+  'metrics.missed': 'missed',
+  'metrics.hottest': 'Hottest',
+  'metrics.activeFailing': 'Active / failing',
+  'chaos.quickTitle': 'Quick Chaos',
+  'chaos.clear': 'Clear',
+  'chaos.labTitle': 'Chaos Lab',
+  'chaos.fab': 'CHAOS',
+  'chaos.collapse': 'Minimize chaos lab',
+  'chaos.blurb':
+    'Inject failures into your design. Targeted failures apply to the bottleneck node. Global events affect everything.',
+  'chaos.infra': 'Infrastructure Failures',
+  'chaos.network': 'Network Chaos',
+  'chaos.reportTitle': 'Resilience Report',
+  'chaos.reportEmpty': 'Run a chaos event to populate the resilience report.',
+  'chaos.colEvent': 'Event',
+  'chaos.colMetrics': 'Metrics',
+  'chaos.colStatus': 'Status',
+  'chaos.replicaTip':
+    'Database replicas add read capacity only; writes stay bound to the single primary.',
 };
 
 export type { Locale };
