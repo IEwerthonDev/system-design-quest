@@ -1,4 +1,10 @@
-import type { ArchitectureGraph, JudgeResult } from '@sdq/shared';
+import type {
+  ArchitectureGraph,
+  ChaosEventId,
+  JudgeResult,
+  LiveMetrics,
+  ResilienceResult,
+} from '@sdq/shared';
 import type { ExperienceLevel } from './storage/preferences';
 
 export type GamePhase = 'briefing' | 'requirements' | 'canvas' | 'result';
@@ -30,6 +36,11 @@ export interface GameState {
     previewActive: boolean;
     reconnectEnd: 'from' | 'to' | null;
   } | null;
+  /** Ephemeral chaos (AD-037) — never persisted on ArchitectureGraph */
+  activeChaosEvent: ChaosEventId | null;
+  chaosTargetNodeId: string | null;
+  liveMetrics: LiveMetrics | null;
+  resilienceReport: ResilienceResult[];
 }
 
 declare global {
@@ -55,6 +66,10 @@ const initialState: GameState = {
   judgingStep: null,
   elapsedMs: null,
   canvasInteraction: null,
+  activeChaosEvent: null,
+  chaosTargetNodeId: null,
+  liveMetrics: null,
+  resilienceReport: [],
 };
 
 export function initGameState(overrides?: Partial<GameState>): GameState {
@@ -69,6 +84,10 @@ export function initGameState(overrides?: Partial<GameState>): GameState {
     judgingStep: null,
     elapsedMs: null,
     canvasInteraction: null,
+    activeChaosEvent: null,
+    chaosTargetNodeId: null,
+    liveMetrics: null,
+    resilienceReport: [],
     ...overrides,
   };
   return window.__GAME_STATE__;
@@ -129,4 +148,29 @@ export function setCanvasInteraction(
         reconnectEnd: state.reconnectEnd,
       }
     : null;
+}
+
+export function setActiveChaos(
+  eventId: GameState['activeChaosEvent'],
+  targetNodeId: string | null = null,
+): void {
+  const state = getGameState();
+  state.activeChaosEvent = eventId;
+  state.chaosTargetNodeId = eventId ? targetNodeId : null;
+}
+
+export function setLiveMetrics(metrics: GameState['liveMetrics']): void {
+  getGameState().liveMetrics = metrics ? { ...metrics, slo: metrics.slo.map((s) => ({ ...s })) } : null;
+}
+
+export function setResilienceReport(report: GameState['resilienceReport']): void {
+  getGameState().resilienceReport = report.map((r) => ({ ...r }));
+}
+
+export function appendResilienceResult(result: NonNullable<GameState['resilienceReport'][number]>): void {
+  getGameState().resilienceReport = [...getGameState().resilienceReport, { ...result }];
+}
+
+export function clearResilienceReport(): void {
+  getGameState().resilienceReport = [];
 }
