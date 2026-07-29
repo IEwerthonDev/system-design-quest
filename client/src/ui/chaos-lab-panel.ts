@@ -8,6 +8,8 @@ export interface ChaosLabPanel {
   root: HTMLElement;
   fab: HTMLButtonElement;
   backdrop: HTMLElement;
+  /** Host for the Quick Chaos chips, rendered as the drawer's first section. */
+  quickSlot: HTMLElement;
   sync(state: {
     report: ResilienceResult[];
     activeEvent: ChaosEventId | null;
@@ -115,6 +117,14 @@ function injectStyles(): void {
       color: var(--sdq-text-subtle);
       line-height: 1.35;
     }
+    .sdq-chaos-lab__quick .sdq-quick-chaos {
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      padding: 0;
+      max-width: 100%;
+      margin-bottom: 4px;
+    }
     .sdq-chaos-lab__section-title {
       margin: 12px 0 6px;
       font: 700 10px var(--sdq-font-mono);
@@ -201,10 +211,14 @@ export function mountChaosLabPanel(
   blurb.className = 'sdq-chaos-lab__blurb';
   blurb.setAttribute('data-testid', 'chaos-lab-blurb');
 
+  const quickHost = document.createElement('div');
+  quickHost.className = 'sdq-chaos-lab__quick';
+  quickHost.setAttribute('data-testid', 'chaos-lab-quick-slot');
+
   const reportHost = document.createElement('div');
   const catalogHost = document.createElement('div');
 
-  root.append(header, blurb, reportHost, catalogHost);
+  root.append(header, blurb, quickHost, reportHost, catalogHost);
   parent.append(backdrop, fab, root);
 
   const report = mountResilienceReport(reportHost, {
@@ -279,6 +293,7 @@ export function mountChaosLabPanel(
     root,
     fab,
     backdrop,
+    quickSlot: quickHost,
     sync(state) {
       activeEvent = state.activeEvent;
       disabled = state.disabled;

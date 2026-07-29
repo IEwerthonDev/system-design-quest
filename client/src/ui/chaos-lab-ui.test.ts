@@ -72,6 +72,23 @@ describe('chaos lab UI panels', () => {
     toolbar.destroy();
   });
 
+  it('exposes a quick slot that hosts Quick Chaos as the drawer first section', () => {
+    host = document.createElement('div');
+    document.body.append(host);
+    const lab = mountChaosLabPanel(host, { onRun: vi.fn(), onClearReport: vi.fn() });
+    const toolbar = mountQuickChaosToolbar(lab.quickSlot, {
+      onToggle: vi.fn(),
+      onClear: vi.fn(),
+    });
+    expect(lab.root.contains(toolbar.root)).toBe(true);
+    const sections = Array.from(lab.root.children);
+    expect(sections.indexOf(lab.quickSlot)).toBeLessThan(
+      sections.findIndex((el) => el.querySelector('[data-testid="chaos-lab-infra"]') !== null),
+    );
+    toolbar.destroy();
+    lab.destroy();
+  });
+
   it('chaos lab runs catalog event and clears report', () => {
     host = document.createElement('div');
     document.body.append(host);
