@@ -22,35 +22,36 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `chaos-lab` implemented — Verify PASS |
-| **Próximo passo** | Smoke UI: Sandbox → Quick Chaos Instance Crash → Resilience Report FAILED; phone FAB exclusivity; then PR → main |
-| **Feature ativa** | `chaos-lab` |
-| **Branch** | `feature/chaos-lab` |
+| **Fase atual** | `chaos-lab` merged + production |
+| **Próximo passo** | Pick next roadmap feature (post–chaos-lab) |
+| **Feature ativa** | (none — chaos-lab shipped) |
+| **Branch** | `main` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035·036·**037** |
 | **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 175 · server 153 · client 445) |
 | **Verify** | PASS — `.specs/features/chaos-lab/validation.md` |
-| **PR** | (pending) |
+| **PR** | [#9](https://github.com/IEwerthonDev/system-design-quest/pull/9) squash-merged |
 | **Production URL** | https://system-design-quest.vercel.app |
+| **Deploy** | `dpl_7cUm91WHq47Sme4xuTuZ3X1P1znh` READY · sha `e6bf195` |
 
-### Context Checkpoint (2026-07-29 chaos-lab)
+### Context Checkpoint (2026-07-29 chaos-lab ship)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — single feature execution |
-| Uncommitted | check after commits |
-| Spec drift | GREEN — AD-037 + chaos-lab specs |
-| Gate confidence | GREEN — full lint+test |
-| Task clarity | GREEN — T1–T12 done |
+| Chat length | GREEN — smoke + PR + merge + deploy |
+| Uncommitted | STATE handoff only |
+| Spec drift | GREEN — AD-037 on main |
+| Gate confidence | GREEN — Verify PASS + browser smoke FAILED |
+| Task clarity | GREEN — feature shipped |
 
 **Veredito:** GREEN
 
+**Smoke:** Modo Estudo → App Server + SQL → Quick Chaos Instance Crash → `__GAME_STATE__.resilienceReport[0].verdict === FAILED`
+
 **Prompt para nova sessão:**
 ```
-Branch feature/chaos-lab. Chaos Lab T1–T12 done, Verify PASS.
-Read .specs/STATE.md Handoff + .specs/features/chaos-lab/validation.md.
-Smoke Sandbox Quick Chaos + Live Metrics on phone; open PR to main when ready.
-Gate: nx run-many -t lint test
+Branch main. chaos-lab shipped (PR #9, prod dpl_7cUm91WHq47Sme4xuTuZ3X1P1znh).
+Read .specs/STATE.md Handoff + docs/ROADMAP.md for next feature.
 ```
 
 
