@@ -149,6 +149,20 @@ Chat · News Feed · Search Autocomplete · Instagram · Google Drive · Yelp Ne
 
 ---
 
+## Side feature — Chaos Lab (`feature/chaos-lab`)
+
+**Objetivo:** Paridade Playground de falhas e métricas ao vivo (AD-037).
+
+| Entrega | Status |
+| ------- | ------ |
+| Quick Chaos (7) + modifiers determinísticos | Done |
+| Live Metrics + SLOs + hottest + tip | Done |
+| Chaos Lab catalog + Resilience Report | Done |
+| Mobile FAB/drawer exclusivity | Done |
+| Speedrun excluded; chaos ephemeral | Done |
+
+---
+
 ## Git Workflow
 
 ```

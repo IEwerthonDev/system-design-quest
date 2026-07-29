@@ -22,31 +22,36 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `requirement-coverage` shipped |
-| **Próximo passo** | Smoke UI: julgar encurtador no browser e conferir a tabela de cobertura |
-| **Feature ativa** | none (`requirement-coverage` shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `chaos-lab` implemented — Verify PASS |
+| **Próximo passo** | Smoke UI: Sandbox → Quick Chaos Instance Crash → Resilience Report FAILED; phone FAB exclusivity; then PR → main |
+| **Feature ativa** | `chaos-lab` |
+| **Branch** | `feature/chaos-lab` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034·035·**036** |
-| **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 157 · server 153 · client 440) |
-| **Verify** | PASS 22/22 ACs — `.specs/features/requirement-coverage/validation.md` |
-| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/8 (squash `e88949f`) |
+| **Decisões** | AD-031·032·033·034·035·036·**037** |
+| **Gate** | `nx run-many -t lint test --skip-nx-cache` green (shared 175 · server 153 · client 445) |
+| **Verify** | PASS — `.specs/features/chaos-lab/validation.md` |
+| **PR** | (pending) |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `system-design-quest-lqzr2su14` READY — probe do encurtador retorna 3 `covered` / 3 `partial` com explicações por capability |
 
-### Context Checkpoint (2026-07-29 requirement-coverage)
+### Context Checkpoint (2026-07-29 chaos-lab)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — sessão nova |
-| Uncommitted | GREEN — branch nova |
-| Spec drift | GREEN |
-| Gate confidence | GREEN — último ship verde |
-| Task clarity | GREEN — T1→T5 |
+| Chat length | GREEN — single feature execution |
+| Uncommitted | check after commits |
+| Spec drift | GREEN — AD-037 + chaos-lab specs |
+| Gate confidence | GREEN — full lint+test |
+| Task clarity | GREEN — T1–T12 done |
 
 **Veredito:** GREEN
 
-**Bug reproduzido em produção (2026-07-29):** grafo do encurtador com todos os must-haves → `PASS 85`, `structuralCodes: []`, e as 6 linhas de cobertura `missing`; LLM real devolve `strengths`/`criticalIssues` como strings.
+**Prompt para nova sessão:**
+```
+Branch feature/chaos-lab. Chaos Lab T1–T12 done, Verify PASS.
+Read .specs/STATE.md Handoff + .specs/features/chaos-lab/validation.md.
+Smoke Sandbox Quick Chaos + Live Metrics on phone; open PR to main when ready.
+Gate: nx run-many -t lint test
+```
 
 
 ### Deploy note (Hobby)
@@ -117,7 +122,8 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
 | AD-034 | active | **Link validity + sim realism** — `assessConnectionPair` ok/warn/invalid; live preview colors; invalid blocked; warn yellow edges; findings always-on; async MQ write relief; primary write concentration; `QUEUE_BACKLOG` + `HOT_PARTITION` | Pedagogue canvas + interview-realistic bottlenecks without discrete-event sim |
 | AD-035 | active | **Sandbox Workload + Mentor FAB/drawer** — both panels collapsed by default on all viewports; FAB chip opens; collapse button + backdrop/outside click closes; opening one closes the other; Componentes palette stays independent (AD-023) | Canvas-first Study Mode; mirrors Componentes phone FAB pattern on desktop too |
-| AD-036 | active | **Cobertura de requisitos derivada do grafo** — `analyzeRequirementCoverage` classifica cada requisito em capabilities (write/read path, uniqueness, latency, throughput, availability, …) e avalia contra grafo + configs; LLM só pode **rebaixar** status (match por texto normalizado), nunca inventar `covered`; caminho estrutural usa o mesmo engine; itens de feedback string do LLM são coeridos para `FeedbackItem` sem `severity` | Tabela de cobertura era sempre `missing` no caminho LLM (match exato de string) e sempre `covered` no estrutural; AD-027 structural-first estendido ao relatório de requisitos |
+| AD-036 | active | **Cobertura de requisitos derivada do grafo** — `analyzeRequirementCoverage` classifica cada requisito em capabilities (write/read path, uniqueness, latency, throughput, availability, …) e avalia contra grafo + configs; LLM só pode **rebaixar** status (match por texto normalizado), nunca inventar `covered`; caminho estrutural usa o mesmo engine; itens de feedback string do LLM são coeridos para `FeedbackItem` sem `capability` | Tabela de cobertura era sempre `missing` no caminho LLM (match exato de string) e sempre `covered` no estrutural; AD-027 structural-first estendido ao relatório de requisitos |
+| AD-037 | active | **Chaos Lab efêmero** — Quick Chaos + Live Metrics + Resilience Report em Sandbox/Practice only (não Speedrun); uma falha ativa por vez; probes isolados vs baseline; estado em `__GAME_STATE__` apenas (nunca em `ArchitectureGraph`/sessions/judge payload); mobile FAB/drawer + exclusão mútua com Workload/Mentor | Playground parity without discrete-event sim; ranking fairness; AD-020/031/034 preserved |
 
 ---
 
@@ -131,6 +137,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | 3 | `problem-library` | 27 problemas (7 Easy, 10 Medium, 10 Hard) |
 | 4 | `speedrun` | Timer, categorias, leaderboard | ✅ Done |
 | 5 | `polish` | UX, tutoriais, partículas, sons |
+| — | `chaos-lab` | Quick Chaos + Live Metrics + Resilience Report (AD-037) |
 | — | `canvas-graph-dnd` | Grafo Obsidian-style + luz direcional | ✅ Verify PASS |
 | — | `blueprint-2d-canvas` | Canvas 2D Playground + sim + configs | ✅ Merged (`4b8c87a`) |
 | — | `playground-parity` | Sim labels + judge sidebar + session history | ✅ Verify PASS (+ Voltar hotfix) |

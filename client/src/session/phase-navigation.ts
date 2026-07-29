@@ -2,17 +2,24 @@ import type { AuthMeResponse } from '@sdq/shared';
 import {
   analyzeTopology,
   DEFAULT_SIMULATION,
+  deriveLiveMetrics,
+  evaluateSimulation,
+  getChaosEvent,
   getProblem,
   normalizeGraph,
+  pickChaosTarget,
+  runResilienceProbe,
   SANDBOX_PROBLEM_ID,
   URL_SHORTENER_ID,
   verdictToSessionStatus,
 } from '@sdq/shared';
 import type {
   ArchitectureFinding,
+  ChaosEventId,
   DesignSessionRecord,
   DesignSessionStatus,
   DesignSessionUpsertInput,
+  SloTargets,
 } from '@sdq/shared';
 import type { submitForJudging } from '../judge/judge-api';
 import { fetchMe } from '../auth/auth-api';
@@ -26,7 +33,14 @@ import { getOrCreateNickname } from '../storage/nickname';
 import { submitLeaderboardScore } from '../leaderboard/leaderboard-api';
 import { SessionsApiError, upsertSession } from '../sessions/sessions-api';
 import type { GameMode, GamePhase } from '../test-hook';
-import { setGuidedStep } from '../test-hook';
+import {
+  appendResilienceResult,
+  clearResilienceReport,
+  getGameState,
+  setActiveChaos,
+  setGuidedStep,
+  setLiveMetrics,
+} from '../test-hook';
 import { mountBriefingPanel } from '../ui/briefing-panel';
 import { bindGlossaryShortcut, openGlossaryPanel } from '../ui/glossary';
 import { mountPalette } from '../ui/palette';
@@ -46,6 +60,9 @@ import { mountProblemDrawer } from '../ui/problem-drawer';
 import { mountFindingsPanel } from '../ui/findings-panel';
 import { mountWorkloadPanel } from '../ui/workload-panel';
 import { mountMentorPanel } from '../ui/mentor-panel';
+import { mountLiveMetricsPanel } from '../ui/live-metrics-panel';
+import { mountQuickChaosToolbar } from '../ui/quick-chaos-toolbar';
+import { mountChaosLabPanel } from '../ui/chaos-lab-panel';
 import { t } from '../i18n/t';
 import { shareDesign } from '../share/share-design';
 import { bindAbandonTracking, track } from '../analytics/track';
@@ -389,12 +406,105 @@ export function mountPhaseNavigation(
 
   const findingsPanel = mountFindingsPanel(shell);
   let workloadPanel: ReturnType<typeof mountWorkloadPanel> | null = null;
+  let mentorPanel: ReturnType<typeof mountMentorPanel> | null = null;
+  let liveMetricsPanel: ReturnType<typeof mountLiveMetricsPanel> | null = null;
+  let chaosLabPanel: ReturnType<typeof mountChaosLabPanel> | null = null;
+  let quickChaos: ReturnType<typeof mountQuickChaosToolbar> | null = null;
+
+  const chaosEnabled = mode !== 'speedrun';
+
+  const resolveSloTargets = (): SloTargets => {
+    const sim = getGraph().simulation;
+    const targets: SloTargets = {
+      availabilityTarget: sim?.targetAvailability ?? 99.9,
+    };
+    if (!isSandbox) {
+      const nf = problem.suggestedRequirements?.nonFunctional ?? [];
+      for (const line of nf) {
+        const m = line.match(/(\d+)\s*ms/i);
+        if (m && /p99|latency|respond/i.test(line)) {
+          targets.latencyP99TargetMs = Number(m[1]);
+          break;
+        }
+      }
+      for (const line of nf) {
+        const m = line.match(/(\d+(?:\.\d+)?)\s*%/);
+        if (m && /avail/i.test(line)) {
+          targets.availabilityTarget = Number(m[1]);
+          break;
+        }
+      }
+    }
+    return targets;
+  };
+
+  const refreshChaosChrome = (): void => {
+    const g = getGraph();
+    const state = getGameState();
+    const empty = g.nodes.length === 0;
+    quickChaos?.sync({
+      activeEvent: state.activeChaosEvent,
+      disabled: empty,
+    });
+    chaosLabPanel?.sync({
+      report: state.resilienceReport,
+      activeEvent: state.activeChaosEvent,
+      disabled: empty,
+    });
+  };
+
+  const refreshLiveMetrics = (): void => {
+    if (!chaosEnabled) return;
+    const g = getGraph();
+    const state = getGameState();
+    const chaos =
+      state.activeChaosEvent != null
+        ? { eventId: state.activeChaosEvent, targetNodeId: state.chaosTargetNodeId ?? undefined }
+        : null;
+    const evaluation = evaluateSimulation(g, chaos);
+    const metrics = deriveLiveMetrics(g, evaluation, resolveSloTargets());
+    setLiveMetrics(metrics);
+    liveMetricsPanel?.sync(metrics);
+  };
 
   const refreshFindings = (): void => {
     const g = getGraph();
     // Always evaluate topology (structural + pressure) so Study Mode mentor works without Start.
     latestFindings = analyzeTopology(g);
     findingsPanel.sync(latestFindings);
+    refreshLiveMetrics();
+    refreshChaosChrome();
+  };
+
+  const closeOverlaysExcept = (keep: 'workload' | 'mentor' | 'metrics' | 'chaos' | null): void => {
+    if (keep !== 'workload') workloadPanel?.close();
+    if (keep !== 'mentor') mentorPanel?.close();
+    if (keep !== 'metrics') liveMetricsPanel?.close();
+    if (keep !== 'chaos') chaosLabPanel?.close();
+  };
+
+  const applyChaosEvent = (eventId: ChaosEventId): void => {
+    const g = getGraph();
+    if (g.nodes.length === 0) return;
+    const def = getChaosEvent(eventId);
+    const baseline = evaluateSimulation(g, null);
+    const target =
+      def?.scope === 'targeted'
+        ? pickChaosTarget(g, getGameState().chaosTargetNodeId ?? undefined, baseline.nodes)
+        : null;
+    setActiveChaos(eventId, target);
+    const probe = runResilienceProbe(g, eventId, target, resolveSloTargets());
+    if (probe) {
+      appendResilienceResult(probe);
+    }
+    blueprint?.refreshPressures();
+    refreshFindings();
+  };
+
+  const clearActiveChaos = (): void => {
+    setActiveChaos(null);
+    blueprint?.refreshPressures();
+    refreshFindings();
   };
 
   const applySimPartial = (partial: Partial<import('@sdq/shared').SimulationSettings>): void => {
@@ -420,22 +530,46 @@ export function mountPhaseNavigation(
 
   const problemDrawer = isSandbox ? null : mountProblemDrawer(shell, problem);
 
-  let mentorPanel: ReturnType<typeof mountMentorPanel> | null = null;
-
   workloadPanel = isSandbox
     ? mountWorkloadPanel(shell, {
         getSettings: () => getGraph().simulation ?? { ...DEFAULT_SIMULATION },
         onChange: applySimPartial,
-        onOpen: () => mentorPanel?.close(),
+        onOpen: () => closeOverlaysExcept('workload'),
       })
     : null;
 
   mentorPanel = isSandbox
     ? mountMentorPanel(shell, {
         getFindings: () => latestFindings,
-        onOpen: () => workloadPanel?.close(),
+        onOpen: () => closeOverlaysExcept('mentor'),
       })
     : null;
+
+  if (chaosEnabled) {
+    liveMetricsPanel = mountLiveMetricsPanel(shell, {
+      onOpen: () => closeOverlaysExcept('metrics'),
+    });
+    chaosLabPanel = mountChaosLabPanel(shell, {
+      onRun: (eventId) => applyChaosEvent(eventId),
+      onClearReport: () => {
+        clearResilienceReport();
+        refreshChaosChrome();
+      },
+      onOpen: () => closeOverlaysExcept('chaos'),
+    });
+    quickChaos = mountQuickChaosToolbar(sessionHeader.controlsSlot, {
+      onToggle: (eventId) => {
+        if (getGameState().activeChaosEvent === eventId) {
+          clearActiveChaos();
+        } else {
+          applyChaosEvent(eventId);
+        }
+      },
+      onClear: () => clearActiveChaos(),
+    });
+    refreshLiveMetrics();
+    refreshChaosChrome();
+  }
 
   const glossaryPanel = openGlossaryPanel(isSandbox ? URL_SHORTENER_ID : problemId, shell);
   const unbindGlossaryShortcut = bindGlossaryShortcut(glossaryPanel);
@@ -579,6 +713,11 @@ export function mountPhaseNavigation(
     if (mentorPanel) {
       mentorPanel.setVisible(phase === 'canvas');
     }
+    liveMetricsPanel?.setVisible(phase === 'canvas');
+    chaosLabPanel?.setVisible(phase === 'canvas');
+    if (quickChaos) {
+      quickChaos.root.hidden = phase !== 'canvas';
+    }
     backButton.hidden = !visibility.showBack;
     placeBackButton(visibility.palette);
     sessionHeader.setVisible(phase === 'canvas');
@@ -670,6 +809,9 @@ export function mountPhaseNavigation(
       findingsPanel.destroy();
       workloadPanel?.destroy();
       mentorPanel?.destroy();
+      liveMetricsPanel?.destroy();
+      chaosLabPanel?.destroy();
+      quickChaos?.destroy();
       submitPanel?.root.remove();
       destroyConfirmModal();
     },

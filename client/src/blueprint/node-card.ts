@@ -167,8 +167,39 @@ function injectNodeCardStyles(): void {
       color: var(--sdq-accent);
       border-color: var(--sdq-accent-border);
     }
+    .sdq-node__tip {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      min-width: 28px;
+      min-height: 28px;
+      border-radius: 999px;
+      border: 1px solid var(--sdq-border-strong);
+      background: var(--sdq-bg-surface);
+      color: var(--sdq-accent);
+      cursor: pointer;
+      touch-action: manipulation;
+      font: 700 11px var(--sdq-font-mono);
+      padding: 0;
+    }
+    .sdq-node__tip-bubble {
+      position: absolute;
+      left: 8px;
+      right: 8px;
+      bottom: calc(100% + 6px);
+      z-index: 5;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--sdq-border);
+      background: #0b1220;
+      color: var(--sdq-text);
+      font-size: 10px;
+      line-height: 1.35;
+      box-shadow: var(--sdq-shadow);
+    }
     .sdq-node--selected .sdq-node__delete,
-    .sdq-node--selected .sdq-node__details {
+    .sdq-node--selected .sdq-node__details,
+    .sdq-node--selected .sdq-node__tip:not([hidden]) {
       display: inline-flex;
     }
   `;
@@ -242,9 +273,22 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   details.setAttribute('data-testid', `node-details-${node.id}`);
   details.innerHTML =
     '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h8"/><path d="M8 9h2"/></svg>';
-  footer.append(minus, repsLabel, plus, details, del);
+  const tipBtn = document.createElement('button');
+  tipBtn.type = 'button';
+  tipBtn.className = 'sdq-node__tip';
+  tipBtn.setAttribute('data-testid', `node-tip-${node.id}`);
+  tipBtn.textContent = 'i';
+  tipBtn.hidden = true;
 
-  root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, footer);
+  const tipBubble = document.createElement('div');
+  tipBubble.className = 'sdq-node__tip-bubble';
+  tipBubble.setAttribute('data-testid', `node-tip-bubble-${node.id}`);
+  tipBubble.setAttribute('role', 'status');
+  tipBubble.hidden = true;
+
+  footer.append(minus, repsLabel, plus, tipBtn, details, del);
+
+  root.append(handleIn, handleOut, body, loadLabel, loadReason, msBar, tipBubble, footer);
 
   let latestNode = node;
 
@@ -315,6 +359,13 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     } else {
       badgeEl.hidden = true;
     }
+    if (cfg?.kind === 'sql_db' || cfg?.kind === 'nosql_db' || n.type === 'sql_db' || n.type === 'nosql_db') {
+      tipBtn.hidden = false;
+      tipBubble.textContent = t('chaos.replicaTip');
+    } else {
+      tipBtn.hidden = true;
+      tipBubble.hidden = true;
+    }
   };
   sync(node);
 
@@ -330,7 +381,8 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
     if (
       t.closest('.sdq-node__rep-btn') ||
       t.closest('.sdq-node__delete') ||
-      t.closest('.sdq-node__details')
+      t.closest('.sdq-node__details') ||
+      t.closest('.sdq-node__tip')
     ) {
       return;
     }
@@ -365,6 +417,11 @@ export function createNodeCard(node: ComponentNode, callbacks: NodeCardCallbacks
   details.addEventListener('click', (ev) => {
     ev.stopPropagation();
     callbacks.onOpenDetails?.(node.id);
+  });
+  tipBtn.addEventListener('click', (ev) => {
+    ev.stopPropagation();
+    tipBubble.hidden = !tipBubble.hidden;
+    tipBubble.textContent = t('chaos.replicaTip');
   });
 
   return {

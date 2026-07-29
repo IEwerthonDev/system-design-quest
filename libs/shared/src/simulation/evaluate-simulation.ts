@@ -10,8 +10,11 @@ import {
   normalizeGraph,
   resolveIngressRps,
 } from '../schema/normalize-graph';
+import type { ChaosContext, ChaosEffects } from '../resilience/chaos-modifiers';
+import { resolveChaosEffects } from '../resilience/chaos-modifiers';
 
 export type { PressureLevel };
+export type { ChaosContext };
 
 export interface SimulationEvaluation {
   nodes: Record<string, PressureLevel>;
@@ -20,6 +23,13 @@ export interface SimulationEvaluation {
   hotReadPath: boolean;
   /** Effective ingress RPS used for this evaluation */
   ingressRps: number;
+  /** Pedagogical fraction 0–1 */
+  errorRate: number;
+  /** Pedagogical availability percent 0–100 */
+  availability: number;
+  avgLatencyMs: number;
+  p95LatencyMs: number;
+  p99LatencyMs: number;
 }
 
 const LATENCY_MS_BY_PRESSURE: Record<PressureLevel, number> = {
@@ -588,13 +598,101 @@ function avgCacheHitOf(normalized: ArchitectureGraph): number | null {
   return caches.reduce((sum, c) => sum + (hitRateOf(c) ?? 90), 0) / caches.length;
 }
 
+function applyChaosToGraph(
+  graph: ArchitectureGraph,
+  effects: ChaosEffects,
+): ArchitectureGraph {
+  const normalized = normalizeGraph(graph);
+  const sim = { ...(normalized.simulation as SimulationSettings) };
+  if (effects.ingressMultiplier !== 1) {
+    const m = effects.ingressMultiplier;
+    sim.traffic = Math.min(5, Math.max(1, Math.round(sim.traffic * Math.min(m, 5))));
+    if (sim.rps != null && sim.rps > 0) {
+      sim.rps = sim.rps * m;
+    }
+    if (sim.readRps != null && sim.readRps > 0) {
+      sim.readRps = sim.readRps * m;
+    }
+    if (sim.writeRps != null && sim.writeRps > 0) {
+      sim.writeRps = sim.writeRps * m;
+    }
+    if (!hasAbsoluteWorkload(sim) && m > 1) {
+      // Keep traffic-only mode but amplify via absolute RPS for surge clarity
+      sim.rps = resolveIngressRps(normalized.simulation as SimulationSettings) * m;
+    }
+  }
+  if (effects.latencyFloorMs > 0) {
+    sim.networkLatencyMs = Math.max(sim.networkLatencyMs ?? 0, effects.latencyFloorMs);
+  }
+
+  const nodes = normalized.nodes.map((node) => {
+    if (effects.hitRateOverride == null) {
+      return { ...node };
+    }
+    if (node.config?.kind === 'cache') {
+      return {
+        ...node,
+        config: { ...node.config, hitRate: effects.hitRateOverride },
+      };
+    }
+    if (node.config?.kind === 'cdn') {
+      return {
+        ...node,
+        config: { ...node.config, hitRate: effects.hitRateOverride },
+      };
+    }
+    return { ...node };
+  });
+
+  return { nodes, edges: normalized.edges.map((e) => ({ ...e })), simulation: sim };
+}
+
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) {
+    return 0;
+  }
+  const idx = Math.min(sorted.length - 1, Math.max(0, Math.ceil((p / 100) * sorted.length) - 1));
+  return sorted[idx]!;
+}
+
+function deriveAvailability(
+  nodes: Record<string, PressureLevel>,
+  effects: ChaosEffects | null,
+): { errorRate: number; availability: number } {
+  const levels = Object.values(nodes);
+  const hotCount = levels.filter((l) => l === 'hot').length;
+  const warnCount = levels.filter((l) => l === 'warn').length;
+  const n = Math.max(1, levels.length);
+  let errorRate = (hotCount * 0.08 + warnCount * 0.02) / n;
+  let availability = 100 - hotCount * 4 - warnCount * 1;
+  if (effects) {
+    errorRate = Math.max(errorRate, effects.errorRate);
+    availability = Math.min(availability, effects.availabilityCap);
+    availability = Math.min(availability, 100 * (1 - errorRate));
+  }
+  return {
+    errorRate: clamp(errorRate, 0, 1),
+    availability: clamp(availability, 0, 100),
+  };
+}
+
 /**
- * Deterministic educational simulation (AD-020 + AD-031).
+ * Deterministic educational simulation (AD-020 + AD-031 + AD-037 chaos).
  * Speed is intentionally ignored — visual-only on the client.
  * Absolute workload fields enable path-aware RPS mode; otherwise traffic 1–5 back-compat.
+ * Optional chaos is ephemeral and must not be persisted on the graph.
  */
-export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluation {
-  const normalized = normalizeGraph(graph);
+export function evaluateSimulation(
+  graph: ArchitectureGraph,
+  chaos?: ChaosContext | null,
+): SimulationEvaluation {
+  const baseNormalized = normalizeGraph(graph);
+  const effects =
+    chaos && baseNormalized.nodes.length > 0
+      ? resolveChaosEffects(baseNormalized, chaos)
+      : null;
+  const working = effects ? applyChaosToGraph(baseNormalized, effects) : baseNormalized;
+  const normalized = normalizeGraph(working);
   const sim = normalized.simulation as SimulationSettings;
   const absolute = hasAbsoluteWorkload(sim);
   const ingressRps = resolveIngressRps(sim);
@@ -613,15 +711,22 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
 
   for (const node of normalized.nodes) {
     const load = loadById[node.id] ?? 0;
-    const capacity = Math.max(0.001, nodeCapacity(node, absolute));
+    const capMult = effects?.capacityMultiplierByNode[node.id] ?? 1;
+    const capacity = Math.max(0.001, nodeCapacity(node, absolute) * capMult);
     const ratio = load / capacity;
     const level = pressureFromRatio(ratio);
     nodes[node.id] = level;
-    latencyMs[node.id] = LATENCY_MS_BY_PRESSURE[level];
+    let ms = LATENCY_MS_BY_PRESSURE[level];
+    if (effects && effects.latencyFloorMs > ms) {
+      ms = effects.latencyFloorMs;
+    }
+    latencyMs[node.id] = ms;
 
     const reason = buildPressureReason(node, level, ratio, traffic, avgCacheHit);
     if (reason) {
       reasons[node.id] = reason;
+    } else if (effects && capMult < 1 && level !== 'ok') {
+      reasons[node.id] = effects.reasonPt;
     }
 
     if (
@@ -645,11 +750,25 @@ export function evaluateSimulation(graph: ArchitectureGraph): SimulationEvaluati
     }
   }
 
+  const latencyValues = Object.values(latencyMs).sort((a, b) => a - b);
+  const avgLatencyMs =
+    latencyValues.length === 0
+      ? 0
+      : Math.round(latencyValues.reduce((s, v) => s + v, 0) / latencyValues.length);
+  const p95LatencyMs = percentile(latencyValues, 95);
+  const p99LatencyMs = percentile(latencyValues, 99);
+  const { errorRate, availability } = deriveAvailability(nodes, effects);
+
   return {
     nodes,
     latencyMs,
     reasons,
     hotReadPath: anyHotOnReadPath && readFrac >= 0.7,
     ingressRps,
+    errorRate,
+    availability,
+    avgLatencyMs,
+    p95LatencyMs,
+    p99LatencyMs,
   };
 }
