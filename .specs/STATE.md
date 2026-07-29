@@ -22,28 +22,31 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `sandbox-panel-drawers` shipped |
-| **Próximo passo** | Smoke UI: Study Mode → free canvas → CARGA/MENTOR FAB open/close |
-| **Feature ativa** | none (`sandbox-panel-drawers` shipped) |
-| **Branch** | `main` |
+| **Fase atual** | `requirement-coverage` — T1–T5 done, Verify |
+| **Próximo passo** | Verifier independente → PR → merge → `vercel --prod` + probe de produção |
+| **Feature ativa** | `requirement-coverage` |
+| **Branch** | `feature/requirement-coverage` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034·035 |
-| **Gate** | `nx run-many -t lint test` green pre-merge |
-| **PR** | https://github.com/IEwerthonDev/system-design-quest/pull/7 (squash `d973ac9`) |
+| **Decisões** | AD-031·032·033·034·035·**036** |
+| **Gate** | `nx run-many -t lint test` green (shared 155 · server 152 · client 440) |
+| **Commits** | `501b2fc` docs · `6d03084` engine · `82a2899` judge merge · `e4ef0a0` FeedbackItem |
+| **PR** | pending |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deployment** | `dpl_8cVp8EABw1PUMxWDuExq8VdpVaA4` READY |
+| **Deployment** | `dpl_8cVp8EABw1PUMxWDuExq8VdpVaA4` READY (pre-feature) |
 
-### Context Checkpoint (2026-07-28 sandbox-panel-drawers ship)
+### Context Checkpoint (2026-07-29 requirement-coverage)
 
 | Sinal | Status |
 | ----- | ------ |
-| Chat length | GREEN — feature shipped |
-| Uncommitted | docs commit |
+| Chat length | GREEN — sessão nova |
+| Uncommitted | GREEN — branch nova |
 | Spec drift | GREEN |
-| Gate confidence | GREEN |
-| Task clarity | GREEN — done |
+| Gate confidence | GREEN — último ship verde |
+| Task clarity | GREEN — T1→T5 |
 
-**Veredito:** GREEN — shipped
+**Veredito:** GREEN
+
+**Bug reproduzido em produção (2026-07-29):** grafo do encurtador com todos os must-haves → `PASS 85`, `structuralCodes: []`, e as 6 linhas de cobertura `missing`; LLM real devolve `strengths`/`criticalIssues` como strings.
 
 
 ### Deploy note (Hobby)
@@ -114,6 +117,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-033 | active | **On-demand mentor** — `POST /api/mentor` with actions evaluate/hint/bottlenecks/improve/missing; mock from findings; sandbox-only chrome | Cost-controlled AI mentor |
 | AD-034 | active | **Link validity + sim realism** — `assessConnectionPair` ok/warn/invalid; live preview colors; invalid blocked; warn yellow edges; findings always-on; async MQ write relief; primary write concentration; `QUEUE_BACKLOG` + `HOT_PARTITION` | Pedagogue canvas + interview-realistic bottlenecks without discrete-event sim |
 | AD-035 | active | **Sandbox Workload + Mentor FAB/drawer** — both panels collapsed by default on all viewports; FAB chip opens; collapse button + backdrop/outside click closes; opening one closes the other; Componentes palette stays independent (AD-023) | Canvas-first Study Mode; mirrors Componentes phone FAB pattern on desktop too |
+| AD-036 | active | **Cobertura de requisitos derivada do grafo** — `analyzeRequirementCoverage` classifica cada requisito em capabilities (write/read path, uniqueness, latency, throughput, availability, …) e avalia contra grafo + configs; LLM só pode **rebaixar** status (match por texto normalizado), nunca inventar `covered`; caminho estrutural usa o mesmo engine; itens de feedback string do LLM são coeridos para `FeedbackItem` sem `severity` | Tabela de cobertura era sempre `missing` no caminho LLM (match exato de string) e sempre `covered` no estrutural; AD-027 structural-first estendido ao relatório de requisitos |
 
 ---
 

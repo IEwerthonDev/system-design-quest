@@ -5,6 +5,7 @@ import type { FeedbackItem, JudgePartialResult } from '@sdq/shared';
 import {
   assertScaleNarrative,
   buildRequirementCoverage,
+  coerceFeedbackItems,
   judgeStructuralOnly,
   judgeSubmission,
   mergeConsensus,
@@ -112,8 +113,8 @@ describe('buildRigorousPrompt / buildPragmaticPrompt', () => {
 });
 
 describe('buildRequirementCoverage', () => {
-  it('populates every declared requirement with coverage status', async () => {
-    const graph = getGoldenGraph('medium');
+  it('populates every declared requirement from the graph analysis (RC-03 AC4)', async () => {
+    const graph = getGoldenGraph('good');
     const rigorous = await mockJudgePartial('rigorous', graph);
     const pragmatic = await mockJudgePartial('pragmatic', graph);
     const input = makeInput(graph, {
@@ -129,11 +130,11 @@ describe('buildRequirementCoverage', () => {
       'Redirect HTTP 302',
       '100k read RPS',
     ]);
-    expect(coverage.every((item) => item.status === 'missing')).toBe(true);
+    expect(coverage.every((item) => item.status !== 'missing')).toBe(true);
     expect(coverage.every((item) => item.explanation.length > 0)).toBe(true);
   });
 
-  it('merges LLM-provided coverage and does not invent covered from golden tiers', async () => {
+  it('lets the LLM downgrade a covered requirement (RC-03 AC1)', async () => {
     const graph = getGoldenGraph('good');
     const rigorous = await mockJudgePartial('rigorous', graph);
     const pragmatic = await mockJudgePartial('pragmatic', graph);
@@ -143,8 +144,8 @@ describe('buildRequirementCoverage', () => {
         {
           requirement: 'Encurtar URL',
           type: 'functional',
-          status: 'covered',
-          explanation: 'LLM found shorten path',
+          status: 'missing',
+          explanation: 'LLM found no shorten path',
         },
       ],
     };
@@ -155,17 +156,99 @@ describe('buildRequirementCoverage', () => {
 
     const coverage = buildRequirementCoverage(input, withLlmCoverage, pragmatic);
 
-    expect(coverage).toEqual([
+    expect(coverage[0]).toEqual(
       expect.objectContaining({
         requirement: 'Encurtar URL',
-        status: 'covered',
-        explanation: 'LLM found shorten path',
-      }),
-      expect.objectContaining({
-        requirement: 'Redirect HTTP 302',
         status: 'missing',
+        explanation: 'LLM found no shorten path',
       }),
-    ]);
+    );
+    expect(coverage[1]!.status).not.toBe('missing');
+  });
+
+  it('ignores LLM upgrades above the graph analysis (RC-03 AC2)', async () => {
+    const graph = getGoldenGraph('medium');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: [],
+      nonFunctional: ['Redirect responde em menos de 100 ms no percentil 99'],
+    });
+    const baseline = buildRequirementCoverage(input, rigorous, pragmatic);
+    expect(baseline[0]!.status).toBe('missing');
+
+    const optimistic: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Redirect responde em menos de 100 ms no percentil 99',
+          type: 'nonFunctional',
+          status: 'covered',
+          explanation: 'LLM claims low latency',
+        },
+      ],
+    };
+
+    const coverage = buildRequirementCoverage(input, optimistic, pragmatic);
+
+    expect(coverage[0]!.status).toBe('missing');
+    expect(coverage[0]!.explanation).not.toBe('LLM claims low latency');
+  });
+
+  it('matches LLM items despite case, accent and punctuation drift (RC-03 AC3)', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: ['Usuário pode encurtar uma URL longa'],
+      nonFunctional: [],
+    });
+    const drifted: typeof rigorous = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: '  usuario pode encurtar uma url longa!  ',
+          type: 'functional',
+          status: 'partial',
+          explanation: 'LLM saw only a partial write path',
+        },
+      ],
+    };
+
+    const coverage = buildRequirementCoverage(input, drifted, pragmatic);
+
+    expect(coverage[0]).toEqual(
+      expect.objectContaining({
+        status: 'partial',
+        explanation: 'LLM saw only a partial write path',
+      }),
+    );
+  });
+
+  it('falls back to a locale explanation when the LLM downgrade has none', async () => {
+    const graph = getGoldenGraph('good');
+    const rigorous = await mockJudgePartial('rigorous', graph);
+    const pragmatic = await mockJudgePartial('pragmatic', graph);
+    const input = makeInput(graph, {
+      functional: ['Usuário pode encurtar uma URL longa em um link curto único'],
+      nonFunctional: [],
+    });
+    const noExplanation = {
+      ...rigorous,
+      requirementCoverage: [
+        {
+          requirement: 'Usuário pode encurtar uma URL longa em um link curto único',
+          type: 'functional',
+          status: 'missing',
+          explanation: '   ',
+        },
+      ],
+    } as typeof rigorous;
+
+    const coverage = buildRequirementCoverage(input, noExplanation, pragmatic);
+
+    expect(coverage[0]!.status).toBe('missing');
+    expect(coverage[0]!.explanation.trim().length).toBeGreaterThan(0);
   });
 
   it('returns empty array when no requirements were declared', async () => {
@@ -215,9 +298,74 @@ describe('mergeConsensus', () => {
     expect(merged.requirementCoverage).toEqual([
       expect.objectContaining({
         requirement: 'Encurtar URL',
-        status: 'missing',
+        status: 'covered',
       }),
     ]);
+  });
+});
+
+describe('coerceFeedbackItems (RC-04)', () => {
+  it('turns plain strings into FeedbackItem without severity', () => {
+    const items = coerceFeedbackItems(['Load balancer é ponto único de falha']);
+
+    expect(items).toEqual([
+      {
+        title: 'Load balancer é ponto único de falha',
+        explanation: 'Load balancer é ponto único de falha',
+        howToImprove: '',
+        whyItMatters: '',
+      },
+    ]);
+    expect(items[0]!.severity).toBeUndefined();
+  });
+
+  it('fills missing fields and preserves severity and related components', () => {
+    const items = coerceFeedbackItems([
+      { title: 'Sem cache', severity: 'blocker', relatedComponents: ['cache_redis', 7] },
+      { explanation: 'Somente explicação' },
+      { title: 'Ignora severidade inválida', severity: 'catastrophic' },
+    ]);
+
+    expect(items[0]).toEqual({
+      title: 'Sem cache',
+      explanation: '',
+      howToImprove: '',
+      whyItMatters: '',
+      severity: 'blocker',
+      relatedComponents: ['cache_redis'],
+    });
+    expect(items[1]).toEqual(
+      expect.objectContaining({ title: 'Somente explicação', explanation: 'Somente explicação' }),
+    );
+    expect(items[2]!.severity).toBeUndefined();
+  });
+
+  it('drops entries that are neither strings nor usable objects', () => {
+    expect(coerceFeedbackItems([null, 7, '', '   ', {}, [], undefined])).toEqual([]);
+    expect(coerceFeedbackItems('not an array')).toEqual([]);
+  });
+
+  it('keeps a live-LLM string critical issue from flipping the verdict to FAIL', async () => {
+    const client: LlmClient = {
+      async completeJson<T>(): Promise<T> {
+        return {
+          score: 95,
+          strengths: ['Cache Redis no caminho de leitura'],
+          criticalIssues: ['Load balancer sem redundância'],
+          improvements: ['Adicionar réplica do LB'],
+          requirementCoverage: [],
+          rationale: 'Modelo respondeu com strings. Análise de escala: 100k RPS de leitura.',
+        } as T;
+      },
+    };
+
+    const result = await judgeSubmission(makeInput(getGoldenGraph('good')), client);
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.criticalIssues.some((issue) => issue.title === 'Load balancer sem redundância')).toBe(
+      true,
+    );
+    expect(result.strengths.every((item) => item.title.length > 0)).toBe(true);
   });
 });
 
@@ -292,6 +440,41 @@ describe('judgeStructuralOnly', () => {
     expect(result.structuralCodes ?? []).not.toContain('missing_component');
     expect(result.scaleNarrative.length).toBeGreaterThan(0);
   });
+
+  it('grades coverage per requirement instead of all-covered on a PASS graph (RC-03)', () => {
+    const result = judgeStructuralOnly({
+      problemId: URL_SHORTENER_ID,
+      requirements: {
+        functional: ['Usuário pode encurtar uma URL longa'],
+        nonFunctional: ['Disponibilidade de 99,9% para operações de leitura'],
+      },
+      graph: getGoldenGraph('good'),
+      mode: 'study',
+      locale: 'pt-BR',
+    });
+
+    expect(result.verdict).toBe('PASS');
+    expect(result.requirementCoverage.map((item) => item.status)).toEqual(['covered', 'missing']);
+  });
+
+  it('keeps score and verdict unchanged when requirements are declared (reporting only)', async () => {
+    const graph = getGoldenGraph('good');
+    const requirements = {
+      functional: ['Usuário pode encurtar uma URL longa'],
+      nonFunctional: ['Disponibilidade de 99,9% para operações de leitura'],
+    };
+
+    const structuralBare = judgeStructuralOnly(makeInput(graph));
+    const structuralDeclared = judgeStructuralOnly(makeInput(graph, requirements));
+    expect(structuralDeclared.score).toBe(structuralBare.score);
+    expect(structuralDeclared.verdict).toBe(structuralBare.verdict);
+
+    const client = createMockLlmClient();
+    const llmBare = await judgeSubmission(makeInput(graph), client);
+    const llmDeclared = await judgeSubmission(makeInput(graph, requirements), client);
+    expect(llmDeclared.score).toBe(llmBare.score);
+    expect(llmDeclared.verdict).toBe(llmBare.verdict);
+  });
 });
 
 describe('judgeSubmission', () => {
@@ -339,7 +522,7 @@ describe('judgeSubmission', () => {
       expect.objectContaining({
         requirement: 'Gerar link curto',
         type: 'functional',
-        status: 'missing',
+        status: 'covered',
       }),
       expect.objectContaining({
         requirement: 'Alta disponibilidade',

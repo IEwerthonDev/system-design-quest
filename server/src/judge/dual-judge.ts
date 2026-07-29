@@ -1,4 +1,5 @@
 import {
+  analyzeRequirementCoverage,
   applyVerdictRules,
   evaluateStructuralRubric,
   getProblem,
@@ -25,6 +26,57 @@ function asArray<T>(value: unknown): T[] {
   return Array.isArray(value) ? (value as T[]) : [];
 }
 
+const FEEDBACK_SEVERITIES: ReadonlySet<string> = new Set(['blocker', 'major', 'minor']);
+
+/**
+ * Coerce LLM feedback lists into `FeedbackItem[]`.
+ * Live models answer with plain strings, so the string becomes title + explanation and carries
+ * no severity — it can never fake an AD-016 blocker.
+ */
+export function coerceFeedbackItems(value: unknown): FeedbackItem[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const items: FeedbackItem[] = [];
+  for (const raw of value) {
+    if (typeof raw === 'string') {
+      const text = raw.trim();
+      if (text.length > 0) {
+        items.push({ title: text, explanation: text, howToImprove: '', whyItMatters: '' });
+      }
+      continue;
+    }
+    if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+      continue;
+    }
+
+    const record = raw as Record<string, unknown>;
+    const title = typeof record.title === 'string' ? record.title.trim() : '';
+    const explanation = typeof record.explanation === 'string' ? record.explanation : '';
+    if (title.length === 0 && explanation.trim().length === 0) {
+      continue;
+    }
+
+    const item: FeedbackItem = {
+      title: title.length > 0 ? title : explanation,
+      explanation,
+      howToImprove: typeof record.howToImprove === 'string' ? record.howToImprove : '',
+      whyItMatters: typeof record.whyItMatters === 'string' ? record.whyItMatters : '',
+    };
+    if (typeof record.severity === 'string' && FEEDBACK_SEVERITIES.has(record.severity)) {
+      item.severity = record.severity as FeedbackItem['severity'];
+    }
+    if (Array.isArray(record.relatedComponents)) {
+      item.relatedComponents = record.relatedComponents.filter(
+        (component): component is string => typeof component === 'string',
+      );
+    }
+    items.push(item);
+  }
+  return items;
+}
+
 /**
  * Coerce LLM JSON into a safe JudgePartialResult.
  * Live models sometimes omit arrays or return objects — that used to crash mergeConsensus.
@@ -35,9 +87,9 @@ export function normalizeJudgePartialResult(raw: unknown): JudgePartialResult {
   const score = typeof value.score === 'number' && Number.isFinite(value.score) ? value.score : 0;
   return {
     score: Math.max(0, Math.min(100, Math.round(score))),
-    strengths: asArray<FeedbackItem>(value.strengths),
-    criticalIssues: asArray<FeedbackItem>(value.criticalIssues),
-    improvements: asArray<FeedbackItem>(value.improvements),
+    strengths: coerceFeedbackItems(value.strengths),
+    criticalIssues: coerceFeedbackItems(value.criticalIssues),
+    improvements: coerceFeedbackItems(value.improvements),
     requirementCoverage: asArray<ReqCoverageItem>(value.requirementCoverage),
     rationale: typeof value.rationale === 'string' ? value.rationale : '',
   };
@@ -56,20 +108,29 @@ function dedupeFeedbackItems(items: FeedbackItem[]): FeedbackItem[] {
   return merged;
 }
 
-function mergeReqCoverageItems(items: ReqCoverageItem[]): ReqCoverageItem[] {
-  const byRequirement = new Map<string, ReqCoverageItem>();
-  for (const item of items) {
-    const existing = byRequirement.get(item.requirement);
-    if (!existing || STATUS_RANK[item.status] < STATUS_RANK[existing.status]) {
-      byRequirement.set(item.requirement, item);
-    }
-  }
-  return [...byRequirement.values()];
+/** Match keys tolerant to case, accents, punctuation, and spacing (AD-036). */
+function coverageKey(requirement: string): string {
+  return requirement
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
 }
 
-/** Conservative gap fill — never invent "covered" from URL-shortener golden tiers (JR-02). */
-function defaultGapCoverageStatus(): ReqCoverageItem['status'] {
-  return 'missing';
+function mergeReqCoverageItems(items: ReqCoverageItem[]): Map<string, ReqCoverageItem> {
+  const byRequirement = new Map<string, ReqCoverageItem>();
+  for (const item of items) {
+    if (typeof item?.requirement !== 'string' || !(item.status in STATUS_RANK)) {
+      continue;
+    }
+    const key = coverageKey(item.requirement);
+    const existing = byRequirement.get(key);
+    if (!existing || STATUS_RANK[item.status] < STATUS_RANK[existing.status]) {
+      byRequirement.set(key, item);
+    }
+  }
+  return byRequirement;
 }
 
 function defaultCoverageExplanation(
@@ -100,52 +161,37 @@ function defaultCoverageExplanation(
   return 'Não há componente ou caminho de dados claro cobrindo este requisito declarado.';
 }
 
-/** Fill requirementCoverage for every declared requirement, merging judge outputs first. */
+/**
+ * Coverage for every declared requirement: graph analysis is the base (AD-036), and LLM items
+ * matched by normalized text may only downgrade the status — never invent "covered" (JR-02).
+ */
 export function buildRequirementCoverage(
   input: JudgeInput,
   rigorous: JudgePartialResult,
   pragmatic: JudgePartialResult,
 ): ReqCoverageItem[] {
   const locale = resolveJudgeLocale(input);
-  const merged = mergeReqCoverageItems([
+  const fromLlm = mergeReqCoverageItems([
     ...asArray<ReqCoverageItem>(rigorous.requirementCoverage),
     ...asArray<ReqCoverageItem>(pragmatic.requirementCoverage),
   ]);
-  const byRequirement = new Map(merged.map((item) => [item.requirement, item]));
+  const base = analyzeRequirementCoverage({
+    requirements: input.requirements,
+    graph: input.graph,
+    locale,
+  });
 
-  const declared: ReqCoverageItem[] = [];
-
-  for (const requirement of input.requirements.functional) {
-    const existing = byRequirement.get(requirement);
-    if (existing) {
-      declared.push(existing);
-    } else {
-      const status = defaultGapCoverageStatus();
-      declared.push({
-        requirement,
-        type: 'functional',
-        status,
-        explanation: defaultCoverageExplanation(status, 'functional', locale),
-      });
+  return base.map((item) => {
+    const llm = fromLlm.get(coverageKey(item.requirement));
+    if (!llm || STATUS_RANK[llm.status] >= STATUS_RANK[item.status]) {
+      return item;
     }
-  }
-
-  for (const requirement of input.requirements.nonFunctional) {
-    const existing = byRequirement.get(requirement);
-    if (existing) {
-      declared.push(existing);
-    } else {
-      const status = defaultGapCoverageStatus();
-      declared.push({
-        requirement,
-        type: 'nonFunctional',
-        status,
-        explanation: defaultCoverageExplanation(status, 'nonFunctional', locale),
-      });
-    }
-  }
-
-  return declared;
+    const explanation =
+      typeof llm.explanation === 'string' && llm.explanation.trim().length > 0
+        ? llm.explanation
+        : defaultCoverageExplanation(llm.status, item.type, locale);
+    return { ...item, status: llm.status, explanation };
+  });
 }
 
 function buildSummary(verdict: Verdict, score: number, locale: Locale): string {
@@ -237,30 +283,12 @@ function llmConfigNote(locale: Locale): string {
   return 'Configure LLM_API_KEY para narrativa dual-judge mais rica. Este resultado é apenas estrutural.';
 }
 
-function structuralCoverage(
-  input: JudgeInput,
-  report: StructuralReport,
-  locale: Locale,
-): ReqCoverageItem[] {
-  const hasBlockers = report.blockers.length > 0;
-  const status: ReqCoverageItem['status'] = hasBlockers ? 'missing' : 'covered';
-  const explanation =
-    locale === 'en'
-      ? hasBlockers
-        ? 'Structural Baseline found missing must-have components for this problem.'
-        : 'Declared requirements align with present Baseline must-have components.'
-      : hasBlockers
-        ? 'O Baseline estrutural encontrou componentes obrigatórios faltando neste problema.'
-        : 'Os requisitos declarados alinham-se aos must-haves Baseline presentes.';
-
-  const declared: ReqCoverageItem[] = [];
-  for (const requirement of input.requirements.functional) {
-    declared.push({ requirement, type: 'functional', status, explanation });
-  }
-  for (const requirement of input.requirements.nonFunctional) {
-    declared.push({ requirement, type: 'nonFunctional', status, explanation });
-  }
-  return declared;
+function structuralCoverage(input: JudgeInput, locale: Locale): ReqCoverageItem[] {
+  return analyzeRequirementCoverage({
+    requirements: input.requirements,
+    graph: input.graph,
+    locale,
+  });
 }
 
 /** Build a JudgeResult from StructuralReport only (no LLM / no shortener golden fixtures). */
@@ -283,7 +311,7 @@ export function buildStructuralOnlyResult(
     strengths: report.strengths,
     criticalIssues,
     improvements: [],
-    requirementCoverage: structuralCoverage(input, report, locale),
+    requirementCoverage: structuralCoverage(input, locale),
     judgeDebate: {
       rigorous: note,
       pragmatic: note,
