@@ -22,12 +22,12 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `design-mode-chrome` shipped |
+| **Fase atual** | `quick-chaos-in-drawer` shipped |
 | **Próximo passo** | Pick next roadmap feature |
 | **Feature ativa** | (none) |
 | **Branch** | `main` |
 | **Bloqueios** | None |
-| **Decisões** | AD-031·032·033·034·035·036·037·**038** |
+| **Decisões** | AD-031·032·033·034·035·036·037·038·**039** |
 | **Gate** | `nx run-many -t lint test --skip-nx-cache` green |
 | **Verify** | PASS — `.specs/features/design-mode-chrome/validation.md` |
 | **PR** | [#10](https://github.com/IEwerthonDev/system-design-quest/pull/10) squash-merged |
@@ -125,6 +125,7 @@ Hobby = static Vite client + thin serverless `api/*.js` (judge, sessions, leader
 | AD-035 | active (extended) | **Workload + Mentor FAB/drawer** — collapsed by default; FAB opens; mutual exclusion with Chaos/Metrics; mounts in Sandbox **and** Practice; right-edge stack with Caos (AD-038) | Canvas-first design chrome |
 | AD-036 | active | **Cobertura de requisitos derivada do grafo** — `analyzeRequirementCoverage` classifica cada requisito em capabilities (write/read path, uniqueness, latency, throughput, availability, …) e avalia contra grafo + configs; LLM só pode **rebaixar** status (match por texto normalizado), nunca inventar `covered`; caminho estrutural usa o mesmo engine; itens de feedback string do LLM são coeridos para `FeedbackItem` sem `capability` | Tabela de cobertura era sempre `missing` no caminho LLM (match exato de string) e sempre `covered` no estrutural; AD-027 structural-first estendido ao relatório de requisitos |
 | AD-037 | active (clarified) | **Chaos Lab efêmero** — Quick Chaos + Live Metrics + Resilience Report in **design modes** (Sandbox + Practice); **not Speedrun** (ranking fairness); one active failure; probes isolated; state in `__GAME_STATE__` only | Playground parity; ranking fairness preserved |
+| AD-039 | active | **Quick Chaos vive no drawer** — chips Quick Chaos são a primeira seção do Chaos Lab (`quickSlot`), acima de Infra/Network; nenhuma faixa de caos fixa no header/canvas; toggle de evento único preservado (AD-037) | FAB CAOS é o único ponto de entrada; devolve altura ao canvas |
 | AD-038 | active | **Right-edge FAB stack** — CSS vars `--sdq-fab-stack-*`; bottom→top slots: Carga(0), Mentor(1), Caos(2), Metrics(3); gap 8px; inset 12px; ≥44px targets + safe-area | Study Mode minimized chrome; desktop + mobile |
 
 ---

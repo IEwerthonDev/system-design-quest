@@ -558,7 +558,7 @@ export function mountPhaseNavigation(
       },
       onOpen: () => closeOverlaysExcept('chaos'),
     });
-    quickChaos = mountQuickChaosToolbar(sessionHeader.controlsSlot, {
+    quickChaos = mountQuickChaosToolbar(chaosLabPanel.quickSlot, {
       onToggle: (eventId) => {
         if (getGameState().activeChaosEvent === eventId) {
           clearActiveChaos();

@@ -720,6 +720,18 @@ describe('phase navigation', () => {
       expect(container.querySelector('[data-testid="quick-chaos-toolbar"]')).toBeTruthy();
     });
 
+    it('renders Quick Chaos inside the Chaos Lab drawer, not over the canvas', () => {
+      mountPhaseNavigation(container, { mode: 'study' });
+      container.querySelector<HTMLButtonElement>('[data-testid="briefing-start"]')!.click();
+      container.querySelector<HTMLButtonElement>('[data-testid="requirements-advance"]')!.click();
+      const toolbar = container.querySelector('[data-testid="quick-chaos-toolbar"]')!;
+      const drawer = container.querySelector('[data-testid="chaos-lab-panel"]')!;
+      expect(drawer.contains(toolbar)).toBe(true);
+      expect(
+        container.querySelector('[data-testid="session-header"]')!.contains(toolbar),
+      ).toBe(false);
+    });
+
     it('mounts design chrome in sandbox canvas', () => {
       mountPhaseNavigation(container, { mode: 'sandbox', problemId: '__sandbox__' });
       expect(getSession()?.phase).toBe('canvas');
