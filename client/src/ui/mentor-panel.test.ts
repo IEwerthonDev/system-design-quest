@@ -38,6 +38,16 @@ describe('mentor-panel', () => {
     panel.destroy();
   });
 
+  it('stacks Mentor FAB on the right edge slot 1 with guideline polish', () => {
+    const { panel } = mount();
+    const css = document.getElementById('sdq-mentor-styles')?.textContent ?? '';
+    expect(css).toMatch(/\.sdq-mentor-fab[\s\S]*right:\s*var\(--sdq-fab-stack-inset/);
+    expect(css).toContain('1 * (var(--sdq-fab-stack-size');
+    expect(css).toContain('overscroll-behavior: contain');
+    expect(css).toContain('prefers-reduced-motion: reduce');
+    panel.destroy();
+  });
+
   it('opens via FAB and closes via collapse and backdrop', () => {
     const { panel } = mount();
     panel.fab.click();
