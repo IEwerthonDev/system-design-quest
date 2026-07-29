@@ -29,10 +29,10 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035·036·037·038·**039** |
 | **Gate** | `nx run-many -t lint test --skip-nx-cache` green |
-| **Verify** | PASS — `.specs/features/design-mode-chrome/validation.md` |
-| **PR** | [#10](https://github.com/IEwerthonDev/system-design-quest/pull/10) squash-merged |
+| **Verify** | PASS — `.specs/features/design-mode-chrome/validation.md` (AD-039 = follow-up small change, gate green) |
+| **PR** | [#10](https://github.com/IEwerthonDev/system-design-quest/pull/10) · [#11](https://github.com/IEwerthonDev/system-design-quest/pull/11) squash-merged |
 | **Production URL** | https://system-design-quest.vercel.app |
-| **Deploy** | `dpl_6f5nPHoWJJtHGLnJfsJXAuP77zmL` READY · sha `4380d79` |
+| **Deploy** | `dpl_AGmxXQWAV4d5P7PZPhHDfburU3Ss` READY · sha `28e8606` |
 
 ### Context Checkpoint (2026-07-29 design-mode-chrome ship)
 
