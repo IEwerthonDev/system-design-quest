@@ -68,10 +68,14 @@ function injectStyles(): void {
       align-items: center;
       gap: 8px;
       position: fixed;
-      left: 12px;
-      bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+      right: var(--sdq-fab-stack-inset, 12px);
+      bottom: calc(
+        var(--sdq-fab-stack-base, calc(16px + env(safe-area-inset-bottom, 0px))) +
+          0 * (var(--sdq-fab-stack-size, 44px) + var(--sdq-fab-stack-gap, 8px))
+      );
       z-index: 19;
-      min-height: 44px;
+      min-height: var(--sdq-fab-stack-size, 44px);
+      min-width: var(--sdq-fab-stack-size, 44px);
       padding: 10px 14px;
       border-radius: var(--sdq-radius, 10px);
       border: 1px solid var(--sdq-accent-border, rgba(201,169,98,0.35));
@@ -86,12 +90,13 @@ function injectStyles(): void {
     .sdq-workload-fab[hidden] { display: none !important; }
     .sdq-workload {
       position: absolute;
-      left: 12px;
+      right: var(--sdq-fab-stack-inset, 12px);
       top: 72px;
       z-index: 22;
       width: min(280px, calc(100vw - 24px));
       max-height: min(50vh, 420px);
       overflow: auto;
+      overscroll-behavior: contain;
       background: var(--sdq-bg-elevated);
       border: 1px solid var(--sdq-border);
       border-radius: 12px;
@@ -105,7 +110,7 @@ function injectStyles(): void {
     .sdq-workload--collapsed {
       visibility: hidden;
       pointer-events: none;
-      transform: translateX(-8px);
+      transform: translateX(8px);
     }
     .sdq-workload__header {
       display: flex;
@@ -127,10 +132,15 @@ function injectStyles(): void {
       background: var(--sdq-bg);
       color: var(--sdq-text);
       border-radius: 6px;
-      min-width: 32px;
-      min-height: 32px;
+      min-width: 44px;
+      min-height: 44px;
       cursor: pointer;
+      touch-action: manipulation;
       font: inherit;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sdq-workload-backdrop { backdrop-filter: none; }
+      .sdq-workload--collapsed { transform: none; }
     }
     .sdq-workload__field {
       display: grid;
