@@ -78,7 +78,7 @@ Result: the learner cannot tell which requirement their architecture actually sa
 1. WHEN a cache or CDN sits on the read path with `hitRate ≥ 80` THEN a latency requirement SHALL be `covered`; WHEN a cache exists off the read path or with `hitRate < 80` THEN `partial`; WHEN absent THEN `missing`.
 2. WHEN load balancing exists AND app replicas ≥ 2 AND a cache/CDN exists THEN a throughput requirement SHALL be `covered`; WHEN only part holds THEN `partial`; WHEN none THEN `missing`.
 3. WHEN load balancer, app, and store are all redundant (replicas ≥ 2, or store `replicationFactor ≥ 2` / a `replica` topology role) THEN an availability requirement SHALL be `covered`; WHEN at least one is redundant THEN `partial`; WHEN none THEN `missing`.
-4. WHEN a uniqueness/collision requirement is declared AND a store exists with hash partitioning, a partition key, or notes naming a code strategy (base62, hash, uuid, snowflake, kgs) THEN `covered`; WHEN only a store exists THEN `partial`.
+4. WHEN a uniqueness/collision requirement is declared AND a store exists with an explicit `partitionKey` or implementation notes/label naming a code strategy (base62, hash, uuid, snowflake, kgs, unique) THEN `covered`; WHEN only a store exists THEN `partial`; WHEN no store exists THEN `missing`. A default `partitioningStrategy` alone never counts as a signal.
 
 **Independent Test**: Same graph with `hitRate: 95` vs `hitRate: 50`, and `replicas: 1` vs `5`, yields different statuses.
 

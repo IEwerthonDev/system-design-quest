@@ -22,13 +22,14 @@ Jogo educativo no browser para aprender System Design desenhando arquiteturas em
 
 | Campo | Valor |
 | ----- | ----- |
-| **Fase atual** | `requirement-coverage` — Execute T1–T5 |
-| **Próximo passo** | T2 engine de cobertura em `libs/shared/src/judge/requirement-coverage.ts` |
+| **Fase atual** | `requirement-coverage` — T1–T5 done, Verify |
+| **Próximo passo** | Verifier independente → PR → merge → `vercel --prod` + probe de produção |
 | **Feature ativa** | `requirement-coverage` |
 | **Branch** | `feature/requirement-coverage` |
 | **Bloqueios** | None |
 | **Decisões** | AD-031·032·033·034·035·**036** |
-| **Gate** | `nx run-many -t lint test` |
+| **Gate** | `nx run-many -t lint test` green (shared 155 · server 152 · client 440) |
+| **Commits** | `501b2fc` docs · `6d03084` engine · `82a2899` judge merge · `e4ef0a0` FeedbackItem |
 | **PR** | pending |
 | **Production URL** | https://system-design-quest.vercel.app |
 | **Deployment** | `dpl_8cVp8EABw1PUMxWDuExq8VdpVaA4` READY (pre-feature) |
